@@ -1,0 +1,4 @@
+-keep class com.example.sshtunnel.** { *; }
+-keep class org.apache.sshd.** { *; }
+-keep class com.jcraft.jsch.** { *; }
+-dontwarn com.jcraft.jsch.**
