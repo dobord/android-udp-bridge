@@ -29,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private Button connectButton;
     private Button disconnectButton;
     private Button startForwardingButton;
+    private Button stopForwardingButton;
     private TextView statusTextView;
 
     private ServiceConnection serviceConnection = new ServiceConnection() {
@@ -71,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
         connectButton = findViewById(R.id.connect_button);
         disconnectButton = findViewById(R.id.disconnect_button);
         startForwardingButton = findViewById(R.id.start_forwarding_button);
+        stopForwardingButton = findViewById(R.id.stop_forwarding_button);
         statusTextView = findViewById(R.id.status_text_view);
         
         // Set default values
@@ -101,6 +103,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 startUdpForwarding();
+            }
+        });
+        
+        stopForwardingButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                stopUdpForwarding();
             }
         });
     }
@@ -187,11 +196,11 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void run() {
                             if (success) {
-                                Toast.makeText(MainActivity.this, "UDP forwarding started", Toast.LENGTH_SHORT).show();
-                                statusTextView.setText("Status: Forwarding " + localPort + " -> " + remoteHost + ":" + remotePort);
+                                Toast.makeText(MainActivity.this, "Port forwarding started", Toast.LENGTH_SHORT).show();
                             } else {
-                                Toast.makeText(MainActivity.this, "Failed to start UDP forwarding", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(MainActivity.this, "Failed to start port forwarding", Toast.LENGTH_SHORT).show();
                             }
+                            updateUI();
                         }
                     });
                 }
@@ -202,12 +211,80 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     
-    private void updateUI() {
+    private void stopUdpForwarding() {
         if (serviceBound) {
+            sshTunnelService.disconnectFromServer();
+            
+            // Reconnect to server for future use
+            String host = hostEditText.getText().toString().trim();
+            String portStr = portEditText.getText().toString().trim();
+            String username = usernameEditText.getText().toString().trim();
+            String password = passwordEditText.getText().toString().trim();
+            
+            if (!host.isEmpty() && !portStr.isEmpty() && !username.isEmpty() && !password.isEmpty()) {
+                try {
+                    int port = Integer.parseInt(portStr);
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            // Small delay to allow cleanup
+                            try { Thread.sleep(1000); } catch (InterruptedException e) {}
+                            
+                            boolean connected = sshTunnelService.connect(host, port, username, password);
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (connected) {
+                                        Toast.makeText(MainActivity.this, "Tunnel stopped, SSH connection maintained", Toast.LENGTH_SHORT).show();
+                                    } else {
+                                        Toast.makeText(MainActivity.this, "Tunnel stopped, SSH connection lost", Toast.LENGTH_SHORT).show();
+                                    }
+                                    updateUI();
+                                }
+                            });
+                        }
+                    }).start();
+                } catch (NumberFormatException e) {
+                    // Just disconnect without reconnecting
+                    Toast.makeText(this, "Tunnel stopped", Toast.LENGTH_SHORT).show();
+                    updateUI();
+                }
+            } else {
+                Toast.makeText(this, "Tunnel stopped", Toast.LENGTH_SHORT).show();
+                updateUI();
+            }
+        }
+    }
+    
+    private void updateUI() {
+        if (serviceBound && sshTunnelService != null) {
             boolean connected = sshTunnelService.isConnected();
+            boolean tunnelActive = sshTunnelService.isTunnelActive();
+            
             connectButton.setEnabled(!connected);
             disconnectButton.setEnabled(connected);
-            startForwardingButton.setEnabled(connected);
+            startForwardingButton.setEnabled(connected && !tunnelActive);
+            stopForwardingButton.setEnabled(tunnelActive);
+            
+            // Update status text
+            if (tunnelActive) {
+                statusTextView.setText("Status: Forwarding " + sshTunnelService.getCurrentTunnelInfo());
+                statusTextView.setBackgroundColor(getResources().getColor(android.R.color.holo_green_light));
+            } else if (connected) {
+                statusTextView.setText("Status: Connected - Ready for forwarding");
+                statusTextView.setBackgroundColor(getResources().getColor(android.R.color.holo_blue_light));
+            } else {
+                statusTextView.setText("Status: Disconnected");
+                statusTextView.setBackgroundColor(getResources().getColor(android.R.color.darker_gray));
+            }
+        } else {
+            // Service not bound
+            connectButton.setEnabled(false);
+            disconnectButton.setEnabled(false);
+            startForwardingButton.setEnabled(false);
+            stopForwardingButton.setEnabled(false);
+            statusTextView.setText("Status: Service not available");
+            statusTextView.setBackgroundColor(getResources().getColor(android.R.color.holo_red_light));
         }
     }
 
