@@ -119,15 +119,26 @@
 
         <Button
             android:id="@+id/start_forwarding_button"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Start UDP Forwarding"
-            android:enabled="false" />
+            android:layout_weight="1"
+            android:text="Start Forwarding"
+            android:enabled="false"
+            android:layout_marginEnd="4dp" />
+
+        <Button
+            android:id="@+id/stop_forwarding_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Stop Forwarding"
+            android:enabled="false"
+            android:layout_marginStart="4dp" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Note: This app creates a UDP tunnel through SSH connection. Local UDP traffic will be forwarded to the remote server through the SSH tunnel."
+            android:text="Note: This app creates a tunnel through SSH connection. Local traffic will be forwarded to the remote server through the SSH tunnel. For UDP forwarding, the app creates a TCP proxy that forwards data through SSH tunnel."
             android:textSize="12sp"
             android:layout_marginTop="16dp"
             android:background="#fffacd"

@@ -18,7 +18,7 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags "-std=c++14"
-                arguments "-DANDROID_STL=c++_shared"
+                arguments "-DANDROID_STL=c++_shared", "-DANDROID_PLATFORM=android-21"
             }
         }
     }
@@ -28,17 +28,28 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+        debug {
+            debuggable true
+            jniDebuggable true
+        }
     }
     
     externalNativeBuild {
         cmake {
             path "src/main/cpp/CMakeLists.txt"
+            version "3.18.1"
         }
     }
     
     packagingOptions {
         pickFirst '**/libc++_shared.so'
         pickFirst '**/libjsc.so'
+        pickFirst '**/libssh.so'
+    }
+    
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 
@@ -46,4 +57,6 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'com.google.android.material:material:1.9.0'
+    implementation 'androidx.lifecycle:lifecycle-service:2.6.2'
+    implementation 'androidx.core:core:1.10.1'
 }
