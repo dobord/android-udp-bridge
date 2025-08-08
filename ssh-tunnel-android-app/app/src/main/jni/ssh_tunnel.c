@@ -3,6 +3,7 @@
 #include "libssh_mock.h"
 #else
 #include <libssh/libssh.h>
+#include <libssh/callbacks.h>
 #endif
 #include <stdlib.h>
 #include <string.h>
@@ -23,11 +24,53 @@
 static ssh_session session = NULL;
 static int tunnel_active = 0;
 static pthread_mutex_t session_mutex = PTHREAD_MUTEX_INITIALIZER;
+#ifndef USE_LIBSSH_MOCK
+static volatile int g_libssh_initialized = 0;
+#endif
+
+#ifndef USE_LIBSSH_MOCK
+// Global libssh log callback (file-scope). Needed to compile with Clang (no nested functions).
+static void ssh_android_log_cb(int priority, const char *function, const char *buffer, void *userdata) {
+    (void)userdata;
+    __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, "libssh[%d] %s: %s", priority,
+                        function ? function : "", buffer ? buffer : "");
+}
+#endif
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
     // Avoid process kill on SIGPIPE when writing to a closed socket/channel
     signal(SIGPIPE, SIG_IGN);
+#ifndef USE_LIBSSH_MOCK
+    // Setup libssh logging for better diagnostics
+    ssh_set_log_callback(ssh_android_log_cb);
+    // Max verbosity to trace functions
+    ssh_set_log_level(SSH_LOG_FUNCTIONS);
+    // Initialize libssh (and underlying crypto/RNG such as mbedTLS) once per process
+    // Set thread callbacks before ssh_init when using threads
+    struct ssh_threads_callbacks_struct *cb = ssh_threads_get_default();
+    if (cb != NULL) {
+        ssh_threads_set_callbacks(cb);
+    }
+    int rc = ssh_init();
+    if (rc == SSH_OK) {
+        g_libssh_initialized = 1;
+    } else {
+        g_libssh_initialized = 0;
+        LOGE("ssh_init failed with code %d", rc);
+        // We'll try again lazily on first connect call
+    }
+#endif
     return JNI_VERSION_1_6;
 }
+
+#ifndef USE_LIBSSH_MOCK
+JNIEXPORT void JNICALL JNI_OnUnload(JavaVM* vm, void* reserved) {
+    // Finalize libssh on library unload
+    if (g_libssh_initialized) {
+        ssh_finalize();
+        g_libssh_initialized = 0;
+    }
+}
+#endif
 
 
 typedef struct {
@@ -64,6 +107,8 @@ static void* udp_forward_thread(void* arg) {
     socklen_t client_len = sizeof(client_addr);
     
     while (tunnel_active) {
+    // reset client_len before each recvfrom call
+    client_len = sizeof(client_addr);
         ssize_t received = recvfrom(local_sock, buffer, sizeof(buffer), 0,
                                     (struct sockaddr*)&client_addr, &client_len);
         if (received < 0) {
@@ -79,26 +124,28 @@ static void* udp_forward_thread(void* arg) {
     // Forward UDP packet through SSH tunnel
     pthread_mutex_lock(&session_mutex);
     ssh_session sess = session;
-    pthread_mutex_unlock(&session_mutex);
     if (sess) {
-            ssh_channel channel = ssh_channel_new(session);
+            ssh_channel channel = ssh_channel_new(sess);
             if (channel == NULL) {
                 LOGE("Failed to create SSH channel");
+                pthread_mutex_unlock(&session_mutex);
                 continue;
             }
 
             if (ssh_channel_open_forward(channel, params->remote_host,
                                          params->remote_port, "localhost", params->local_port) != SSH_OK) {
-                LOGE("Failed to open SSH channel for forwarding: %s", ssh_get_error(session));
+                LOGE("Failed to open SSH channel for forwarding: %s", ssh_get_error(sess));
                 ssh_channel_free(channel);
+                pthread_mutex_unlock(&session_mutex);
                 continue;
             }
 
             int written = ssh_channel_write(channel, buffer, (uint32_t)received);
             if (written <= 0) {
-                LOGE("ssh_channel_write failed: %s", ssh_get_error(session));
+                LOGE("ssh_channel_write failed: %s", ssh_get_error(sess));
                 ssh_channel_close(channel);
                 ssh_channel_free(channel);
+                pthread_mutex_unlock(&session_mutex);
                 continue;
             }
             LOGI("Successfully wrote %d bytes to SSH channel", written);
@@ -114,12 +161,13 @@ static void* udp_forward_thread(void* arg) {
                     LOGE("sendto failed: errno=%d", errno);
                 }
             } else if (nbytes == SSH_ERROR) {
-                LOGE("ssh_channel_read_timeout error: %s", ssh_get_error(session));
+                LOGE("ssh_channel_read_timeout error: %s", ssh_get_error(sess));
             }
 
             ssh_channel_send_eof(channel);
             ssh_channel_close(channel);
             ssh_channel_free(channel);
+            pthread_mutex_unlock(&session_mutex);
         } else {
             // Fallback: echo data back if no SSH session
             LOGI("No SSH session, echoing data back");
@@ -127,6 +175,8 @@ static void* udp_forward_thread(void* arg) {
                        (struct sockaddr*)&client_addr, client_len) < 0) {
                 LOGE("sendto failed: errno=%d", errno);
             }
+            // no session was used
+            pthread_mutex_unlock(&session_mutex);
         }
     }
     
@@ -145,6 +195,20 @@ Java_com_example_sshtunnel_SshTunnelService_connectToServer(JNIEnv *env, jobject
     LOGI("Attempting to connect to %s:%d with user %s", host_str, port, username_str);
 
     pthread_mutex_lock(&session_mutex);
+#ifndef USE_LIBSSH_MOCK
+    if (!g_libssh_initialized) {
+        int rc = ssh_init();
+        if (rc != SSH_OK) {
+            LOGE("ssh_init (lazy) failed with code %d", rc);
+            pthread_mutex_unlock(&session_mutex);
+            (*env)->ReleaseStringUTFChars(env, host, host_str);
+            (*env)->ReleaseStringUTFChars(env, username, username_str);
+            (*env)->ReleaseStringUTFChars(env, password, password_str);
+            return JNI_FALSE;
+        }
+        g_libssh_initialized = 1;
+    }
+#endif
     session = ssh_new();
     if (session == NULL) {
         LOGE("Failed to create SSH session");
@@ -206,6 +270,21 @@ Java_com_example_sshtunnel_SshTunnelService_connectWithKey(JNIEnv *env, jobject 
     LOGI("Attempting to connect to %s:%d with user %s using key %s", host_str, port, username_str, privateKey_str);
 
     pthread_mutex_lock(&session_mutex);
+#ifndef USE_LIBSSH_MOCK
+    if (!g_libssh_initialized) {
+        int rc = ssh_init();
+        if (rc != SSH_OK) {
+            LOGE("ssh_init (lazy) failed with code %d", rc);
+            pthread_mutex_unlock(&session_mutex);
+            (*env)->ReleaseStringUTFChars(env, host, host_str);
+            (*env)->ReleaseStringUTFChars(env, username, username_str);
+            (*env)->ReleaseStringUTFChars(env, privateKeyPath, privateKey_str);
+            if (passphrase_str) (*env)->ReleaseStringUTFChars(env, passphrase, passphrase_str);
+            return JNI_FALSE;
+        }
+        g_libssh_initialized = 1;
+    }
+#endif
     session = ssh_new();
     if (session == NULL) {
         LOGE("Failed to create SSH session");

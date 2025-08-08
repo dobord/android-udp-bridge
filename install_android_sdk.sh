@@ -8,7 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Variables
 ANDROID_HOME="/opt/android-sdk"
-ANDROID_NDK_VERSION="25.1.8937393"
+ANDROID_NDK_VERSION="26.3.11579264"
 ANDROID_BUILD_TOOLS_VERSION="34.0.0"
 ANDROID_PLATFORM_VERSION="34"
 
@@ -20,7 +20,7 @@ sudo chown $USER:$USER $ANDROID_HOME
 
 # Download Android Command Line Tools
 cd /tmp
-wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
 unzip -q commandlinetools-linux-9477386_latest.zip
 mkdir -p $ANDROID_HOME/cmdline-tools
 mv cmdline-tools $ANDROID_HOME/cmdline-tools/latest

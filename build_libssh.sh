@@ -25,6 +25,8 @@ echo "Используем Android NDK: $NDK_PATH"
 LIBSSH_VERSION="0.11.2"
 MBEDTLS_VERSION="2.28.7"
 MIN_API_LEVEL=24
+# Флаги для 16K страниц (Android 15)
+MAX_PAGE_LDFLAGS="-Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384"
 # Ограничиваемся arm64-v8a для ускорения и соответствия настройкам приложения
 ABIS=("arm64-v8a")
 
@@ -114,6 +116,9 @@ build_for_abi() {
         -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
         -DCMAKE_C_FLAGS="-fPIC" \
         -DCMAKE_CXX_FLAGS="-fPIC" \
+        -DCMAKE_EXE_LINKER_FLAGS_INIT="$MAX_PAGE_LDFLAGS" \
+        -DCMAKE_SHARED_LINKER_FLAGS_INIT="$MAX_PAGE_LDFLAGS" \
+        -DCMAKE_MODULE_LINKER_FLAGS_INIT="$MAX_PAGE_LDFLAGS" \
         -DENABLE_TESTING=OFF \
         -DENABLE_PROGRAMS=OFF \
         -DBUILD_SHARED_LIBS=OFF
@@ -131,10 +136,13 @@ build_for_abi() {
         -DCMAKE_ANDROID_NDK="$NDK_PATH" \
         -DCMAKE_ANDROID_API=$MIN_API_LEVEL \
         -DCMAKE_ANDROID_STL_TYPE=c++_shared \
-    -DCMAKE_C_FLAGS="-DS_IWRITE=S_IWUSR" \
+        -DCMAKE_C_FLAGS="-DS_IWRITE=S_IWUSR" \
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_INSTALL_PREFIX="$INSTALL_DIR" \
         -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+        -DCMAKE_EXE_LINKER_FLAGS_INIT="$MAX_PAGE_LDFLAGS" \
+        -DCMAKE_SHARED_LINKER_FLAGS_INIT="$MAX_PAGE_LDFLAGS" \
+        -DCMAKE_MODULE_LINKER_FLAGS_INIT="$MAX_PAGE_LDFLAGS" \
         -DWITH_EXAMPLES=OFF \
         -DWITH_TESTING=OFF \
         -DWITH_SERVER=OFF \
