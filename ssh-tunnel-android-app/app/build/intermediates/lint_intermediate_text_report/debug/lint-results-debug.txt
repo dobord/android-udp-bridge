@@ -1,0 +1,285 @@
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/build.gradle:48: Warning: A newer version of androidx.appcompat:appcompat than 1.6.1 is available: 1.7.1 [GradleDependency]
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/build.gradle:49: Warning: A newer version of androidx.constraintlayout:constraintlayout than 2.1.4 is available: 2.2.1 [GradleDependency]
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/build.gradle:50: Warning: A newer version of com.google.android.material:material than 1.9.0 is available: 1.12.0 [GradleDependency]
+    implementation 'com.google.android.material:material:1.9.0'
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "GradleDependency":
+   This detector looks for usages of libraries where the version you are using
+   is not the current stable release. Using older versions is fine, and there
+   are cases where you deliberately want to stick with an older version.
+   However, you may simply not be aware that a more recent version is
+   available, and that is what this lint check helps find.
+
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/values/strings.xml:4: Warning: The resource R.string.connect_button appears to be unused [UnusedResources]
+    <string name="connect_button">Connect</string>
+            ~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/values/strings.xml:5: Warning: The resource R.string.disconnect_button appears to be unused [UnusedResources]
+    <string name="disconnect_button">Disconnect</string>
+            ~~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/values/strings.xml:6: Warning: The resource R.string.start_forwarding_button appears to be unused [UnusedResources]
+    <string name="start_forwarding_button">Start UDP Forwarding</string>
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/values/strings.xml:7: Warning: The resource R.string.stop_forwarding_button appears to be unused [UnusedResources]
+    <string name="stop_forwarding_button">Stop UDP Forwarding</string>
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/values/strings.xml:8: Warning: The resource R.string.status_connected appears to be unused [UnusedResources]
+    <string name="status_connected">Connected</string>
+            ~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/values/strings.xml:9: Warning: The resource R.string.status_disconnected appears to be unused [UnusedResources]
+    <string name="status_disconnected">Disconnected</string>
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/values/strings.xml:10: Warning: The resource R.string.status_forwarding appears to be unused [UnusedResources]
+    <string name="status_forwarding">Forwarding</string>
+            ~~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/values/strings.xml:11: Warning: The resource R.string.server_address_hint appears to be unused [UnusedResources]
+    <string name="server_address_hint">Enter SSH server address</string>
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/values/strings.xml:12: Warning: The resource R.string.server_port_hint appears to be unused [UnusedResources]
+    <string name="server_port_hint">Enter SSH server port (22)</string>
+            ~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/values/strings.xml:13: Warning: The resource R.string.username_hint appears to be unused [UnusedResources]
+    <string name="username_hint">Enter username</string>
+            ~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/values/strings.xml:14: Warning: The resource R.string.password_hint appears to be unused [UnusedResources]
+    <string name="password_hint">Enter password</string>
+            ~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/values/strings.xml:15: Warning: The resource R.string.local_port_hint appears to be unused [UnusedResources]
+    <string name="local_port_hint">Enter local UDP port</string>
+            ~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/values/strings.xml:16: Warning: The resource R.string.remote_host_hint appears to be unused [UnusedResources]
+    <string name="remote_host_hint">Enter remote host</string>
+            ~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/values/strings.xml:17: Warning: The resource R.string.remote_port_hint appears to be unused [UnusedResources]
+    <string name="remote_port_hint">Enter remote UDP port</string>
+            ~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/values/strings.xml:18: Warning: The resource R.string.error_connection_failed appears to be unused [UnusedResources]
+    <string name="error_connection_failed">SSH connection failed</string>
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/values/strings.xml:19: Warning: The resource R.string.error_invalid_address appears to be unused [UnusedResources]
+    <string name="error_invalid_address">Invalid server address</string>
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/values/strings.xml:20: Warning: The resource R.string.error_invalid_port appears to be unused [UnusedResources]
+    <string name="error_invalid_port">Invalid port number</string>
+            ~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/values/strings.xml:21: Warning: The resource R.string.error_empty_fields appears to be unused [UnusedResources]
+    <string name="error_empty_fields">Please fill all required fields</string>
+            ~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/values/strings.xml:22: Warning: The resource R.string.tunnel_status appears to be unused [UnusedResources]
+    <string name="tunnel_status">Tunnel Status: %s</string>
+            ~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "UnusedResources":
+   Unused resources make applications larger and slow down builds.
+
+
+   The unused resource check can ignore tests. If you want to include
+   resources that are only referenced from tests, consider packaging them in a
+   test source set instead.
+
+   You can include test sources in the unused resource check by setting the
+   system property lint.unused-resources.include-tests =true, and to exclude
+   them (usually for performance reasons), use
+   lint.unused-resources.exclude-tests =true.
+   ,
+
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/AndroidManifest.xml:9: Warning: Should explicitly set android:icon, there is no default [MissingApplicationIcon]
+    <application
+     ~~~~~~~~~~~
+
+   Explanation for issues of type "MissingApplicationIcon":
+   You should set an icon for the application as whole because there is no
+   default. This attribute must be set as a reference to a drawable resource
+   containing the image (for example @drawable/icon).
+
+   https://developer.android.com/studio/publish/preparing#publishing-configure
+
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/layout/activity_main.xml:118: Warning: Buttons in button bars should be borderless; use style="?android:attr/buttonBarButtonStyle" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]
+            <Button
+             ~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/layout/activity_main.xml:126: Warning: Buttons in button bars should be borderless; use style="?android:attr/buttonBarButtonStyle" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]
+            <Button
+             ~~~~~~
+
+   Explanation for issues of type "ButtonStyle":
+   Button bars typically use a borderless style for the buttons. Set the
+   style="?android:attr/buttonBarButtonStyle" attribute on each of the
+   buttons, and set style="?android:attr/buttonBarStyle" on the parent layout
+
+   https://material.io/components/dialogs/
+
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/layout/activity_main.xml:31: Warning: Missing autofillHints attribute [Autofill]
+        <EditText
+         ~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/layout/activity_main.xml:39: Warning: Missing autofillHints attribute [Autofill]
+        <EditText
+         ~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/layout/activity_main.xml:47: Warning: Missing autofillHints attribute [Autofill]
+        <EditText
+         ~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/layout/activity_main.xml:86: Warning: Missing autofillHints attribute [Autofill]
+        <EditText
+         ~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/layout/activity_main.xml:94: Warning: Missing autofillHints attribute [Autofill]
+        <EditText
+         ~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/layout/activity_main.xml:103: Warning: Missing autofillHints attribute [Autofill]
+        <EditText
+         ~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/layout/activity_main.xml:145: Warning: Missing autofillHints attribute [Autofill]
+        <EditText
+         ~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/layout/activity_main.xml:153: Warning: Missing autofillHints attribute [Autofill]
+        <EditText
+         ~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/layout/activity_main.xml:161: Warning: Missing autofillHints attribute [Autofill]
+        <EditText
+         ~~~~~~~~
+
+   Explanation for issues of type "Autofill":
+   Specify an autofillHints attribute when targeting SDK version 26 or higher
+   or explicitly specify that the view is not important for autofill. Your app
+   can help an autofill service classify the data correctly by providing the
+   meaning of each view that could be autofillable, such as views representing
+   usernames, passwords, credit card fields, email addresses, etc.
+
+   The hints can have any value, but it is recommended to use predefined
+   values like 'username' for a username or 'creditCardNumber' for a credit
+   card number. For a list of all predefined autofill hint constants, see the
+   AUTOFILL_HINT_ constants in the View reference at
+   https://developer.android.com/reference/android/view/View.html.
+
+   You can mark a view unimportant for autofill by specifying an
+   importantForAutofill attribute on that view or a parent view. See
+   https://developer.android.com/reference/android/view/View.html#setImportant
+   ForAutofill(int).
+
+   https://developer.android.com/guide/topics/text/autofill.html
+
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/java/com/example/sshtunnel/MainActivity.java:91: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        hostEditText.setText("192.168.1.100");
+                             ~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/java/com/example/sshtunnel/MainActivity.java:92: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        portEditText.setText("22");
+                             ~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/java/com/example/sshtunnel/MainActivity.java:93: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        usernameEditText.setText("user");
+                                 ~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/java/com/example/sshtunnel/MainActivity.java:94: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        localPortEditText.setText("8080");
+                                  ~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/java/com/example/sshtunnel/MainActivity.java:95: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        remoteHostEditText.setText("127.0.0.1");
+                                   ~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/java/com/example/sshtunnel/MainActivity.java:96: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        remotePortEditText.setText("80");
+                                   ~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/java/com/example/sshtunnel/MainActivity.java:194: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+                                statusTextView.setText("Status: Connected (" + authMethod + ")");
+                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/java/com/example/sshtunnel/MainActivity.java:194: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+                                statusTextView.setText("Status: Connected (" + authMethod + ")");
+                                                       ~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/java/com/example/sshtunnel/MainActivity.java:197: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+                                statusTextView.setText("Status: Connection failed");
+                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/java/com/example/sshtunnel/MainActivity.java:213: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+            statusTextView.setText("Status: Disconnected");
+                                   ~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/java/com/example/sshtunnel/MainActivity.java:248: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+                                statusTextView.setText("Status: Forwarding " + localPort + " -> " + remoteHost + ":" + remotePort);
+                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/java/com/example/sshtunnel/MainActivity.java:248: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+                                statusTextView.setText("Status: Forwarding " + localPort + " -> " + remoteHost + ":" + remotePort);
+                                                       ~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "SetTextI18n":
+   When calling TextView#setText
+   * Never call Number#toString() to format numbers; it will not handle
+   fraction separators and locale-specific digits properly. Consider using
+   String#format with proper format specifications (%d or %f) instead.
+   * Do not pass a string literal (e.g. "Hello") to display text. Hardcoded
+   text can not be properly translated to other languages. Consider using
+   Android resource strings instead.
+   * Do not build messages by concatenating text chunks. Such messages can not
+   be properly translated.
+
+   https://developer.android.com/guide/topics/resources/localization.html
+
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/layout/activity_main.xml:16: Warning: Hardcoded string "Status: Disconnected", should use @string resource [HardcodedText]
+            android:text="Status: Disconnected"
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/layout/activity_main.xml:26: Warning: Hardcoded string "SSH Connection Settings", should use @string resource [HardcodedText]
+            android:text="SSH Connection Settings"
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/layout/activity_main.xml:35: Warning: Hardcoded string "SSH Server Host", should use @string resource [HardcodedText]
+            android:hint="SSH Server Host"
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/layout/activity_main.xml:43: Warning: Hardcoded string "SSH Server Port (22)", should use @string resource [HardcodedText]
+            android:hint="SSH Server Port (22)"
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/layout/activity_main.xml:51: Warning: Hardcoded string "Username", should use @string resource [HardcodedText]
+            android:hint="Username"
+            ~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/layout/activity_main.xml:58: Warning: Hardcoded string "Authentication Method", should use @string resource [HardcodedText]
+            android:text="Authentication Method"
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/layout/activity_main.xml:74: Warning: Hardcoded string "Password", should use @string resource [HardcodedText]
+                android:text="Password"
+                ~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/layout/activity_main.xml:82: Warning: Hardcoded string "Private Key", should use @string resource [HardcodedText]
+                android:text="Private Key" />
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/layout/activity_main.xml:90: Warning: Hardcoded string "Password", should use @string resource [HardcodedText]
+            android:hint="Password"
+            ~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/layout/activity_main.xml:98: Warning: Hardcoded string "Private Key Path", should use @string resource [HardcodedText]
+            android:hint="Private Key Path"
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/layout/activity_main.xml:107: Warning: Hardcoded string "Key Passphrase (optional)", should use @string resource [HardcodedText]
+            android:hint="Key Passphrase (optional)"
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/layout/activity_main.xml:123: Warning: Hardcoded string "Connect", should use @string resource [HardcodedText]
+                android:text="Connect"
+                ~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/layout/activity_main.xml:131: Warning: Hardcoded string "Disconnect", should use @string resource [HardcodedText]
+                android:text="Disconnect"
+                ~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/layout/activity_main.xml:140: Warning: Hardcoded string "UDP Port Forwarding", should use @string resource [HardcodedText]
+            android:text="UDP Port Forwarding"
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/layout/activity_main.xml:149: Warning: Hardcoded string "Local UDP Port", should use @string resource [HardcodedText]
+            android:hint="Local UDP Port"
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/layout/activity_main.xml:157: Warning: Hardcoded string "Remote Host (127.0.0.1)", should use @string resource [HardcodedText]
+            android:hint="Remote Host (127.0.0.1)"
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/layout/activity_main.xml:165: Warning: Hardcoded string "Remote UDP Port", should use @string resource [HardcodedText]
+            android:hint="Remote UDP Port"
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/layout/activity_main.xml:173: Warning: Hardcoded string "Start UDP Forwarding", should use @string resource [HardcodedText]
+            android:text="Start UDP Forwarding"
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/res/layout/activity_main.xml:179: Warning: Hardcoded string "Note: This app creates a UDP tunnel through SSH connection. Local UDP traffic will be forwarded to the remote server through the SSH tunnel.", should use @string resource [HardcodedText]
+            android:text="Note: This app creates a UDP tunnel through SSH connection. Local UDP traffic will be forwarded to the remote server through the SSH tunnel."
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "HardcodedText":
+   Hardcoding text attributes directly in layout files is bad for several
+   reasons:
+
+   * When creating configuration variations (for example for landscape or
+   portrait) you have to repeat the actual text (and keep it up to date when
+   making changes)
+
+   * The application cannot be translated to other languages by just adding
+   new translations for existing string resources.
+
+   There are quickfixes to automatically extract this hardcoded string into a
+   resource lookup.
+
+0 errors, 65 warnings

@@ -52,13 +52,62 @@
             android:inputType="text"
             android:layout_marginBottom="8dp" />
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Authentication Method"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <RadioGroup
+            android:id="@+id/auth_method_radio_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <RadioButton
+                android:id="@+id/password_auth_radio"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Password"
+                android:checked="true"
+                android:layout_marginEnd="16dp" />
+
+            <RadioButton
+                android:id="@+id/key_auth_radio"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Private Key" />
+
+        </RadioGroup>
+
         <EditText
             android:id="@+id/password_edit_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Password"
             android:inputType="textPassword"
-            android:layout_marginBottom="16dp" />
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/private_key_edit_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Private Key Path"
+            android:inputType="text"
+            android:layout_marginBottom="8dp"
+            android:visibility="gone" />
+
+        <EditText
+            android:id="@+id/passphrase_edit_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Key Passphrase (optional)"
+            android:inputType="textPassword"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone" />
 
         <LinearLayout
             android:layout_width="match_parent"

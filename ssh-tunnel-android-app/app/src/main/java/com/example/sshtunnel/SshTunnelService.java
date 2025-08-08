@@ -17,6 +17,7 @@ public class SshTunnelService extends Service {
     
     // Native methods
     public native boolean connectToServer(String host, int port, String username, String password);
+    public native boolean connectWithKey(String host, int port, String username, String privateKeyPath, String passphrase);
     public native void disconnect();
     public native boolean forwardPort(int localPort, String remoteHost, int remotePort);
     
@@ -43,6 +44,20 @@ public class SshTunnelService extends Service {
             Log.d(TAG, "Successfully connected to server");
         } else {
             Log.e(TAG, "Failed to connect to server");
+        }
+        
+        return isConnected;
+    }
+
+    public boolean connectWithPrivateKey(String serverAddress, int serverPort, String username, String privateKeyPath, String passphrase) {
+        Log.d(TAG, "Attempting to connect to " + serverAddress + ":" + serverPort + " using private key");
+        
+        isConnected = connectWithKey(serverAddress, serverPort, username, privateKeyPath, passphrase);
+        
+        if (isConnected) {
+            Log.d(TAG, "Successfully connected to server with private key");
+        } else {
+            Log.e(TAG, "Failed to connect to server with private key");
         }
         
         return isConnected;

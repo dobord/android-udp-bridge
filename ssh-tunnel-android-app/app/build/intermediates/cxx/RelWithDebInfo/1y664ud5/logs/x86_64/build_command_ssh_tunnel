@@ -1,0 +1,4 @@
+/opt/android-sdk/cmake/3.22.1/bin/ninja \
+  -C \
+  /workspaces/android-udp-bridge/ssh-tunnel-android-app/app/.cxx/RelWithDebInfo/1y664ud5/x86_64 \
+  ssh_tunnel

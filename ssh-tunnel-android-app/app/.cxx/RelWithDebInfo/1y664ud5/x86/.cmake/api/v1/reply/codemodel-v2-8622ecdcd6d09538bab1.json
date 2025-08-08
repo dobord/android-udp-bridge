@@ -1,0 +1,69 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-RelWithDebInfo-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.6.0"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				}
+			],
+			"name" : "RelWithDebInfo",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "sshtunnel",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "ssh_advanced::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ssh_advanced-RelWithDebInfo-0faa6c6f346c11fc57d8.json",
+					"name" : "ssh_advanced",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ssh_tunnel::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ssh_tunnel-RelWithDebInfo-b3f61b93eca3a1c2eeba.json",
+					"name" : "ssh_tunnel",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/.cxx/RelWithDebInfo/1y664ud5/x86",
+		"source" : "/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/cpp"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 3
+	}
+}

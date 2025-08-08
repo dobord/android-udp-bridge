@@ -132,7 +132,7 @@ Java_com_example_sshtunnel_SshTunnelService_connectToServer(JNIEnv *env, jobject
 
     int auth = ssh_userauth_password(session, username_str, password_str);
     if (auth != SSH_AUTH_SUCCESS) {
-        LOGE("SSH authentication failed");
+        LOGE("SSH password authentication failed");
         ssh_disconnect(session);
         ssh_free(session);
         session = NULL;
@@ -147,6 +147,74 @@ Java_com_example_sshtunnel_SshTunnelService_connectToServer(JNIEnv *env, jobject
     (*env)->ReleaseStringUTFChars(env, password, password_str);
 
     LOGI("SSH connection established successfully");
+    return JNI_TRUE;
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_example_sshtunnel_SshTunnelService_connectWithKey(JNIEnv *env, jobject obj, jstring host, jint port, jstring username, jstring privateKeyPath, jstring passphrase) {
+    const char *host_str = (*env)->GetStringUTFChars(env, host, 0);
+    const char *username_str = (*env)->GetStringUTFChars(env, username, 0);
+    const char *privateKey_str = (*env)->GetStringUTFChars(env, privateKeyPath, 0);
+    const char *passphrase_str = passphrase ? (*env)->GetStringUTFChars(env, passphrase, 0) : NULL;
+
+    LOGI("Attempting to connect to %s:%d with user %s using key %s", host_str, port, username_str, privateKey_str);
+
+    session = ssh_new();
+    if (session == NULL) {
+        LOGE("Failed to create SSH session");
+        (*env)->ReleaseStringUTFChars(env, host, host_str);
+        (*env)->ReleaseStringUTFChars(env, username, username_str);
+        (*env)->ReleaseStringUTFChars(env, privateKeyPath, privateKey_str);
+        if (passphrase_str) (*env)->ReleaseStringUTFChars(env, passphrase, passphrase_str);
+        return JNI_FALSE;
+    }
+
+    ssh_options_set(session, SSH_OPTIONS_HOST, host_str);
+    ssh_options_set(session, SSH_OPTIONS_PORT, &port);
+    ssh_options_set(session, SSH_OPTIONS_USER, username_str);
+
+    int connection = ssh_connect(session);
+    if (connection != SSH_OK) {
+        LOGE("SSH connection failed: %s", ssh_get_error(session));
+        ssh_free(session);
+        session = NULL;
+        (*env)->ReleaseStringUTFChars(env, host, host_str);
+        (*env)->ReleaseStringUTFChars(env, username, username_str);
+        (*env)->ReleaseStringUTFChars(env, privateKeyPath, privateKey_str);
+        if (passphrase_str) (*env)->ReleaseStringUTFChars(env, passphrase, passphrase_str);
+        return JNI_FALSE;
+    }
+
+    // Try key authentication
+    int auth = ssh_userauth_publickey_auto(session, username_str, passphrase_str);
+    if (auth != SSH_AUTH_SUCCESS) {
+        // Try with specific key file
+        ssh_key privkey;
+        int import_result = ssh_pki_import_privkey_file(privateKey_str, passphrase_str, NULL, NULL, &privkey);
+        if (import_result == SSH_OK) {
+            auth = ssh_userauth_publickey(session, username_str, privkey);
+            ssh_key_free(privkey);
+        }
+        
+        if (auth != SSH_AUTH_SUCCESS) {
+            LOGE("SSH key authentication failed");
+            ssh_disconnect(session);
+            ssh_free(session);
+            session = NULL;
+            (*env)->ReleaseStringUTFChars(env, host, host_str);
+            (*env)->ReleaseStringUTFChars(env, username, username_str);
+            (*env)->ReleaseStringUTFChars(env, privateKeyPath, privateKey_str);
+            if (passphrase_str) (*env)->ReleaseStringUTFChars(env, passphrase, passphrase_str);
+            return JNI_FALSE;
+        }
+    }
+
+    (*env)->ReleaseStringUTFChars(env, host, host_str);
+    (*env)->ReleaseStringUTFChars(env, username, username_str);
+    (*env)->ReleaseStringUTFChars(env, privateKeyPath, privateKey_str);
+    if (passphrase_str) (*env)->ReleaseStringUTFChars(env, passphrase, passphrase_str);
+
+    LOGI("SSH key authentication successful");
     return JNI_TRUE;
 }
 

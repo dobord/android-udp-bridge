@@ -1,0 +1,1602 @@
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineSystem.cmake:228 (message)"
+      - "CMakeLists.txt:13 (project)"
+    message: |
+      The target system is: Android - 21 - aarch64
+      The host system is: Linux - 6.8.0-1030-azure - x86_64
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:13 (project)"
+    message: |
+      Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+      Compiler: /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang 
+      Build flags: 
+      Id flags: -c;--target=aarch64-none-linux-android21 
+      
+      The output was:
+      0
+      
+      
+      Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "CMakeCCompilerId.o"
+      
+      The C compiler identification is Clang, found in:
+        /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/3.28.3/CompilerIdC/CMakeCCompilerId.o
+      
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerABI.cmake:57 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:13 (project)"
+    checks:
+      - "Detecting C compiler ABI info"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Hsqv5e"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Hsqv5e"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "CMAKE_C_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Hsqv5e'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_c1acb/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_c1acb.dir/build.make CMakeFiles/cmTC_c1acb.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Hsqv5e'
+        Building C object CMakeFiles/cmTC_c1acb.dir/CMakeCCompilerABI.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21   -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -fexceptions  -O2 -g -DNDEBUG -fPIE   -v -MD -MT CMakeFiles/cmTC_c1acb.dir/CMakeCCompilerABI.c.o -MF CMakeFiles/cmTC_c1acb.dir/CMakeCCompilerABI.c.o.d -o CMakeFiles/cmTC_c1acb.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake-3.28/Modules/CMakeCCompilerABI.c
+        Android (8490178, based on r450784d) clang version 14.0.6 (https://android.googlesource.com/toolchain/llvm-project 4c603efb0cca074e9238af8b4106c30add4418f6)
+        Target: aarch64-none-linux-android21
+        Thread model: posix
+        InstalledDir: /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin
+         (in-process)
+         "/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang" -cc1 -triple aarch64-none-linux-android21 -emit-obj --mrelax-relocations -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCCompilerABI.c -mrelocation-model pic -pic-level 2 -pic-is-pie -mframe-pointer=non-leaf -ffp-contract=on -fno-rounding-math -mconstructor-aliases -funwind-tables=2 -target-cpu generic -target-feature +neon -target-feature +v8a -target-feature +fix-cortex-a53-835769 -target-abi aapcs -fallow-half-arguments-and-returns -mllvm -treat-scalable-fixed-error-as-warning -debug-info-kind=constructor -dwarf-version=4 -debugger-tuning=gdb -v -ffunction-sections -fdata-sections -fcoverage-compilation-dir=/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Hsqv5e -resource-dir /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/14.0.6 -dependency-file CMakeFiles/cmTC_c1acb.dir/CMakeCCompilerABI.c.o.d -MT CMakeFiles/cmTC_c1acb.dir/CMakeCCompilerABI.c.o -sys-header-deps -D ANDROID -D _FORTIFY_SOURCE=2 -D NDEBUG -internal-isystem /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/14.0.6/include -internal-isystem /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/local/include -internal-externc-isystem /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/include/aarch64-linux-android -internal-externc-isystem /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/include -internal-externc-isystem /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/include -O2 -Wformat -fdebug-compilation-dir=/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Hsqv5e -ferror-limit 19 -stack-protector 2 -fno-signed-char -fgnuc-version=4.2.1 -fexceptions -vectorize-loops -vectorize-slp -target-feature +outline-atomics -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_c1acb.dir/CMakeCCompilerABI.c.o -x c /usr/share/cmake-3.28/Modules/CMakeCCompilerABI.c
+        clang -cc1 version 14.0.6 based upon LLVM 14.0.6git default target x86_64-unknown-linux-gnu
+        ignoring nonexistent directory "/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/include"
+        #include "..." search starts here:
+        #include <...> search starts here:
+         /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/14.0.6/include
+         /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/local/include
+         /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/include/aarch64-linux-android
+         /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/include
+        End of search list.
+        Linking C executable cmTC_c1acb
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c1acb.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -fexceptions  -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections -v CMakeFiles/cmTC_c1acb.dir/CMakeCCompilerABI.c.o -o cmTC_c1acb   -latomic -lm 
+        Android (8490178, based on r450784d) clang version 14.0.6 (https://android.googlesource.com/toolchain/llvm-project 4c603efb0cca074e9238af8b4106c30add4418f6)
+        Target: aarch64-none-linux-android21
+        Thread model: posix
+        InstalledDir: /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin
+         "/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/ld" -pie -EL --fix-cortex-a53-843419 --warn-shared-textrel -z now -z relro -z max-page-size=4096 --hash-style=both --enable-new-dtags --eh-frame-hdr -m aarch64linux -dynamic-linker /system/bin/linker64 -o cmTC_c1acb /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/lib/aarch64-linux-android/21/crtbegin_dynamic.o -L/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/14.0.6/lib/linux/aarch64 -L/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/lib/aarch64-linux-android/21 -L/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/lib/aarch64-linux-android -L/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/lib --build-id=sha1 --no-rosegment --fatal-warnings --gc-sections --no-undefined --gc-sections CMakeFiles/cmTC_c1acb.dir/CMakeCCompilerABI.c.o -latomic -lm /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/14.0.6/lib/linux/libclang_rt.builtins-aarch64-android.a -l:libunwind.a -ldl -lc /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/14.0.6/lib/linux/libclang_rt.builtins-aarch64-android.a -l:libunwind.a -ldl /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/lib/aarch64-linux-android/21/crtend_android.o
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Hsqv5e'
+        
+      exitCode: 0
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerABI.cmake:127 (message)"
+      - "/usr/share/cmake-3.28/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:13 (project)"
+    message: |
+      Parsed C implicit include dir info: rv=done
+        found start of include info
+        found start of implicit include info
+          add: [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/14.0.6/include]
+          add: [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/local/include]
+          add: [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/include/aarch64-linux-android]
+          add: [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/include]
+        end of search list found
+        collapse include dir [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/14.0.6/include] ==> [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/14.0.6/include]
+        collapse include dir [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/local/include] ==> [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/local/include]
+        collapse include dir [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/include/aarch64-linux-android] ==> [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/aarch64-linux-android]
+        collapse include dir [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/include] ==> [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include]
+        implicit include dirs: [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/14.0.6/include;/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/local/include;/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/aarch64-linux-android;/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include]
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerABI.cmake:159 (message)"
+      - "/usr/share/cmake-3.28/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:13 (project)"
+    message: |
+      Parsed C implicit link information:
+        link line regex: [^( *|.*[/\\])(ld\\.lld|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
+        ignore line: [Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Hsqv5e']
+        ignore line: []
+        ignore line: [Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_c1acb/fast]
+        ignore line: [/usr/bin/gmake  -f CMakeFiles/cmTC_c1acb.dir/build.make CMakeFiles/cmTC_c1acb.dir/build]
+        ignore line: [gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Hsqv5e']
+        ignore line: [Building C object CMakeFiles/cmTC_c1acb.dir/CMakeCCompilerABI.c.o]
+        ignore line: [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21   -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -fexceptions  -O2 -g -DNDEBUG -fPIE   -v -MD -MT CMakeFiles/cmTC_c1acb.dir/CMakeCCompilerABI.c.o -MF CMakeFiles/cmTC_c1acb.dir/CMakeCCompilerABI.c.o.d -o CMakeFiles/cmTC_c1acb.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake-3.28/Modules/CMakeCCompilerABI.c]
+        ignore line: [Android (8490178  based on r450784d) clang version 14.0.6 (https://android.googlesource.com/toolchain/llvm-project 4c603efb0cca074e9238af8b4106c30add4418f6)]
+        ignore line: [Target: aarch64-none-linux-android21]
+        ignore line: [Thread model: posix]
+        ignore line: [InstalledDir: /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin]
+        ignore line: [ (in-process)]
+        ignore line: [ "/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang" -cc1 -triple aarch64-none-linux-android21 -emit-obj --mrelax-relocations -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCCompilerABI.c -mrelocation-model pic -pic-level 2 -pic-is-pie -mframe-pointer=non-leaf -ffp-contract=on -fno-rounding-math -mconstructor-aliases -funwind-tables=2 -target-cpu generic -target-feature +neon -target-feature +v8a -target-feature +fix-cortex-a53-835769 -target-abi aapcs -fallow-half-arguments-and-returns -mllvm -treat-scalable-fixed-error-as-warning -debug-info-kind=constructor -dwarf-version=4 -debugger-tuning=gdb -v -ffunction-sections -fdata-sections -fcoverage-compilation-dir=/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Hsqv5e -resource-dir /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/14.0.6 -dependency-file CMakeFiles/cmTC_c1acb.dir/CMakeCCompilerABI.c.o.d -MT CMakeFiles/cmTC_c1acb.dir/CMakeCCompilerABI.c.o -sys-header-deps -D ANDROID -D _FORTIFY_SOURCE=2 -D NDEBUG -internal-isystem /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/14.0.6/include -internal-isystem /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/local/include -internal-externc-isystem /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/include/aarch64-linux-android -internal-externc-isystem /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/include -internal-externc-isystem /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/include -O2 -Wformat -fdebug-compilation-dir=/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Hsqv5e -ferror-limit 19 -stack-protector 2 -fno-signed-char -fgnuc-version=4.2.1 -fexceptions -vectorize-loops -vectorize-slp -target-feature +outline-atomics -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_c1acb.dir/CMakeCCompilerABI.c.o -x c /usr/share/cmake-3.28/Modules/CMakeCCompilerABI.c]
+        ignore line: [clang -cc1 version 14.0.6 based upon LLVM 14.0.6git default target x86_64-unknown-linux-gnu]
+        ignore line: [ignoring nonexistent directory "/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/include"]
+        ignore line: [#include "..." search starts here:]
+        ignore line: [#include <...> search starts here:]
+        ignore line: [ /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/14.0.6/include]
+        ignore line: [ /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/local/include]
+        ignore line: [ /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/include/aarch64-linux-android]
+        ignore line: [ /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/include]
+        ignore line: [End of search list.]
+        ignore line: [Linking C executable cmTC_c1acb]
+        ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c1acb.dir/link.txt --verbose=1]
+        ignore line: [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -fexceptions  -O2 -g -DNDEBUG -Wl --build-id=sha1 -Wl --no-rosegment -Wl --fatal-warnings -Wl --gc-sections -Qunused-arguments -Wl --no-undefined  -Wl --gc-sections -v CMakeFiles/cmTC_c1acb.dir/CMakeCCompilerABI.c.o -o cmTC_c1acb   -latomic -lm ]
+        ignore line: [Android (8490178  based on r450784d) clang version 14.0.6 (https://android.googlesource.com/toolchain/llvm-project 4c603efb0cca074e9238af8b4106c30add4418f6)]
+        ignore line: [Target: aarch64-none-linux-android21]
+        ignore line: [Thread model: posix]
+        ignore line: [InstalledDir: /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin]
+        link line: [ "/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/ld" -pie -EL --fix-cortex-a53-843419 --warn-shared-textrel -z now -z relro -z max-page-size=4096 --hash-style=both --enable-new-dtags --eh-frame-hdr -m aarch64linux -dynamic-linker /system/bin/linker64 -o cmTC_c1acb /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/lib/aarch64-linux-android/21/crtbegin_dynamic.o -L/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/14.0.6/lib/linux/aarch64 -L/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/lib/aarch64-linux-android/21 -L/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/lib/aarch64-linux-android -L/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/lib --build-id=sha1 --no-rosegment --fatal-warnings --gc-sections --no-undefined --gc-sections CMakeFiles/cmTC_c1acb.dir/CMakeCCompilerABI.c.o -latomic -lm /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/14.0.6/lib/linux/libclang_rt.builtins-aarch64-android.a -l:libunwind.a -ldl -lc /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/14.0.6/lib/linux/libclang_rt.builtins-aarch64-android.a -l:libunwind.a -ldl /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/lib/aarch64-linux-android/21/crtend_android.o]
+          arg [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/ld] ==> ignore
+          arg [-pie] ==> ignore
+          arg [-EL] ==> ignore
+          arg [--fix-cortex-a53-843419] ==> ignore
+          arg [--warn-shared-textrel] ==> ignore
+          arg [-znow] ==> ignore
+          arg [-zrelro] ==> ignore
+          arg [-zmax-page-size=4096] ==> ignore
+          arg [--hash-style=both] ==> ignore
+          arg [--enable-new-dtags] ==> ignore
+          arg [--eh-frame-hdr] ==> ignore
+          arg [-m] ==> ignore
+          arg [aarch64linux] ==> ignore
+          arg [-dynamic-linker] ==> ignore
+          arg [/system/bin/linker64] ==> ignore
+          arg [-o] ==> ignore
+          arg [cmTC_c1acb] ==> ignore
+          arg [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/lib/aarch64-linux-android/21/crtbegin_dynamic.o] ==> obj [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/lib/aarch64-linux-android/21/crtbegin_dynamic.o]
+          arg [-L/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/14.0.6/lib/linux/aarch64] ==> dir [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/14.0.6/lib/linux/aarch64]
+          arg [-L/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/lib/aarch64-linux-android/21] ==> dir [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/lib/aarch64-linux-android/21]
+          arg [-L/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/lib/aarch64-linux-android] ==> dir [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/lib/aarch64-linux-android]
+          arg [-L/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/lib] ==> dir [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/lib]
+          arg [--build-id=sha1] ==> ignore
+          arg [--no-rosegment] ==> ignore
+          arg [--fatal-warnings] ==> ignore
+          arg [--gc-sections] ==> ignore
+          arg [--no-undefined] ==> ignore
+          arg [--gc-sections] ==> ignore
+          arg [CMakeFiles/cmTC_c1acb.dir/CMakeCCompilerABI.c.o] ==> ignore
+          arg [-latomic] ==> lib [atomic]
+          arg [-lm] ==> lib [m]
+          arg [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/14.0.6/lib/linux/libclang_rt.builtins-aarch64-android.a] ==> lib [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/14.0.6/lib/linux/libclang_rt.builtins-aarch64-android.a]
+          arg [-l:libunwind.a] ==> lib [-l:libunwind.a]
+          arg [-ldl] ==> lib [dl]
+          arg [-lc] ==> lib [c]
+          arg [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/14.0.6/lib/linux/libclang_rt.builtins-aarch64-android.a] ==> lib [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/14.0.6/lib/linux/libclang_rt.builtins-aarch64-android.a]
+          arg [-l:libunwind.a] ==> lib [-l:libunwind.a]
+          arg [-ldl] ==> lib [dl]
+          arg [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/lib/aarch64-linux-android/21/crtend_android.o] ==> obj [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/lib/aarch64-linux-android/21/crtend_android.o]
+        remove lib [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/14.0.6/lib/linux/libclang_rt.builtins-aarch64-android.a]
+        remove lib [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/14.0.6/lib/linux/libclang_rt.builtins-aarch64-android.a]
+        collapse obj [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/lib/aarch64-linux-android/21/crtbegin_dynamic.o] ==> [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/21/crtbegin_dynamic.o]
+        collapse obj [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/lib/aarch64-linux-android/21/crtend_android.o] ==> [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/21/crtend_android.o]
+        collapse library dir [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/14.0.6/lib/linux/aarch64] ==> [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/14.0.6/lib/linux/aarch64]
+        collapse library dir [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/lib/aarch64-linux-android/21] ==> [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/21]
+        collapse library dir [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/lib/aarch64-linux-android] ==> [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android]
+        collapse library dir [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/../sysroot/usr/lib] ==> [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib]
+        implicit libs: [atomic;m;-l:libunwind.a;dl;c;-l:libunwind.a;dl]
+        implicit objs: [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/21/crtbegin_dynamic.o;/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/21/crtend_android.o]
+        implicit dirs: [/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/14.0.6/lib/linux/aarch64;/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/21;/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android;/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib]
+        implicit fwks: []
+      
+      
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "CompilerChecks.cmake:10 (check_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test REQUIRED_FLAGS_WERROR"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-HR19IK"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-HR19IK"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "REQUIRED_FLAGS_WERROR"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-HR19IK'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_cf505/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_cf505.dir/build.make CMakeFiles/cmTC_cf505.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-HR19IK'
+        Building C object CMakeFiles/cmTC_cf505.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DREQUIRED_FLAGS_WERROR  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions  -O2 -g -DNDEBUG -fPIE   -Werror -MD -MT CMakeFiles/cmTC_cf505.dir/src.c.o -MF CMakeFiles/cmTC_cf505.dir/src.c.o.d -o CMakeFiles/cmTC_cf505.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-HR19IK/src.c
+        Linking C executable cmTC_cf505
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_cf505.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions  -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_cf505.dir/src.c.o -o cmTC_cf505   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-HR19IK'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:19 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_STD_GNU99_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Tn0Xjz"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Tn0Xjz"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_STD_GNU99_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Tn0Xjz'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_4f34d/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_4f34d.dir/build.make CMakeFiles/cmTC_4f34d.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Tn0Xjz'
+        Building C object CMakeFiles/cmTC_4f34d.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_STD_GNU99_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -fPIE   -std=gnu99 -MD -MT CMakeFiles/cmTC_4f34d.dir/src.c.o -MF CMakeFiles/cmTC_4f34d.dir/src.c.o.d -o CMakeFiles/cmTC_4f34d.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Tn0Xjz/src.c
+        Linking C executable cmTC_4f34d
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_4f34d.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_4f34d.dir/src.c.o -o cmTC_4f34d   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Tn0Xjz'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:20 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_WPEDANTIC_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-eInixm"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-eInixm"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_WPEDANTIC_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-eInixm'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_729e4/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_729e4.dir/build.make CMakeFiles/cmTC_729e4.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-eInixm'
+        Building C object CMakeFiles/cmTC_729e4.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_WPEDANTIC_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -fPIE   -Wpedantic -MD -MT CMakeFiles/cmTC_729e4.dir/src.c.o -MF CMakeFiles/cmTC_729e4.dir/src.c.o.d -o CMakeFiles/cmTC_729e4.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-eInixm/src.c
+        Linking C executable cmTC_729e4
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_729e4.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_729e4.dir/src.c.o -o cmTC_729e4   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-eInixm'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:21 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_WALL_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-IzlMvn"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-IzlMvn"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_WALL_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-IzlMvn'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_a958d/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_a958d.dir/build.make CMakeFiles/cmTC_a958d.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-IzlMvn'
+        Building C object CMakeFiles/cmTC_a958d.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_WALL_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -fPIE   -Wall -MD -MT CMakeFiles/cmTC_a958d.dir/src.c.o -MF CMakeFiles/cmTC_a958d.dir/src.c.o.d -o CMakeFiles/cmTC_a958d.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-IzlMvn/src.c
+        Linking C executable cmTC_a958d
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_a958d.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_a958d.dir/src.c.o -o cmTC_a958d   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-IzlMvn'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:22 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_WSHADOW_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-L4XdFI"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-L4XdFI"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_WSHADOW_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-L4XdFI'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_62751/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_62751.dir/build.make CMakeFiles/cmTC_62751.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-L4XdFI'
+        Building C object CMakeFiles/cmTC_62751.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_WSHADOW_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -fPIE   -Wshadow -MD -MT CMakeFiles/cmTC_62751.dir/src.c.o -MF CMakeFiles/cmTC_62751.dir/src.c.o.d -o CMakeFiles/cmTC_62751.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-L4XdFI/src.c
+        Linking C executable cmTC_62751
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_62751.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_62751.dir/src.c.o -o cmTC_62751   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-L4XdFI'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:23 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_WMISSING_PROTOTYPES_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-SPIeZZ"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-SPIeZZ"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_WMISSING_PROTOTYPES_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-SPIeZZ'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_269aa/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_269aa.dir/build.make CMakeFiles/cmTC_269aa.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-SPIeZZ'
+        Building C object CMakeFiles/cmTC_269aa.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_WMISSING_PROTOTYPES_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -fPIE   -Wmissing-prototypes -MD -MT CMakeFiles/cmTC_269aa.dir/src.c.o -MF CMakeFiles/cmTC_269aa.dir/src.c.o.d -o CMakeFiles/cmTC_269aa.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-SPIeZZ/src.c
+        Linking C executable cmTC_269aa
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_269aa.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_269aa.dir/src.c.o -o cmTC_269aa   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-SPIeZZ'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:24 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_WCAST_ALIGN_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-2LS5xt"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-2LS5xt"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_WCAST_ALIGN_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-2LS5xt'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_2e778/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_2e778.dir/build.make CMakeFiles/cmTC_2e778.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-2LS5xt'
+        Building C object CMakeFiles/cmTC_2e778.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_WCAST_ALIGN_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -fPIE   -Wcast-align -MD -MT CMakeFiles/cmTC_2e778.dir/src.c.o -MF CMakeFiles/cmTC_2e778.dir/src.c.o.d -o CMakeFiles/cmTC_2e778.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-2LS5xt/src.c
+        Linking C executable cmTC_2e778
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_2e778.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_2e778.dir/src.c.o -o cmTC_2e778   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-2LS5xt'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:26 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_WERROR_ADDRESS_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Vzg3rt"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Vzg3rt"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_WERROR_ADDRESS_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Vzg3rt'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_d8ddf/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_d8ddf.dir/build.make CMakeFiles/cmTC_d8ddf.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Vzg3rt'
+        Building C object CMakeFiles/cmTC_d8ddf.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_WERROR_ADDRESS_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -fPIE   -Werror=address -MD -MT CMakeFiles/cmTC_d8ddf.dir/src.c.o -MF CMakeFiles/cmTC_d8ddf.dir/src.c.o.d -o CMakeFiles/cmTC_d8ddf.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Vzg3rt/src.c
+        Linking C executable cmTC_d8ddf
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_d8ddf.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_d8ddf.dir/src.c.o -o cmTC_d8ddf   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Vzg3rt'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:27 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_WSTRICT_PROTOTYPES_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-HIqZsz"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-HIqZsz"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_WSTRICT_PROTOTYPES_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-HIqZsz'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_cf111/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_cf111.dir/build.make CMakeFiles/cmTC_cf111.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-HIqZsz'
+        Building C object CMakeFiles/cmTC_cf111.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_WSTRICT_PROTOTYPES_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -fPIE   -Wstrict-prototypes -MD -MT CMakeFiles/cmTC_cf111.dir/src.c.o -MF CMakeFiles/cmTC_cf111.dir/src.c.o.d -o CMakeFiles/cmTC_cf111.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-HIqZsz/src.c
+        Linking C executable cmTC_cf111
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_cf111.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_cf111.dir/src.c.o -o cmTC_cf111   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-HIqZsz'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:28 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_WERROR_STRICT_PROTOTYPES_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-XPL8SL"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-XPL8SL"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_WERROR_STRICT_PROTOTYPES_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-XPL8SL'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_f78b3/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_f78b3.dir/build.make CMakeFiles/cmTC_f78b3.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-XPL8SL'
+        Building C object CMakeFiles/cmTC_f78b3.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_WERROR_STRICT_PROTOTYPES_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -fPIE   -Werror=strict-prototypes -MD -MT CMakeFiles/cmTC_f78b3.dir/src.c.o -MF CMakeFiles/cmTC_f78b3.dir/src.c.o.d -o CMakeFiles/cmTC_f78b3.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-XPL8SL/src.c
+        Linking C executable cmTC_f78b3
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_f78b3.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_f78b3.dir/src.c.o -o cmTC_f78b3   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-XPL8SL'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:29 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_WWRITE_STRINGS_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-RveLNm"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-RveLNm"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_WWRITE_STRINGS_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-RveLNm'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_9b25d/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_9b25d.dir/build.make CMakeFiles/cmTC_9b25d.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-RveLNm'
+        Building C object CMakeFiles/cmTC_9b25d.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_WWRITE_STRINGS_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -fPIE   -Wwrite-strings -MD -MT CMakeFiles/cmTC_9b25d.dir/src.c.o -MF CMakeFiles/cmTC_9b25d.dir/src.c.o.d -o CMakeFiles/cmTC_9b25d.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-RveLNm/src.c
+        Linking C executable cmTC_9b25d
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_9b25d.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_9b25d.dir/src.c.o -o cmTC_9b25d   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-RveLNm'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:30 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_WERROR_WRITE_STRINGS_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-w8v4En"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-w8v4En"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_WERROR_WRITE_STRINGS_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-w8v4En'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_d7272/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_d7272.dir/build.make CMakeFiles/cmTC_d7272.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-w8v4En'
+        Building C object CMakeFiles/cmTC_d7272.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_WERROR_WRITE_STRINGS_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -fPIE   -Werror=write-strings -MD -MT CMakeFiles/cmTC_d7272.dir/src.c.o -MF CMakeFiles/cmTC_d7272.dir/src.c.o.d -o CMakeFiles/cmTC_d7272.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-w8v4En/src.c
+        Linking C executable cmTC_d7272
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_d7272.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_d7272.dir/src.c.o -o cmTC_d7272   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-w8v4En'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:31 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_WERROR_IMPLICIT_FUNCTION_DECLARATION_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-eAVYBx"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-eAVYBx"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_WERROR_IMPLICIT_FUNCTION_DECLARATION_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-eAVYBx'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_39f3e/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_39f3e.dir/build.make CMakeFiles/cmTC_39f3e.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-eAVYBx'
+        Building C object CMakeFiles/cmTC_39f3e.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_WERROR_IMPLICIT_FUNCTION_DECLARATION_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -fPIE   -Werror-implicit-function-declaration -MD -MT CMakeFiles/cmTC_39f3e.dir/src.c.o -MF CMakeFiles/cmTC_39f3e.dir/src.c.o.d -o CMakeFiles/cmTC_39f3e.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-eAVYBx/src.c
+        Linking C executable cmTC_39f3e
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_39f3e.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_39f3e.dir/src.c.o -o cmTC_39f3e   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-eAVYBx'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:32 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_WPOINTER_ARITH_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-4lJrKb"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-4lJrKb"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_WPOINTER_ARITH_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-4lJrKb'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_635c0/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_635c0.dir/build.make CMakeFiles/cmTC_635c0.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-4lJrKb'
+        Building C object CMakeFiles/cmTC_635c0.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_WPOINTER_ARITH_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -fPIE   -Wpointer-arith -MD -MT CMakeFiles/cmTC_635c0.dir/src.c.o -MF CMakeFiles/cmTC_635c0.dir/src.c.o.d -o CMakeFiles/cmTC_635c0.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-4lJrKb/src.c
+        Linking C executable cmTC_635c0
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_635c0.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_635c0.dir/src.c.o -o cmTC_635c0   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-4lJrKb'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:33 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_WERROR_POINTER_ARITH_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-TbdYAK"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-TbdYAK"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_WERROR_POINTER_ARITH_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-TbdYAK'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_edcc0/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_edcc0.dir/build.make CMakeFiles/cmTC_edcc0.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-TbdYAK'
+        Building C object CMakeFiles/cmTC_edcc0.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_WERROR_POINTER_ARITH_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -fPIE   -Werror=pointer-arith -MD -MT CMakeFiles/cmTC_edcc0.dir/src.c.o -MF CMakeFiles/cmTC_edcc0.dir/src.c.o.d -o CMakeFiles/cmTC_edcc0.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-TbdYAK/src.c
+        Linking C executable cmTC_edcc0
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_edcc0.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_edcc0.dir/src.c.o -o cmTC_edcc0   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-TbdYAK'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:34 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_WDECLARATION_AFTER_STATEMENT_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-LaTEm9"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-LaTEm9"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_WDECLARATION_AFTER_STATEMENT_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-LaTEm9'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_b9abc/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_b9abc.dir/build.make CMakeFiles/cmTC_b9abc.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-LaTEm9'
+        Building C object CMakeFiles/cmTC_b9abc.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_WDECLARATION_AFTER_STATEMENT_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -fPIE   -Wdeclaration-after-statement -MD -MT CMakeFiles/cmTC_b9abc.dir/src.c.o -MF CMakeFiles/cmTC_b9abc.dir/src.c.o.d -o CMakeFiles/cmTC_b9abc.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-LaTEm9/src.c
+        Linking C executable cmTC_b9abc
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b9abc.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_b9abc.dir/src.c.o -o cmTC_b9abc   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-LaTEm9'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:35 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_WERROR_DECLARATION_AFTER_STATEMENT_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-PaYqtq"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-PaYqtq"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_WERROR_DECLARATION_AFTER_STATEMENT_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-PaYqtq'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_66678/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_66678.dir/build.make CMakeFiles/cmTC_66678.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-PaYqtq'
+        Building C object CMakeFiles/cmTC_66678.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_WERROR_DECLARATION_AFTER_STATEMENT_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -fPIE   -Werror=declaration-after-statement -MD -MT CMakeFiles/cmTC_66678.dir/src.c.o -MF CMakeFiles/cmTC_66678.dir/src.c.o.d -o CMakeFiles/cmTC_66678.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-PaYqtq/src.c
+        Linking C executable cmTC_66678
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_66678.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_66678.dir/src.c.o -o cmTC_66678   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-PaYqtq'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:36 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_WRETURN_TYPE_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-dHRKfi"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-dHRKfi"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_WRETURN_TYPE_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-dHRKfi'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_0c2eb/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_0c2eb.dir/build.make CMakeFiles/cmTC_0c2eb.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-dHRKfi'
+        Building C object CMakeFiles/cmTC_0c2eb.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_WRETURN_TYPE_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -fPIE   -Wreturn-type -MD -MT CMakeFiles/cmTC_0c2eb.dir/src.c.o -MF CMakeFiles/cmTC_0c2eb.dir/src.c.o.d -o CMakeFiles/cmTC_0c2eb.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-dHRKfi/src.c
+        Linking C executable cmTC_0c2eb
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_0c2eb.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_0c2eb.dir/src.c.o -o cmTC_0c2eb   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-dHRKfi'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:37 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_WERROR_RETURN_TYPE_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-j7Vw4H"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-j7Vw4H"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_WERROR_RETURN_TYPE_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-j7Vw4H'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_5d759/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_5d759.dir/build.make CMakeFiles/cmTC_5d759.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-j7Vw4H'
+        Building C object CMakeFiles/cmTC_5d759.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_WERROR_RETURN_TYPE_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -fPIE   -Werror=return-type -MD -MT CMakeFiles/cmTC_5d759.dir/src.c.o -MF CMakeFiles/cmTC_5d759.dir/src.c.o.d -o CMakeFiles/cmTC_5d759.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-j7Vw4H/src.c
+        Linking C executable cmTC_5d759
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_5d759.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_5d759.dir/src.c.o -o cmTC_5d759   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-j7Vw4H'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:38 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_WUNINITIALIZED_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Eqy8H3"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Eqy8H3"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_WUNINITIALIZED_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Eqy8H3'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_00120/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_00120.dir/build.make CMakeFiles/cmTC_00120.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Eqy8H3'
+        Building C object CMakeFiles/cmTC_00120.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_WUNINITIALIZED_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -fPIE   -Wuninitialized -MD -MT CMakeFiles/cmTC_00120.dir/src.c.o -MF CMakeFiles/cmTC_00120.dir/src.c.o.d -o CMakeFiles/cmTC_00120.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Eqy8H3/src.c
+        Linking C executable cmTC_00120
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_00120.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_00120.dir/src.c.o -o cmTC_00120   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Eqy8H3'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:39 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_WERROR_UNINITIALIZED_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-mFA6HF"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-mFA6HF"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_WERROR_UNINITIALIZED_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-mFA6HF'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_bd709/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_bd709.dir/build.make CMakeFiles/cmTC_bd709.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-mFA6HF'
+        Building C object CMakeFiles/cmTC_bd709.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_WERROR_UNINITIALIZED_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -fPIE   -Werror=uninitialized -MD -MT CMakeFiles/cmTC_bd709.dir/src.c.o -MF CMakeFiles/cmTC_bd709.dir/src.c.o.d -o CMakeFiles/cmTC_bd709.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-mFA6HF/src.c
+        Linking C executable cmTC_bd709
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_bd709.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_bd709.dir/src.c.o -o cmTC_bd709   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-mFA6HF'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:40 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_WIMPLICIT_FALLTHROUGH_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-PXaT11"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-PXaT11"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_WIMPLICIT_FALLTHROUGH_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-PXaT11'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_97616/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_97616.dir/build.make CMakeFiles/cmTC_97616.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-PXaT11'
+        Building C object CMakeFiles/cmTC_97616.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_WIMPLICIT_FALLTHROUGH_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -fPIE   -Wimplicit-fallthrough -MD -MT CMakeFiles/cmTC_97616.dir/src.c.o -MF CMakeFiles/cmTC_97616.dir/src.c.o.d -o CMakeFiles/cmTC_97616.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-PXaT11/src.c
+        Linking C executable cmTC_97616
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_97616.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_97616.dir/src.c.o -o cmTC_97616   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-PXaT11'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:41 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_WERROR_STRICT_OVERFLOW_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-O5bh5k"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-O5bh5k"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_WERROR_STRICT_OVERFLOW_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-O5bh5k'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_d1526/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_d1526.dir/build.make CMakeFiles/cmTC_d1526.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-O5bh5k'
+        Building C object CMakeFiles/cmTC_d1526.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_WERROR_STRICT_OVERFLOW_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -fPIE   -Werror=strict-overflow -MD -MT CMakeFiles/cmTC_d1526.dir/src.c.o -MF CMakeFiles/cmTC_d1526.dir/src.c.o.d -o CMakeFiles/cmTC_d1526.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-O5bh5k/src.c
+        Linking C executable cmTC_d1526
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_d1526.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_d1526.dir/src.c.o -o cmTC_d1526   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-O5bh5k'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:42 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_WSTRICT_OVERFLOW_2_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-8la5TY"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-8la5TY"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_WSTRICT_OVERFLOW_2_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-8la5TY'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_c787b/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_c787b.dir/build.make CMakeFiles/cmTC_c787b.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-8la5TY'
+        Building C object CMakeFiles/cmTC_c787b.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_WSTRICT_OVERFLOW_2_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -fPIE   -Wstrict-overflow=2 -MD -MT CMakeFiles/cmTC_c787b.dir/src.c.o -MF CMakeFiles/cmTC_c787b.dir/src.c.o.d -o CMakeFiles/cmTC_c787b.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-8la5TY/src.c
+        Linking C executable cmTC_c787b
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c787b.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_c787b.dir/src.c.o -o cmTC_c787b   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-8la5TY'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:43 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_WNO_FORMAT_ZERO_LENGTH_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-ASj9sB"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-ASj9sB"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_WNO_FORMAT_ZERO_LENGTH_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-ASj9sB'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_bf4c0/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_bf4c0.dir/build.make CMakeFiles/cmTC_bf4c0.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-ASj9sB'
+        Building C object CMakeFiles/cmTC_bf4c0.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_WNO_FORMAT_ZERO_LENGTH_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -fPIE   -Wno-format-zero-length -MD -MT CMakeFiles/cmTC_bf4c0.dir/src.c.o -MF CMakeFiles/cmTC_bf4c0.dir/src.c.o.d -o CMakeFiles/cmTC_bf4c0.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-ASj9sB/src.c
+        Linking C executable cmTC_bf4c0
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_bf4c0.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_bf4c0.dir/src.c.o -o cmTC_bf4c0   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-ASj9sB'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:44 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_WMISSING_FIELD_INITIALIZERS_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-S9OvgF"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-S9OvgF"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_WMISSING_FIELD_INITIALIZERS_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-S9OvgF'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_48f7a/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_48f7a.dir/build.make CMakeFiles/cmTC_48f7a.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-S9OvgF'
+        Building C object CMakeFiles/cmTC_48f7a.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_WMISSING_FIELD_INITIALIZERS_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -fPIE   -Wmissing-field-initializers -MD -MT CMakeFiles/cmTC_48f7a.dir/src.c.o -MF CMakeFiles/cmTC_48f7a.dir/src.c.o.d -o CMakeFiles/cmTC_48f7a.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-S9OvgF/src.c
+        Linking C executable cmTC_48f7a
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_48f7a.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_48f7a.dir/src.c.o -o cmTC_48f7a   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-S9OvgF'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:45 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_WSIGN_COMPARE_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-sAc1B5"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-sAc1B5"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_WSIGN_COMPARE_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-sAc1B5'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_3f92d/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_3f92d.dir/build.make CMakeFiles/cmTC_3f92d.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-sAc1B5'
+        Building C object CMakeFiles/cmTC_3f92d.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_WSIGN_COMPARE_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -fPIE   -Wsign-compare -MD -MT CMakeFiles/cmTC_3f92d.dir/src.c.o -MF CMakeFiles/cmTC_3f92d.dir/src.c.o.d -o CMakeFiles/cmTC_3f92d.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-sAc1B5/src.c
+        Linking C executable cmTC_3f92d
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_3f92d.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_3f92d.dir/src.c.o -o cmTC_3f92d   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-sAc1B5'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "CompilerChecks.cmake:47 (check_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test REQUIRED_FLAGS_WFORMAT"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-jD7TN6"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-jD7TN6"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "REQUIRED_FLAGS_WFORMAT"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-jD7TN6'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_6c7cc/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_6c7cc.dir/build.make CMakeFiles/cmTC_6c7cc.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-jD7TN6'
+        Building C object CMakeFiles/cmTC_6c7cc.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DREQUIRED_FLAGS_WFORMAT  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -fPIE   -Wformat -MD -MT CMakeFiles/cmTC_6c7cc.dir/src.c.o -MF CMakeFiles/cmTC_6c7cc.dir/src.c.o.d -o CMakeFiles/cmTC_6c7cc.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-jD7TN6/src.c
+        Linking C executable cmTC_6c7cc
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_6c7cc.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_6c7cc.dir/src.c.o -o cmTC_6c7cc   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-jD7TN6'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:52 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_WFORMAT_SECURITY_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-WQ49Qm"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-WQ49Qm"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_WFORMAT_SECURITY_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-WQ49Qm'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_afa74/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_afa74.dir/build.make CMakeFiles/cmTC_afa74.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-WQ49Qm'
+        Building C object CMakeFiles/cmTC_afa74.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_WFORMAT_SECURITY_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -Wformat -O2 -g -DNDEBUG -fPIE   -Wformat-security -MD -MT CMakeFiles/cmTC_afa74.dir/src.c.o -MF CMakeFiles/cmTC_afa74.dir/src.c.o.d -o CMakeFiles/cmTC_afa74.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-WQ49Qm/src.c
+        Linking C executable cmTC_afa74
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_afa74.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -Wformat -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_afa74.dir/src.c.o -o cmTC_afa74   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-WQ49Qm'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:53 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_WERROR_FORMAT_SECURITY_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-ui87m5"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-ui87m5"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_WERROR_FORMAT_SECURITY_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-ui87m5'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_79b3e/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_79b3e.dir/build.make CMakeFiles/cmTC_79b3e.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-ui87m5'
+        Building C object CMakeFiles/cmTC_79b3e.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_WERROR_FORMAT_SECURITY_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -Wformat -O2 -g -DNDEBUG -fPIE   -Werror=format-security -MD -MT CMakeFiles/cmTC_79b3e.dir/src.c.o -MF CMakeFiles/cmTC_79b3e.dir/src.c.o.d -o CMakeFiles/cmTC_79b3e.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-ui87m5/src.c
+        Linking C executable cmTC_79b3e
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_79b3e.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -Wformat -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_79b3e.dir/src.c.o -o cmTC_79b3e   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-ui87m5'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:58 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_WNO_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-k9nEyu"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-k9nEyu"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_WNO_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-k9nEyu'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_23805/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_23805.dir/build.make CMakeFiles/cmTC_23805.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-k9nEyu'
+        Building C object CMakeFiles/cmTC_23805.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_WNO_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -Wformat -O2 -g -DNDEBUG -fPIE   -Wno-gnu-zero-variadic-macro-arguments -MD -MT CMakeFiles/cmTC_23805.dir/src.c.o -MF CMakeFiles/cmTC_23805.dir/src.c.o.d -o CMakeFiles/cmTC_23805.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-k9nEyu/src.c
+        Linking C executable cmTC_23805
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_23805.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -Wformat -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_23805.dir/src.c.o -o cmTC_23805   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-k9nEyu'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:61 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_FNO_COMMON_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-oB8uNt"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-oB8uNt"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_FNO_COMMON_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-oB8uNt'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_17210/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_17210.dir/build.make CMakeFiles/cmTC_17210.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-oB8uNt'
+        Building C object CMakeFiles/cmTC_17210.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_FNO_COMMON_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -Wformat -O2 -g -DNDEBUG -fPIE   -fno-common -MD -MT CMakeFiles/cmTC_17210.dir/src.c.o -MF CMakeFiles/cmTC_17210.dir/src.c.o.d -o CMakeFiles/cmTC_17210.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-oB8uNt/src.c
+        Linking C executable cmTC_17210
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_17210.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -Wformat -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_17210.dir/src.c.o -o cmTC_17210   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-oB8uNt'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/CheckCSourceCompiles.cmake:52 (cmake_check_source_compiles)"
+      - "cmake/Modules/CheckCCompilerFlagSSP.cmake:26 (check_c_source_compiles)"
+      - "CompilerChecks.cmake:70 (check_c_compiler_flag_ssp)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_STACK_PROTECTOR_STRONG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-7jNQfu"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-7jNQfu"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_STACK_PROTECTOR_STRONG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-7jNQfu'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_776f1/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_776f1.dir/build.make CMakeFiles/cmTC_776f1.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-7jNQfu'
+        Building C object CMakeFiles/cmTC_776f1.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_STACK_PROTECTOR_STRONG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -fstack-protector-strong -O2 -g -DNDEBUG -fPIE -MD -MT CMakeFiles/cmTC_776f1.dir/src.c.o -MF CMakeFiles/cmTC_776f1.dir/src.c.o.d -o CMakeFiles/cmTC_776f1.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-7jNQfu/src.c
+        Linking C executable cmTC_776f1
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_776f1.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -fstack-protector-strong -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_776f1.dir/src.c.o -o cmTC_776f1   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-7jNQfu'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/CheckCSourceCompiles.cmake:52 (cmake_check_source_compiles)"
+      - "cmake/Modules/CheckCCompilerFlagSSP.cmake:26 (check_c_source_compiles)"
+      - "CompilerChecks.cmake:89 (check_c_compiler_flag_ssp)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_STACK_CLASH_PROTECTION"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-KhtdPA"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-KhtdPA"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_STACK_CLASH_PROTECTION"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-KhtdPA'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_1a73e/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_1a73e.dir/build.make CMakeFiles/cmTC_1a73e.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-KhtdPA'
+        Building C object CMakeFiles/cmTC_1a73e.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_STACK_CLASH_PROTECTION  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -fstack-clash-protection -O2 -g -DNDEBUG -fPIE -MD -MT CMakeFiles/cmTC_1a73e.dir/src.c.o -MF CMakeFiles/cmTC_1a73e.dir/src.c.o.d -o CMakeFiles/cmTC_1a73e.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-KhtdPA/src.c
+        clang: warning: argument unused during compilation: '-fstack-clash-protection' [-Wunused-command-line-argument]
+        Linking C executable cmTC_1a73e
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_1a73e.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -fstack-clash-protection -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_1a73e.dir/src.c.o -o cmTC_1a73e   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-KhtdPA'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckCompilerFlag.cmake:18 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/CheckCCompilerFlag.cmake:51 (cmake_check_compiler_flag)"
+      - "cmake/Modules/AddCCompilerFlag.cmake:16 (check_c_compiler_flag)"
+      - "CompilerChecks.cmake:100 (add_c_compiler_flag)"
+      - "CMakeLists.txt:36 (include)"
+    checks:
+      - "Performing Test WITH_WNO_DEPRECATED_DECLARATIONS_FLAG"
+    directories:
+      source: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Riga1Z"
+      binary: "/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Riga1Z"
+    cmakeVariables:
+      CMAKE_ANDROID_STL_TYPE: "c++_shared"
+      CMAKE_CXX_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN: ""
+      CMAKE_C_COMPILER_TARGET: "aarch64-none-linux-android21"
+      CMAKE_C_FLAGS: "-DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions"
+      CMAKE_EXE_LINKER_FLAGS: "-Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections"
+      CMAKE_MODULE_PATH: "/workspaces/android-udp-bridge/libssh_build/libssh-0.10.6/cmake/Modules"
+      CMAKE_POSITION_INDEPENDENT_CODE: "ON"
+    buildResult:
+      variable: "WITH_WNO_DEPRECATED_DECLARATIONS_FLAG"
+      cached: true
+      stdout: |
+        Change Dir: '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Riga1Z'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_44763/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_44763.dir/build.make CMakeFiles/cmTC_44763.dir/build
+        gmake[1]: Entering directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Riga1Z'
+        Building C object CMakeFiles/cmTC_44763.dir/src.c.o
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DWITH_WNO_DEPRECATED_DECLARATIONS_FLAG  -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -Wformat -O2 -g -DNDEBUG -fPIE   -Wno-deprecated-declarations -MD -MT CMakeFiles/cmTC_44763.dir/src.c.o -MF CMakeFiles/cmTC_44763.dir/src.c.o.d -o CMakeFiles/cmTC_44763.dir/src.c.o -c /workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Riga1Z/src.c
+        Linking C executable cmTC_44763
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_44763.dir/link.txt --verbose=1
+        /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=aarch64-none-linux-android21 -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -Werror -Wformat -O2 -g -DNDEBUG -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Qunused-arguments -Wl,--no-undefined  -Wl,--gc-sections  CMakeFiles/cmTC_44763.dir/src.c.o -o cmTC_44763   -latomic -lm 
+        gmake[1]: Leaving directory '/workspaces/android-udp-bridge/libssh_build/build/arm64-v8a/CMakeFiles/CMakeScratch/TryCompile-Riga1Z'
+        
+      exitCode: 0
+...

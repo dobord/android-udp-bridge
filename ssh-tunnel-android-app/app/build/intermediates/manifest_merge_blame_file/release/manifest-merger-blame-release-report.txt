@@ -1,0 +1,98 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.example.sshtunnel"
+4    android:versionCode="1"
+5    android:versionName="1.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="21"
+9        android:targetSdkVersion="34" />
+10
+11    <uses-permission android:name="android.permission.INTERNET" />
+11-->/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/AndroidManifest.xml:4:5-67
+11-->/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/AndroidManifest.xml:4:22-64
+12    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+12-->/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/AndroidManifest.xml:5:5-79
+12-->/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/AndroidManifest.xml:5:22-76
+13    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+13-->/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/AndroidManifest.xml:6:5-76
+13-->/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/AndroidManifest.xml:6:22-73
+14    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+14-->/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/AndroidManifest.xml:7:5-77
+14-->/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/AndroidManifest.xml:7:22-74
+15
+16    <permission
+16-->[androidx.core:core:1.9.0] /home/codespace/.gradle/caches/transforms-3/8222cb7143ba57e62d848e6565915cfd/transformed/core-1.9.0/AndroidManifest.xml:22:5-24:47
+17        android:name="com.example.sshtunnel.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+17-->[androidx.core:core:1.9.0] /home/codespace/.gradle/caches/transforms-3/8222cb7143ba57e62d848e6565915cfd/transformed/core-1.9.0/AndroidManifest.xml:23:9-81
+18        android:protectionLevel="signature" />
+18-->[androidx.core:core:1.9.0] /home/codespace/.gradle/caches/transforms-3/8222cb7143ba57e62d848e6565915cfd/transformed/core-1.9.0/AndroidManifest.xml:24:9-44
+19
+20    <uses-permission android:name="com.example.sshtunnel.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+20-->[androidx.core:core:1.9.0] /home/codespace/.gradle/caches/transforms-3/8222cb7143ba57e62d848e6565915cfd/transformed/core-1.9.0/AndroidManifest.xml:26:5-97
+20-->[androidx.core:core:1.9.0] /home/codespace/.gradle/caches/transforms-3/8222cb7143ba57e62d848e6565915cfd/transformed/core-1.9.0/AndroidManifest.xml:26:22-94
+21
+22    <application
+22-->/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/AndroidManifest.xml:9:5-29:19
+23        android:allowBackup="true"
+23-->/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/AndroidManifest.xml:10:9-35
+24        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+24-->[androidx.core:core:1.9.0] /home/codespace/.gradle/caches/transforms-3/8222cb7143ba57e62d848e6565915cfd/transformed/core-1.9.0/AndroidManifest.xml:28:18-86
+25        android:extractNativeLibs="true"
+26        android:label="@string/app_name"
+26-->/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/AndroidManifest.xml:11:9-41
+27        android:supportsRtl="true"
+27-->/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/AndroidManifest.xml:12:9-35
+28        android:theme="@style/Theme.AppCompat.Light.DarkActionBar" >
+28-->/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/AndroidManifest.xml:13:9-67
+29        <activity
+29-->/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/AndroidManifest.xml:15:9-22:20
+30            android:name="com.example.sshtunnel.MainActivity"
+30-->/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/AndroidManifest.xml:16:13-41
+31            android:exported="true" >
+31-->/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/AndroidManifest.xml:17:13-36
+32            <intent-filter>
+32-->/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/AndroidManifest.xml:18:13-21:29
+33                <action android:name="android.intent.action.MAIN" />
+33-->/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/AndroidManifest.xml:19:17-69
+33-->/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/AndroidManifest.xml:19:25-66
+34
+35                <category android:name="android.intent.category.LAUNCHER" />
+35-->/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/AndroidManifest.xml:20:17-77
+35-->/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/AndroidManifest.xml:20:27-74
+36            </intent-filter>
+37        </activity>
+38
+39        <service
+39-->/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/AndroidManifest.xml:24:9-27:56
+40            android:name="com.example.sshtunnel.SshTunnelService"
+40-->/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/AndroidManifest.xml:25:13-45
+41            android:exported="false"
+41-->/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/AndroidManifest.xml:26:13-37
+42            android:foregroundServiceType="dataSync" />
+42-->/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/AndroidManifest.xml:27:13-53
+43
+44        <provider
+44-->[androidx.emoji2:emoji2:1.2.0] /home/codespace/.gradle/caches/transforms-3/cd9429c185a437c1c2680426049eb8fb/transformed/emoji2-1.2.0/AndroidManifest.xml:24:9-32:20
+45            android:name="androidx.startup.InitializationProvider"
+45-->[androidx.emoji2:emoji2:1.2.0] /home/codespace/.gradle/caches/transforms-3/cd9429c185a437c1c2680426049eb8fb/transformed/emoji2-1.2.0/AndroidManifest.xml:25:13-67
+46            android:authorities="com.example.sshtunnel.androidx-startup"
+46-->[androidx.emoji2:emoji2:1.2.0] /home/codespace/.gradle/caches/transforms-3/cd9429c185a437c1c2680426049eb8fb/transformed/emoji2-1.2.0/AndroidManifest.xml:26:13-68
+47            android:exported="false" >
+47-->[androidx.emoji2:emoji2:1.2.0] /home/codespace/.gradle/caches/transforms-3/cd9429c185a437c1c2680426049eb8fb/transformed/emoji2-1.2.0/AndroidManifest.xml:27:13-37
+48            <meta-data
+48-->[androidx.emoji2:emoji2:1.2.0] /home/codespace/.gradle/caches/transforms-3/cd9429c185a437c1c2680426049eb8fb/transformed/emoji2-1.2.0/AndroidManifest.xml:29:13-31:52
+49                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+49-->[androidx.emoji2:emoji2:1.2.0] /home/codespace/.gradle/caches/transforms-3/cd9429c185a437c1c2680426049eb8fb/transformed/emoji2-1.2.0/AndroidManifest.xml:30:17-75
+50                android:value="androidx.startup" />
+50-->[androidx.emoji2:emoji2:1.2.0] /home/codespace/.gradle/caches/transforms-3/cd9429c185a437c1c2680426049eb8fb/transformed/emoji2-1.2.0/AndroidManifest.xml:31:17-49
+51            <meta-data
+51-->[androidx.lifecycle:lifecycle-process:2.4.1] /home/codespace/.gradle/caches/transforms-3/1799c573ad4805bad8c8f240a170e137/transformed/lifecycle-process-2.4.1/AndroidManifest.xml:31:13-33:52
+52                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+52-->[androidx.lifecycle:lifecycle-process:2.4.1] /home/codespace/.gradle/caches/transforms-3/1799c573ad4805bad8c8f240a170e137/transformed/lifecycle-process-2.4.1/AndroidManifest.xml:32:17-78
+53                android:value="androidx.startup" />
+53-->[androidx.lifecycle:lifecycle-process:2.4.1] /home/codespace/.gradle/caches/transforms-3/1799c573ad4805bad8c8f240a170e137/transformed/lifecycle-process-2.4.1/AndroidManifest.xml:33:17-49
+54        </provider>
+55    </application>
+56
+57</manifest>

@@ -9,6 +9,8 @@ import android.os.IBinder;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RadioGroup;
+import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -22,9 +24,15 @@ public class MainActivity extends AppCompatActivity {
     private EditText portEditText;
     private EditText usernameEditText;
     private EditText passwordEditText;
+    private EditText privateKeyEditText;
+    private EditText passphraseEditText;
     private EditText localPortEditText;
     private EditText remoteHostEditText;
     private EditText remotePortEditText;
+    
+    private RadioGroup authMethodRadioGroup;
+    private RadioButton passwordAuthRadio;
+    private RadioButton keyAuthRadio;
     
     private Button connectButton;
     private Button disconnectButton;
@@ -64,9 +72,15 @@ public class MainActivity extends AppCompatActivity {
         portEditText = findViewById(R.id.port_edit_text);
         usernameEditText = findViewById(R.id.username_edit_text);
         passwordEditText = findViewById(R.id.password_edit_text);
+        privateKeyEditText = findViewById(R.id.private_key_edit_text);
+        passphraseEditText = findViewById(R.id.passphrase_edit_text);
         localPortEditText = findViewById(R.id.local_port_edit_text);
         remoteHostEditText = findViewById(R.id.remote_host_edit_text);
         remotePortEditText = findViewById(R.id.remote_port_edit_text);
+        
+        authMethodRadioGroup = findViewById(R.id.auth_method_radio_group);
+        passwordAuthRadio = findViewById(R.id.password_auth_radio);
+        keyAuthRadio = findViewById(R.id.key_auth_radio);
         
         connectButton = findViewById(R.id.connect_button);
         disconnectButton = findViewById(R.id.disconnect_button);
@@ -83,6 +97,23 @@ public class MainActivity extends AppCompatActivity {
     }
     
     private void setupClickListeners() {
+        authMethodRadioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                if (checkedId == R.id.password_auth_radio) {
+                    // Show password fields, hide key fields
+                    passwordEditText.setVisibility(View.VISIBLE);
+                    privateKeyEditText.setVisibility(View.GONE);
+                    passphraseEditText.setVisibility(View.GONE);
+                } else if (checkedId == R.id.key_auth_radio) {
+                    // Hide password fields, show key fields
+                    passwordEditText.setVisibility(View.GONE);
+                    privateKeyEditText.setVisibility(View.VISIBLE);
+                    passphraseEditText.setVisibility(View.VISIBLE);
+                }
+            }
+        });
+        
         connectButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -114,11 +145,26 @@ public class MainActivity extends AppCompatActivity {
         String host = hostEditText.getText().toString().trim();
         String portStr = portEditText.getText().toString().trim();
         String username = usernameEditText.getText().toString().trim();
-        String password = passwordEditText.getText().toString().trim();
         
-        if (host.isEmpty() || portStr.isEmpty() || username.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "Please fill all connection fields", Toast.LENGTH_SHORT).show();
+        if (host.isEmpty() || portStr.isEmpty() || username.isEmpty()) {
+            Toast.makeText(this, "Please fill all required fields", Toast.LENGTH_SHORT).show();
             return;
+        }
+        
+        boolean useKeyAuth = keyAuthRadio.isChecked();
+        
+        if (useKeyAuth) {
+            String privateKeyPath = privateKeyEditText.getText().toString().trim();
+            if (privateKeyPath.isEmpty()) {
+                Toast.makeText(this, "Please specify private key path", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        } else {
+            String password = passwordEditText.getText().toString().trim();
+            if (password.isEmpty()) {
+                Toast.makeText(this, "Please enter password", Toast.LENGTH_SHORT).show();
+                return;
+            }
         }
         
         try {
@@ -127,14 +173,25 @@ public class MainActivity extends AppCompatActivity {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    boolean connected = sshTunnelService.connect(host, port, username, password);
+                    boolean connected;
+                    
+                    if (useKeyAuth) {
+                        String privateKeyPath = privateKeyEditText.getText().toString().trim();
+                        String passphrase = passphraseEditText.getText().toString().trim();
+                        connected = sshTunnelService.connectWithPrivateKey(host, port, username, privateKeyPath, 
+                                                                         passphrase.isEmpty() ? null : passphrase);
+                    } else {
+                        String password = passwordEditText.getText().toString().trim();
+                        connected = sshTunnelService.connect(host, port, username, password);
+                    }
                     
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             if (connected) {
-                                Toast.makeText(MainActivity.this, "Connected to SSH server", Toast.LENGTH_SHORT).show();
-                                statusTextView.setText("Status: Connected");
+                                String authMethod = useKeyAuth ? "private key" : "password";
+                                Toast.makeText(MainActivity.this, "Connected to SSH server using " + authMethod, Toast.LENGTH_SHORT).show();
+                                statusTextView.setText("Status: Connected (" + authMethod + ")");
                             } else {
                                 Toast.makeText(MainActivity.this, "Failed to connect", Toast.LENGTH_SHORT).show();
                                 statusTextView.setText("Status: Connection failed");
