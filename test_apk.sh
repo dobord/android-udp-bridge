@@ -2,7 +2,8 @@
 
 # Test script for SSH Tunnel Android App
 
-APK_PATH="/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/build/outputs/apk/debug/app-debug.apk"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+APK_PATH="$SCRIPT_DIR/ssh-tunnel-android-app/app/build/outputs/apk/debug/app-debug.apk"
 PACKAGE_NAME="com.example.sshtunnel"
 
 echo "=== SSH Tunnel Android App Test Script ==="
