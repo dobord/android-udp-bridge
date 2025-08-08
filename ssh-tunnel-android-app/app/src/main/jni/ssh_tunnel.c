@@ -1,5 +1,9 @@
 #include <jni.h>
+#ifdef USE_LIBSSH_MOCK
+#include "libssh_mock.h"
+#else
 #include <libssh/libssh.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
