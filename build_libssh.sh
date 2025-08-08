@@ -22,25 +22,43 @@ NDK_PATH="${ANDROID_NDK_HOME:-$ANDROID_NDK_ROOT}"
 echo "Используем Android NDK: $NDK_PATH"
 
 # Параметры сборки
-LIBSSH_VERSION="0.10.6"
-MIN_API_LEVEL=21
-ABIS=("arm64-v8a" "armeabi-v7a" "x86" "x86_64")
+LIBSSH_VERSION="0.11.2"
+MBEDTLS_VERSION="2.28.7"
+MIN_API_LEVEL=24
+# Ограничиваемся arm64-v8a для ускорения и соответствия настройкам приложения
+ABIS=("arm64-v8a")
 
 # Рабочие директории
 WORK_DIR="$(pwd)/libssh_build"
 SOURCE_DIR="$WORK_DIR/libssh-$LIBSSH_VERSION"
 BUILD_BASE_DIR="$WORK_DIR/build"
-INSTALL_BASE_DIR="$(pwd)/app/src/main/prebuilt"
+# Устанавливаем прямо в пребиилды Android модуля
+INSTALL_BASE_DIR="$(pwd)/ssh-tunnel-android-app/app/src/main/prebuilt"
+
+# Директории для mbedTLS
+MBEDTLS_WORK_DIR="$WORK_DIR/mbedtls"
+MBEDTLS_SOURCE_DIR="$MBEDTLS_WORK_DIR/mbedtls-$MBEDTLS_VERSION"
+MBEDTLS_BUILD_BASE_DIR="$MBEDTLS_WORK_DIR/build"
 
 echo "Создаём рабочие директории..."
 mkdir -p "$WORK_DIR"
 mkdir -p "$INSTALL_BASE_DIR"
 
+# Скачиваем mbedTLS, если ещё не скачан
+if [ ! -f "$MBEDTLS_WORK_DIR/mbedtls-$MBEDTLS_VERSION.tar.gz" ]; then
+    echo "Скачиваем mbedTLS $MBEDTLS_VERSION..."
+    mkdir -p "$MBEDTLS_WORK_DIR"
+    cd "$MBEDTLS_WORK_DIR"
+    wget -O "mbedtls-$MBEDTLS_VERSION.tar.gz" "https://github.com/Mbed-TLS/mbedtls/archive/refs/tags/v$MBEDTLS_VERSION.tar.gz"
+    tar -xf "mbedtls-$MBEDTLS_VERSION.tar.gz"
+fi
+
 # Скачиваем libssh, если ещё не скачан
 if [ ! -f "$WORK_DIR/libssh-$LIBSSH_VERSION.tar.xz" ]; then
     echo "Скачиваем libssh $LIBSSH_VERSION..."
     cd "$WORK_DIR"
-    wget "https://www.libssh.org/files/0.10/libssh-$LIBSSH_VERSION.tar.xz"
+    # Начиная с 0.11 используется каталог 0.11
+    wget "https://www.libssh.org/files/0.11/libssh-$LIBSSH_VERSION.tar.xz"
     tar -xf "libssh-$LIBSSH_VERSION.tar.xz"
 fi
 
@@ -75,10 +93,35 @@ build_for_abi() {
     
     BUILD_DIR="$BUILD_BASE_DIR/$ABI"
     INSTALL_DIR="$INSTALL_BASE_DIR/libssh/$ABI"
-    
-    mkdir -p "$BUILD_DIR"
-    mkdir -p "$INSTALL_DIR"
-    
+    MBEDTLS_BUILD_DIR="$MBEDTLS_BUILD_BASE_DIR/$ABI"
+    MBEDTLS_INSTALL_DIR="$INSTALL_BASE_DIR/mbedtls/$ABI"
+
+    # Чистим каталоги сборки для предотвращения конфликтов CMakeCache
+    rm -rf "$BUILD_DIR" "$MBEDTLS_BUILD_DIR"
+    mkdir -p "$BUILD_DIR" "$INSTALL_DIR" "$MBEDTLS_BUILD_DIR" "$MBEDTLS_INSTALL_DIR"
+
+    # 1) Сборка mbedTLS (статические библиотеки)
+    echo "Сборка mbedTLS для архитектуры: $ABI"
+    cd "$MBEDTLS_BUILD_DIR"
+    cmake "$MBEDTLS_SOURCE_DIR" \
+        -DCMAKE_SYSTEM_NAME=Android \
+        -DCMAKE_ANDROID_ARCH_ABI=$ANDROID_ABI \
+        -DCMAKE_ANDROID_NDK="$NDK_PATH" \
+        -DCMAKE_ANDROID_API=$MIN_API_LEVEL \
+        -DCMAKE_ANDROID_STL_TYPE=c++_shared \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX="$MBEDTLS_INSTALL_DIR" \
+        -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+        -DCMAKE_C_FLAGS="-fPIC" \
+        -DCMAKE_CXX_FLAGS="-fPIC" \
+        -DENABLE_TESTING=OFF \
+        -DENABLE_PROGRAMS=OFF \
+        -DBUILD_SHARED_LIBS=OFF
+    cmake --build . --config Release -- -j$(nproc)
+    cmake --install .
+    echo "✅ mbedTLS для $ABI установлена в $MBEDTLS_INSTALL_DIR"
+
+    # 2) Сборка libssh со связкой на mbedTLS
     cd "$BUILD_DIR"
     
     # Конфигурация CMake для Android
@@ -88,6 +131,7 @@ build_for_abi() {
         -DCMAKE_ANDROID_NDK="$NDK_PATH" \
         -DCMAKE_ANDROID_API=$MIN_API_LEVEL \
         -DCMAKE_ANDROID_STL_TYPE=c++_shared \
+    -DCMAKE_C_FLAGS="-DS_IWRITE=S_IWUSR" \
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_INSTALL_PREFIX="$INSTALL_DIR" \
         -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
@@ -98,7 +142,13 @@ build_for_abi() {
         -DWITH_GSSAPI=OFF \
         -DWITH_PCAP=OFF \
         -DWITH_SFTP=ON \
-        -DBUILD_SHARED_LIBS=OFF
+        -DWITH_MBEDTLS=ON \
+        -DBUILD_SHARED_LIBS=OFF \
+        -DMBEDTLS_ROOT_DIR="$MBEDTLS_INSTALL_DIR" \
+        -DMBEDTLS_INCLUDE_DIR="$MBEDTLS_INSTALL_DIR/include" \
+        -DMBEDTLS_CRYPTO_LIBRARY="$MBEDTLS_INSTALL_DIR/lib/libmbedcrypto.a" \
+        -DMBEDTLS_X509_LIBRARY="$MBEDTLS_INSTALL_DIR/lib/libmbedx509.a" \
+        -DMBEDTLS_SSL_LIBRARY="$MBEDTLS_INSTALL_DIR/lib/libmbedtls.a"
     
     # Сборка и установка
     cmake --build . --config Release -- -j$(nproc)

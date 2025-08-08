@@ -8,13 +8,13 @@ android {
     
     defaultConfig {
         applicationId "com.example.sshtunnel"
-        minSdk 21
+        minSdk 24
         targetSdk 34
         versionCode 1
         versionName "1.0"
         
         ndk {
-            abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+            abiFilters "arm64-v8a"
         }
         
         externalNativeBuild {
@@ -37,6 +37,8 @@ android {
             path "src/main/cpp/CMakeLists.txt"
         }
     }
+    
+    ndkVersion "25.1.8937393"
     
     packaging {
         pickFirst '**/libc++_shared.so'

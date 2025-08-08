@@ -42,11 +42,35 @@ public class SshTunnelService extends Service {
         
         if (isConnected) {
             Log.d(TAG, "Successfully connected to server");
+            // Attempt auto-forward if last known config is available via sticky intent extras (set by Activity)
+            tryAutoStartForwarding();
         } else {
             Log.e(TAG, "Failed to connect to server");
         }
         
         return isConnected;
+    }
+
+    // Called by Activity right before connect() to provide desired forwarding config
+    private volatile Integer pendingLocalPort;
+    private volatile String pendingRemoteHost;
+    private volatile Integer pendingRemotePort;
+
+    public void setPendingForwarding(Integer localPort, String remoteHost, Integer remotePort) {
+        this.pendingLocalPort = localPort;
+        this.pendingRemoteHost = remoteHost;
+        this.pendingRemotePort = remotePort;
+    }
+
+    private void tryAutoStartForwarding() {
+        if (pendingLocalPort != null && pendingRemoteHost != null && pendingRemotePort != null) {
+            Log.d(TAG, "Auto-starting UDP forwarding after connect: " + pendingLocalPort + " -> " + pendingRemoteHost + ":" + pendingRemotePort);
+            forwardPort(pendingLocalPort, pendingRemoteHost, pendingRemotePort);
+            // One-shot
+            pendingLocalPort = null;
+            pendingRemoteHost = null;
+            pendingRemotePort = null;
+        }
     }
 
     public boolean connectWithPrivateKey(String serverAddress, int serverPort, String username, String privateKeyPath, String passphrase) {
