@@ -1,0 +1,12 @@
+[
+{
+  "directory": "/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/.cxx/Debug/38231x1x/x86",
+  "command": "/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=i686-none-linux-android21 --sysroot=/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/sysroot -Dssh_tunnel_EXPORTS -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -mstackrealign -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info  -fPIC -Wall -Wextra -o CMakeFiles/ssh_tunnel.dir/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/jni/ssh_tunnel.c.o -c /workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/jni/ssh_tunnel.c",
+  "file": "/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/jni/ssh_tunnel.c"
+},
+{
+  "directory": "/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/.cxx/Debug/38231x1x/x86",
+  "command": "/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=i686-none-linux-android21 --sysroot=/opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/sysroot -Dssh_tunnel_EXPORTS -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -mstackrealign -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info  -fPIC -Wall -Wextra -o CMakeFiles/ssh_tunnel.dir/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/jni/libssh_mock.c.o -c /workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/jni/libssh_mock.c",
+  "file": "/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/jni/libssh_mock.c"
+}
+]

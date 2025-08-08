@@ -1,0 +1,8 @@
+# ninja log v5
+47	60	1754633699249184239	/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/build/intermediates/cxx/Debug/38231x1x/obj/x86/libssh_tunnel.so	3597d59eb5736eb7
+1	21	1754634347018200177	build.ninja	a40e04e03a55877c
+0	47	1754633699235184239	CMakeFiles/ssh_tunnel.dir/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/jni/ssh_tunnel.c.o	8c99876933622898
+0	1	0	clean	2d2f43cf2094d251
+1	80	1754634347130200180	CMakeFiles/ssh_tunnel.dir/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/jni/libssh_mock.c.o	882bd4c173e91671
+0	96	1754634347147200180	CMakeFiles/ssh_tunnel.dir/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/jni/ssh_tunnel.c.o	8c99876933622898
+97	125	1754634347176200181	/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/build/intermediates/cxx/Debug/38231x1x/obj/x86/libssh_tunnel.so	307e346082081bc2
