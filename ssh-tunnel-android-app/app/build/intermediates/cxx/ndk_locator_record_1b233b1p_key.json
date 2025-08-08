@@ -1,0 +1,7 @@
+{
+  "ndkDirProperty": "/opt/android-sdk/ndk/25.1.8937393",
+  "sdkFolder": "/opt/android-sdk",
+  "sideBySideNdkFolderNames": [
+    "25.1.8937393"
+  ]
+}

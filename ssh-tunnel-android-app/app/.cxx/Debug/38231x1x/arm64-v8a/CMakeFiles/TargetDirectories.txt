@@ -1,0 +1,3 @@
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/.cxx/Debug/38231x1x/arm64-v8a/CMakeFiles/ssh_tunnel.dir
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/.cxx/Debug/38231x1x/arm64-v8a/CMakeFiles/edit_cache.dir
+/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/.cxx/Debug/38231x1x/arm64-v8a/CMakeFiles/rebuild_cache.dir
