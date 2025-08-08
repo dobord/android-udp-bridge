@@ -4,6 +4,8 @@
 
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Variables
 ANDROID_HOME="/opt/android-sdk"
 ANDROID_NDK_VERSION="25.1.8937393"
@@ -43,7 +45,8 @@ echo "export ANDROID_NDK_HOME=\$ANDROID_HOME/ndk/$ANDROID_NDK_VERSION" >> ~/.bas
 echo "export PATH=\$PATH:\$ANDROID_HOME/cmdline-tools/latest/bin:\$ANDROID_HOME/platform-tools" >> ~/.bashrc
 
 # Create local.properties for the project
-cat > /workspaces/android-udp-bridge/ssh-tunnel-android-app/local.properties << EOF
+mkdir -p "$SCRIPT_DIR/ssh-tunnel-android-app"
+cat > "$SCRIPT_DIR/ssh-tunnel-android-app/local.properties" << EOF
 sdk.dir=$ANDROID_HOME
 ndk.dir=$ANDROID_HOME/ndk/$ANDROID_NDK_VERSION
 EOF

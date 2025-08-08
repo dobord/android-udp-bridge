@@ -7,7 +7,9 @@ set -e
 echo "Building SSH Tunnel Android App..."
 
 # Change to project directory
-cd /workspaces/android-udp-bridge/ssh-tunnel-android-app
+# Resolve script directory and change to project directory relative to it
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR/ssh-tunnel-android-app"
 
 # Check if Android SDK is installed
 if [ ! -d "/opt/android-sdk" ]; then
