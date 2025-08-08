@@ -22,6 +22,7 @@ if (EXISTS ${LIBSSH_STATIC_LIB})
     message(STATUS "Using prebuilt libssh: ${LIBSSH_STATIC_LIB}")
     target_include_directories(ssh_tunnel PRIVATE
         ${LIBSSH_PREBUILT_DIR}/${ANDROID_ABI}/include
+        ${MBEDTLS_PREBUILT_DIR}/${ANDROID_ABI}/include
     )
 
     add_library(ssh STATIC IMPORTED)

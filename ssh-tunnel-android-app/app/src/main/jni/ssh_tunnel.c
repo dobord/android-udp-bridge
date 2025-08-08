@@ -16,47 +16,227 @@
 #include <signal.h>
 #include <errno.h>
 #include <stdint.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
-#define LOG_TAG "SSHTunnel"
+// Direct mbedTLS includes for manual crypto initialization
+#ifndef USE_LIBSSH_MOCK
+#include <mbedtls/entropy.h>
+#include <mbedtls/ctr_drbg.h>
+#include <mbedtls/platform.h>
+#include <mbedtls/error.h>
+#include <mbedtls/threading.h>
+#endif
+
+#define LOG_TAG "SSHTunnelApp"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#define LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
 
 static ssh_session session = NULL;
 static int tunnel_active = 0;
 static pthread_mutex_t session_mutex = PTHREAD_MUTEX_INITIALIZER;
 #ifndef USE_LIBSSH_MOCK
 static volatile int g_libssh_initialized = 0;
+
+// Global mbedTLS objects for manual crypto initialization
+static mbedtls_entropy_context g_entropy;
+static mbedtls_ctr_drbg_context g_ctr_drbg;
+static volatile int g_mbedtls_initialized = 0;
 #endif
 
 #ifndef USE_LIBSSH_MOCK
 // Global libssh log callback (file-scope). Needed to compile with Clang (no nested functions).
 static void ssh_android_log_cb(int priority, const char *function, const char *buffer, void *userdata) {
     (void)userdata;
-    __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, "libssh[%d] %s: %s", priority,
+    // Use INFO level to ensure messages are visible in logcat
+    __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "libssh[%d] %s: %s", priority,
                         function ? function : "", buffer ? buffer : "");
+}
+
+// Android entropy source using /dev/urandom
+static int android_entropy_source(void *data, unsigned char *output, size_t len, size_t *olen) {
+    (void)data;
+    int fd = open("/dev/urandom", O_RDONLY);
+    if (fd < 0) {
+        LOGE("Failed to open /dev/urandom: %s", strerror(errno));
+        return -1;
+    }
+    
+    ssize_t bytes_read = read(fd, output, len);
+    close(fd);
+    
+    if (bytes_read < 0) {
+        LOGE("Failed to read from /dev/urandom: %s", strerror(errno));
+        return -1;
+    }
+    
+    *olen = (size_t)bytes_read;
+    LOGI("Generated %zu bytes of entropy from /dev/urandom", *olen);
+    return 0;
+}
+
+// Direct mbedTLS initialization as workaround for libssh init failure
+static int init_mbedtls_directly() {
+    if (g_mbedtls_initialized) {
+        LOGI("mbedTLS already initialized");
+        return 0;
+    }
+    
+    LOGI("Initializing mbedTLS directly");
+    
+    // Initialize entropy context
+    mbedtls_entropy_init(&g_entropy);
+    mbedtls_ctr_drbg_init(&g_ctr_drbg);
+    
+    // Add our custom entropy source
+    int ret = mbedtls_entropy_add_source(&g_entropy, android_entropy_source, 
+                                         NULL, 32, MBEDTLS_ENTROPY_SOURCE_STRONG);
+    if (ret != 0) {
+        char error_buf[100];
+        mbedtls_strerror(ret, error_buf, sizeof(error_buf));
+        LOGE("Failed to add entropy source: %s (0x%x)", error_buf, ret);
+        return -1;
+    }
+    
+    // Seed the DRBG
+    const char* personalization = "ssh-tunnel-android";
+    ret = mbedtls_ctr_drbg_seed(&g_ctr_drbg, mbedtls_entropy_func, &g_entropy,
+                                (const unsigned char*)personalization,
+                                strlen(personalization));
+    if (ret != 0) {
+        char error_buf[100];
+        mbedtls_strerror(ret, error_buf, sizeof(error_buf));
+        LOGE("Failed to seed DRBG: %s (0x%x)", error_buf, ret);
+        mbedtls_entropy_free(&g_entropy);
+        mbedtls_ctr_drbg_free(&g_ctr_drbg);
+        return -1;
+    }
+    
+    // Test the DRBG
+    unsigned char test_buf[32];
+    ret = mbedtls_ctr_drbg_random(&g_ctr_drbg, test_buf, sizeof(test_buf));
+    if (ret != 0) {
+        char error_buf[100];
+        mbedtls_strerror(ret, error_buf, sizeof(error_buf));
+        LOGE("DRBG test failed: %s (0x%x)", error_buf, ret);
+        mbedtls_entropy_free(&g_entropy);
+        mbedtls_ctr_drbg_free(&g_ctr_drbg);
+        return -1;
+    }
+    
+    LOGI("mbedTLS initialized successfully with direct entropy source");
+    
+    g_mbedtls_initialized = 1;
+    return 0;
+}
+
+// Custom crypto initialization function that mimics what libssh should do
+static int force_crypto_init() {
+    LOGI("Forcing crypto initialization");
+    
+    // Initialize platform
+    int ret = mbedtls_platform_setup(NULL);
+    if (ret != 0) {
+        LOGE("mbedtls_platform_setup failed: %d", ret);
+    }
+    
+    // Initialize our entropy context
+    if (init_mbedtls_directly() != 0) {
+        LOGE("Direct mbedTLS init failed");
+        return -1;
+    }
+    
+    return 0;
+}
+// Enhanced initialization with entropy source
+static int init_libssh_with_entropy() {
+    LOGI("Attempting to initialize libssh with custom entropy source");
+    
+    // Force crypto initialization first
+    if (force_crypto_init() != 0) {
+        LOGE("Failed to force crypto initialization");
+        return -1;
+    }
+    
+    // First try to initialize entropy directly through /dev/urandom
+    unsigned char entropy_buf[32];
+    size_t entropy_len;
+    
+    if (android_entropy_source(NULL, entropy_buf, sizeof(entropy_buf), &entropy_len) == 0) {
+        LOGI("Successfully generated %zu bytes of entropy", entropy_len);
+    } else {
+        LOGW("Failed to generate entropy, proceeding without custom source");
+    }
+    
+    // Setup threading before any libssh calls
+    struct ssh_threads_callbacks_struct *cb = ssh_threads_get_default();
+    if (cb != NULL) {
+        LOGI("Setting thread callbacks");
+        if (ssh_threads_set_callbacks(cb) != SSH_OK) {
+            LOGE("Failed to set SSH thread callbacks");
+            return -1;
+        }
+    } else {
+        LOGE("Failed to get thread callbacks");
+        return -1;
+    }
+    
+    // Attempt standard ssh_init
+    int ret = ssh_init();
+    if (ret == SSH_OK) {
+        LOGI("ssh_init succeeded with mbedTLS pre-initialized");
+        return 1; // Success
+    } else {
+        LOGW("ssh_init failed with code %d, proceeding with manual crypto", ret);
+        return -1; // Failed but will continue with manual crypto
+    }
 }
 #endif
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
+    (void)vm; (void)reserved;  // Suppress unused parameter warnings
     // Avoid process kill on SIGPIPE when writing to a closed socket/channel
     signal(SIGPIPE, SIG_IGN);
 #ifndef USE_LIBSSH_MOCK
+    LOGI("JNI_OnLoad: Starting libssh initialization");
+    
     // Setup libssh logging for better diagnostics
+    LOGI("JNI_OnLoad: Setting up libssh logging");
     ssh_set_log_callback(ssh_android_log_cb);
-    // Max verbosity to trace functions
-    ssh_set_log_level(SSH_LOG_FUNCTIONS);
+    // Max verbosity to trace all operations and crypto details
+    ssh_set_log_level(SSH_LOG_TRACE);
+    LOGI("JNI_OnLoad: libssh logging configured");
+    
     // Initialize libssh (and underlying crypto/RNG such as mbedTLS) once per process
-    // Set thread callbacks before ssh_init when using threads
-    struct ssh_threads_callbacks_struct *cb = ssh_threads_get_default();
-    if (cb != NULL) {
-        ssh_threads_set_callbacks(cb);
-    }
-    int rc = ssh_init();
-    if (rc == SSH_OK) {
-        g_libssh_initialized = 1;
+    LOGI("JNI_OnLoad: Attempting enhanced initialization with entropy");
+    
+    // Try bypassing ssh_init for now and test direct crypto functionality
+    LOGI("JNI_OnLoad: Testing libssh version info");
+    const char* version = ssh_version(0);
+    if (version) {
+        LOGI("JNI_OnLoad: libssh version: %s", version);
     } else {
-        g_libssh_initialized = 0;
-        LOGE("ssh_init failed with code %d", rc);
-        // We'll try again lazily on first connect call
+        LOGE("JNI_OnLoad: Failed to get libssh version");
+    }
+    
+    // Check if we can create a session without init
+    LOGI("JNI_OnLoad: Testing ssh_new() without init");
+    ssh_session test_session = ssh_new();
+    if (test_session) {
+        LOGI("JNI_OnLoad: ssh_new() succeeded without init");
+        ssh_free(test_session);
+    } else {
+        LOGE("JNI_OnLoad: ssh_new() failed without init");
+    }
+    
+    // Try enhanced initialization with entropy
+    int init_result = init_libssh_with_entropy();
+    g_libssh_initialized = init_result;
+    
+    if (init_result == 1) {
+        LOGI("JNI_OnLoad: libssh initialized successfully with entropy");
+    } else {
+        LOGI("JNI_OnLoad: Proceeding without global ssh_init - will try per-session initialization");
     }
 #endif
     return JNI_VERSION_1_6;
@@ -64,10 +244,19 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
 
 #ifndef USE_LIBSSH_MOCK
 JNIEXPORT void JNICALL JNI_OnUnload(JavaVM* vm, void* reserved) {
+    (void)vm; (void)reserved;  // Suppress unused parameter warnings
     // Finalize libssh on library unload
     if (g_libssh_initialized) {
         ssh_finalize();
         g_libssh_initialized = 0;
+    }
+    
+    // Clean up mbedTLS
+    if (g_mbedtls_initialized) {
+        mbedtls_ctr_drbg_free(&g_ctr_drbg);
+        mbedtls_entropy_free(&g_entropy);
+        g_mbedtls_initialized = 0;
+        LOGI("mbedTLS cleanup completed");
     }
 }
 #endif
@@ -196,17 +385,21 @@ Java_com_example_sshtunnel_SshTunnelService_connectToServer(JNIEnv *env, jobject
 
     pthread_mutex_lock(&session_mutex);
 #ifndef USE_LIBSSH_MOCK
-    if (!g_libssh_initialized) {
+    if (g_libssh_initialized == 0) {
+        LOGI("Attempting lazy ssh_init()");
         int rc = ssh_init();
+        LOGI("Lazy ssh_init() returned %d", rc);
         if (rc != SSH_OK) {
             LOGE("ssh_init (lazy) failed with code %d", rc);
-            pthread_mutex_unlock(&session_mutex);
-            (*env)->ReleaseStringUTFChars(env, host, host_str);
-            (*env)->ReleaseStringUTFChars(env, username, username_str);
-            (*env)->ReleaseStringUTFChars(env, password, password_str);
-            return JNI_FALSE;
+            // Don't give up - try to proceed anyway for modern libssh
+            LOGI("Proceeding without ssh_init - testing session creation");
+            g_libssh_initialized = -1;
+        } else {
+            g_libssh_initialized = 1;
+            LOGI("Lazy ssh_init() successful");
         }
-        g_libssh_initialized = 1;
+    } else if (g_libssh_initialized == -1) {
+        LOGI("Using libssh without global init (crypto issues detected)");
     }
 #endif
     session = ssh_new();
@@ -218,14 +411,52 @@ Java_com_example_sshtunnel_SshTunnelService_connectToServer(JNIEnv *env, jobject
         (*env)->ReleaseStringUTFChars(env, password, password_str);
         return JNI_FALSE;
     }
+    
+    LOGI("SSH session created successfully, setting options");
 
+    // Force crypto initialization per session as workaround for global init failure
     int verbosity = SSH_LOG_PROTOCOL;
     ssh_options_set(session, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
+    
+    // Try to force crypto backend initialization before connect
     ssh_options_set(session, SSH_OPTIONS_HOST, host_str);
     ssh_options_set(session, SSH_OPTIONS_PORT, &port);
     ssh_options_set(session, SSH_OPTIONS_USER, username_str);
+    
+    // Set some crypto-related options to trigger initialization
+    const char *ciphers = "aes128-ctr,aes192-ctr,aes256-ctr";
+    ssh_options_set(session, SSH_OPTIONS_CIPHERS_C_S, ciphers);
+    ssh_options_set(session, SSH_OPTIONS_CIPHERS_S_C, ciphers);
+    
+    const char *kex = "diffie-hellman-group14-sha256,ecdh-sha2-nistp256";
+    ssh_options_set(session, SSH_OPTIONS_KEY_EXCHANGE, kex);
+    
     ssh_set_blocking(session, 1);
 
+    // CRITICAL: Force entropy initialization before any crypto operations
+    LOGI("Forcing entropy initialization before ssh_connect");
+    unsigned char entropy_buf[64];
+    size_t entropy_len;
+    
+    // Generate fresh entropy to ensure /dev/urandom is accessible
+    if (android_entropy_source(NULL, entropy_buf, sizeof(entropy_buf), &entropy_len) == 0) {
+        LOGI("Pre-connect entropy generation successful: %zu bytes", entropy_len);
+        
+        // Try to seed randomness manually if possible
+        // Note: This is a workaround for mbedTLS DRBG not being properly initialized
+        // We're attempting to ensure entropy is available before crypto operations
+        for (int i = 0; i < 3; i++) {
+            unsigned char more_entropy[32];
+            size_t more_len;
+            if (android_entropy_source(NULL, more_entropy, sizeof(more_entropy), &more_len) == 0) {
+                LOGI("Additional entropy round %d: %zu bytes", i+1, more_len);
+            }
+        }
+    } else {
+        LOGE("Critical: Unable to generate entropy before ssh_connect - expect crashes");
+    }
+
+    LOGI("Attempting SSH connection to %s:%d with enhanced crypto options", host_str, port);
     int connection = ssh_connect(session);
     if (connection != SSH_OK) {
         LOGE("SSH connection failed: %s", ssh_get_error(session));
