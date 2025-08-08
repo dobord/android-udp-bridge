@@ -67,6 +67,26 @@ cd ssh-tunnel-android-app
 ./test_advanced_ssh.sh
 ```
 
+#### Windows (PowerShell)
+```powershell
+# 1) (Опционально) Убедитесь, что Android SDK доступен
+# Если переменная ANDROID_HOME не задана, пропишите путь в local.properties:
+#   ssh-tunnel-android-app\local.properties -> sdk.dir=E:\Android\Sdk
+
+# 2) Собрать и установить prebuilt-библиотеки (mbedTLS + libssh)
+cd E:\projects\android-udp-bridge
+./build_libssh.bat
+
+# 3) Собрать APK
+./build_app.bat
+
+# 4) (Опционально) Установить APK на устройство
+adb install -r .\ssh-tunnel-android-app\app\build\outputs\apk\debug\app-debug.apk
+
+# 5) (Опционально) Смотреть логи
+adb logcat | Select-String -Pattern "(SSHTunnel|LibSSH_Advanced)"
+```
+
 ### Установка на устройство
 ```bash
 # Установка APK
