@@ -17,11 +17,11 @@
     "{LIST_OF_TARGETS_TO_BUILD}"
   ],
   "libraries": {
-    "ssh_stub::@6890427a1f51a3e7e1df": {
+    "ssh_advanced::@6890427a1f51a3e7e1df": {
       "toolchain": "toolchain",
       "abi": "x86",
-      "artifactName": "ssh_stub",
-      "output": "/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/.cxx/Debug/38231x1x/x86/libssh_stub.a"
+      "artifactName": "ssh_advanced",
+      "output": "/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/.cxx/Debug/38231x1x/x86/libssh_advanced.a"
     },
     "ssh_tunnel::@6890427a1f51a3e7e1df": {
       "toolchain": "toolchain",

@@ -22,6 +22,12 @@ struct ssh_channel_struct {
     int active;
 };
 
+struct ssh_key_struct {
+    char* filename;
+    char* passphrase;
+    int valid;
+};
+
 ssh_session ssh_new(void) {
     LOGI("ssh_new() called");
     ssh_session session = (ssh_session)malloc(sizeof(struct ssh_session_struct));
@@ -151,4 +157,60 @@ int ssh_channel_read(ssh_channel channel, void *dest, uint32_t count, int is_std
     
     // Симуляция чтения данных (возвращаем эхо)
     return 0; // Нет данных для чтения в заглушке
+}
+
+int ssh_userauth_publickey_auto(ssh_session session, const char *username, const char *passphrase) {
+    LOGI("ssh_userauth_publickey_auto() called for user %s", username ? username : "unknown");
+    if (!session) return SSH_AUTH_ERROR;
+    
+    // Симуляция автоматической аутентификации по ключу
+    LOGI("Public key auto authentication simulated successfully");
+    return SSH_AUTH_SUCCESS;
+}
+
+int ssh_userauth_publickey(ssh_session session, const char *username, const ssh_key privkey) {
+    LOGI("ssh_userauth_publickey() called for user %s", username ? username : "unknown");
+    if (!session || !privkey) return SSH_AUTH_ERROR;
+    
+    // Симуляция аутентификации по конкретному ключу
+    if (!privkey->valid) {
+        LOGE("Invalid private key");
+        return SSH_AUTH_ERROR;
+    }
+    
+    LOGI("Public key authentication simulated successfully");
+    return SSH_AUTH_SUCCESS;
+}
+
+int ssh_pki_import_privkey_file(const char *filename, const char *passphrase, void *auth_fn, void *auth_data, ssh_key *pkey) {
+    LOGI("ssh_pki_import_privkey_file() called for file %s", filename ? filename : "unknown");
+    
+    if (!filename || !pkey) {
+        LOGE("Invalid parameters for key import");
+        return SSH_ERROR;
+    }
+    
+    // Симуляция загрузки приватного ключа
+    ssh_key key = (ssh_key)malloc(sizeof(struct ssh_key_struct));
+    if (!key) {
+        LOGE("Failed to allocate memory for key");
+        return SSH_ERROR;
+    }
+    
+    key->filename = strdup(filename);
+    key->passphrase = passphrase ? strdup(passphrase) : NULL;
+    key->valid = 1; // Предполагаем, что ключ всегда валидный в заглушке
+    
+    *pkey = key;
+    LOGI("Private key import simulated successfully");
+    return SSH_OK;
+}
+
+void ssh_key_free(ssh_key key) {
+    LOGI("ssh_key_free() called");
+    if (key) {
+        if (key->filename) free(key->filename);
+        if (key->passphrase) free(key->passphrase);
+        free(key);
+    }
 }

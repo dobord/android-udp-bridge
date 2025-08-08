@@ -6,16 +6,16 @@ project("sshtunnel")
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
 
-# Путь к нашей заглушке libssh
-set(LIBSSH_STUB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../prebuilt/libssh)
+# Путь к нашей расширенной SSH библиотеке
+set(LIBSSH_ADVANCED_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../prebuilt/libssh_advanced)
 
-# Создаем статическую библиотеку libssh заглушку
-add_library(ssh_stub STATIC
-    ${LIBSSH_STUB_DIR}/libssh_stub.c
+# Создаем статическую библиотеку расширенного SSH stub
+add_library(ssh_advanced STATIC
+    ${LIBSSH_ADVANCED_DIR}/ssh_advanced_stub.c
 )
 
-# Настройка include директорий для заглушки
-target_include_directories(ssh_stub PUBLIC ${LIBSSH_STUB_DIR}/include)
+# Настройка include директорий для расширенной библиотеки
+target_include_directories(ssh_advanced PUBLIC ${LIBSSH_ADVANCED_DIR}/include)
 
 # Создаем нашу основную библиотеку
 add_library(ssh_tunnel SHARED
@@ -23,16 +23,16 @@ add_library(ssh_tunnel SHARED
 )
 
 # Добавляем include директории
-target_include_directories(ssh_tunnel PRIVATE ${LIBSSH_STUB_DIR}/include)
+target_include_directories(ssh_tunnel PRIVATE ${LIBSSH_ADVANCED_DIR}/include)
 
 # Находим системные библиотеки
 find_library(log-lib log)
 
 # Связываем библиотеки
 target_link_libraries(ssh_tunnel
-    ssh_stub
+    ssh_advanced
     ${log-lib}
 )
 
 # Добавляем флаги компиляции
-target_compile_options(ssh_tunnel PRIVATE -Wall -Wextra -DHAVE_LIBSSH)
+target_compile_options(ssh_tunnel PRIVATE -Wall -Wextra -DHAVE_LIBSSH_ADVANCED)

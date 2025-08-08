@@ -11,6 +11,7 @@ extern "C" {
 // Basic types
 typedef struct ssh_session_struct* ssh_session;
 typedef struct ssh_channel_struct* ssh_channel;
+typedef struct ssh_key_struct* ssh_key;
 
 // Return codes
 #define SSH_OK 0
@@ -43,6 +44,10 @@ void ssh_disconnect(ssh_session session);
 int ssh_options_set(ssh_session session, enum ssh_options_e type, const void *value);
 const char* ssh_get_error(ssh_session session);
 int ssh_userauth_password(ssh_session session, const char *username, const char *password);
+int ssh_userauth_publickey_auto(ssh_session session, const char *username, const char *passphrase);
+int ssh_userauth_publickey(ssh_session session, const char *username, const ssh_key privkey);
+int ssh_pki_import_privkey_file(const char *filename, const char *passphrase, void *auth_fn, void *auth_data, ssh_key *pkey);
+void ssh_key_free(ssh_key key);
 
 ssh_channel ssh_channel_new(ssh_session session);
 void ssh_channel_free(ssh_channel channel);
