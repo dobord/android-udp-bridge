@@ -65,3 +65,6 @@ endif()
 
 # Общие флаги компиляции
 target_compile_options(ssh_tunnel PRIVATE -Wall -Wextra)
+
+# Для совместимости с устройствами Android 15 с размером страницы 16K
+target_link_options(ssh_tunnel PRIVATE -Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384)

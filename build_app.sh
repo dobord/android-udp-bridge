@@ -19,7 +19,7 @@ fi
 
 # Set environment variables
 export ANDROID_HOME="/opt/android-sdk"
-export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/25.1.8937393"
+export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/26.3.11579264"
 export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
 
 # Check if gradlew exists and make it executable
