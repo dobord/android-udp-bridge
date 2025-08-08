@@ -1,0 +1,64 @@
+# OS/editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.iml
+
+# Logs
+*.log
+
+# Gradle/Android Studio
+**/.gradle/
+**/build/
+**/.cxx/
+**/.externalNativeBuild/
+**/captures/
+**/intermediates/
+**/out/
+**/.settings/
+**/*.hprof
+**/local.properties
+
+# Do NOT ignore Gradle wrapper (should be versioned)
+!**/gradle/wrapper/gradle-wrapper.jar
+!**/gradle/wrapper/gradle-wrapper.properties
+!**/gradlew
+!**/gradlew.bat
+
+# CMake/NDK generated files
+**/CMakeCache.txt
+**/CMakeFiles/
+**/cmake_install.cmake
+**/compile_commands.json
+**/Makefile
+
+# Vendor/lib builds (keep source archives, ignore build outputs)
+libssh_build/build/
+libssh_build/**/build/
+libssh_build/**/CMakeFiles/
+libssh_build/**/CMakeCache.txt
+libssh_build/**/cmake_install.cmake
+libssh_build/**/Makefile
+libssh_build/**/compile_commands.json
+libssh_build/**/install_manifest.txt
+
+mbedtls/build/
+mbedtls/**/build/
+mbedtls/**/CMakeFiles/
+mbedtls/**/CMakeCache.txt
+mbedtls/**/cmake_install.cmake
+mbedtls/**/Makefile
+
+# Legacy top-level Android module (if present)
+/app/
+app/.cxx/
+app/build/
+app/.gradle/
+
+# Common archives and temp
+*.tmp
+*.swp
+*.swo
+*.bak
+*.orig

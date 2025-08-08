@@ -1,4 +1,0 @@
-/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/.cxx/RelWithDebInfo/1y664ud5/armeabi-v7a/CMakeFiles/ssh_advanced.dir
-/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/.cxx/RelWithDebInfo/1y664ud5/armeabi-v7a/CMakeFiles/ssh_tunnel.dir
-/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/.cxx/RelWithDebInfo/1y664ud5/armeabi-v7a/CMakeFiles/edit_cache.dir
-/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/.cxx/RelWithDebInfo/1y664ud5/armeabi-v7a/CMakeFiles/rebuild_cache.dir

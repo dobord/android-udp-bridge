@@ -1,1 +1,0 @@
-/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/cpp/CMakeLists.txt

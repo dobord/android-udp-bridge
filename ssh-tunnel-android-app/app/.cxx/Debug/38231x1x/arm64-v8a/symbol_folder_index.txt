@@ -1,1 +1,0 @@
-/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/build/intermediates/cxx/Debug/38231x1x/obj/arm64-v8a
