@@ -22,6 +22,12 @@
       "abi": "arm64-v8a",
       "output": "/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/build/intermediates/cxx/Debug/38231x1x/obj/arm64-v8a/libssh_tunnel.so",
       "runtimeFiles": []
+    },
+    "ssh_stub::@6890427a1f51a3e7e1df": {
+      "artifactName": "ssh_stub",
+      "abi": "arm64-v8a",
+      "output": "/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/.cxx/Debug/38231x1x/arm64-v8a/libssh_stub.a",
+      "runtimeFiles": []
     }
   }
 }
