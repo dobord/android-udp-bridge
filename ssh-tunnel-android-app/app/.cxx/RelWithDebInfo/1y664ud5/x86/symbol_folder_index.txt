@@ -1,1 +1,0 @@
-/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/build/intermediates/cxx/RelWithDebInfo/1y664ud5/obj/x86
