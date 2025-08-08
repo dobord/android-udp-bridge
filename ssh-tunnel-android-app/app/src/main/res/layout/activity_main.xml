@@ -170,7 +170,7 @@
             android:id="@+id/start_forwarding_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Start UDP Forwarding"
+            android:text="@string/start_forwarding_button"
             android:enabled="false" />
 
         <TextView

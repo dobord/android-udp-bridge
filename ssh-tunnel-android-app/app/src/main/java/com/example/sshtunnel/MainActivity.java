@@ -152,6 +152,19 @@ public class MainActivity extends AppCompatActivity {
         }
         
         boolean useKeyAuth = keyAuthRadio.isChecked();
+
+        // Collect forwarding config to auto-start after connect
+        String localPortStr = localPortEditText.getText().toString().trim();
+        String remoteHost = remoteHostEditText.getText().toString().trim();
+        String remotePortStr = remotePortEditText.getText().toString().trim();
+        Integer localPort = null;
+        Integer remotePort = null;
+        if (!localPortStr.isEmpty() && !remoteHost.isEmpty() && !remotePortStr.isEmpty()) {
+            try {
+                localPort = Integer.parseInt(localPortStr);
+                remotePort = Integer.parseInt(remotePortStr);
+            } catch (NumberFormatException ignore) { /* validated later */ }
+        }
         
         if (useKeyAuth) {
             String privateKeyPath = privateKeyEditText.getText().toString().trim();
@@ -170,12 +183,21 @@ public class MainActivity extends AppCompatActivity {
         try {
             int port = Integer.parseInt(portStr);
             
+            // Provide pending forwarding to service (best-effort)
+            sshTunnelService.setPendingForwarding(localPort, remoteHost, remotePort);
+
+            // Final copies for inner classes
+            final Integer fLocalPort = localPort;
+            final Integer fRemotePort = remotePort;
+            final String fRemoteHost = remoteHost;
+            final boolean useKeyAuthLocal = useKeyAuth;
+
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     boolean connected;
                     
-                    if (useKeyAuth) {
+                    if (useKeyAuthLocal) {
                         String privateKeyPath = privateKeyEditText.getText().toString().trim();
                         String passphrase = passphraseEditText.getText().toString().trim();
                         connected = sshTunnelService.connectWithPrivateKey(host, port, username, privateKeyPath, 
@@ -189,9 +211,14 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void run() {
                             if (connected) {
-                                String authMethod = useKeyAuth ? "private key" : "password";
+                                String authMethod = useKeyAuthLocal ? "private key" : "password";
+                                String status = "Status: Connected (" + authMethod + ")";
+                                // If forwarding config present, update status meaningfully
+                                if (fLocalPort != null && fRemotePort != null && fRemoteHost != null && !fRemoteHost.isEmpty()) {
+                                    status = "Status: Forwarding " + fLocalPort + " -> " + fRemoteHost + ":" + fRemotePort + " (" + authMethod + ")";
+                                }
                                 Toast.makeText(MainActivity.this, "Connected to SSH server using " + authMethod, Toast.LENGTH_SHORT).show();
-                                statusTextView.setText("Status: Connected (" + authMethod + ")");
+                                statusTextView.setText(status);
                             } else {
                                 Toast.makeText(MainActivity.this, "Failed to connect", Toast.LENGTH_SHORT).show();
                                 statusTextView.setText("Status: Connection failed");

@@ -8,6 +8,9 @@
 #include <arpa/inet.h>
 #include <pthread.h>
 #include <android/log.h>
+#include <signal.h>
+#include <errno.h>
+#include <stdint.h>
 
 #define LOG_TAG "SSHTunnel"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
@@ -15,6 +18,13 @@
 
 static ssh_session session = NULL;
 static int tunnel_active = 0;
+static pthread_mutex_t session_mutex = PTHREAD_MUTEX_INITIALIZER;
+JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
+    // Avoid process kill on SIGPIPE when writing to a closed socket/channel
+    signal(SIGPIPE, SIG_IGN);
+    return JNI_VERSION_1_6;
+}
+
 
 typedef struct {
     int local_port;
@@ -50,44 +60,68 @@ static void* udp_forward_thread(void* arg) {
     socklen_t client_len = sizeof(client_addr);
     
     while (tunnel_active) {
-        ssize_t received = recvfrom(local_sock, buffer, sizeof(buffer), 0, 
-                                   (struct sockaddr*)&client_addr, &client_len);
-        if (received > 0) {
-            LOGI("Received UDP packet of %zd bytes", received);
-            
-            // Forward UDP packet through SSH tunnel
-            if (session) {
-                ssh_channel channel = ssh_channel_new(session);
-                if (channel != NULL) {
-                    if (ssh_channel_open_forward(channel, params->remote_host, 
-                                               params->remote_port, "localhost", params->local_port) == SSH_OK) {
-                        LOGI("SSH channel opened, forwarding data");
-                        
-                        int written = ssh_channel_write(channel, buffer, received);
-                        if (written > 0) {
-                            LOGI("Successfully wrote %d bytes to SSH channel", written);
-                            
-                            // Read response
-                            int nbytes = ssh_channel_read(channel, buffer, sizeof(buffer), 0);
-                            if (nbytes > 0) {
-                                LOGI("Received %d bytes response from SSH channel", nbytes);
-                                sendto(local_sock, buffer, nbytes, 0, 
-                                      (struct sockaddr*)&client_addr, client_len);
-                            }
-                        }
-                    } else {
-                        LOGE("Failed to open SSH channel for forwarding");
-                    }
-                    ssh_channel_close(channel);
-                    ssh_channel_free(channel);
-                } else {
-                    LOGE("Failed to create SSH channel");
+        ssize_t received = recvfrom(local_sock, buffer, sizeof(buffer), 0,
+                                    (struct sockaddr*)&client_addr, &client_len);
+        if (received < 0) {
+            LOGE("recvfrom failed: errno=%d", errno);
+            break;
+        }
+        if (received == 0) {
+            continue;
+        }
+
+        LOGI("Received UDP packet of %zd bytes", received);
+
+    // Forward UDP packet through SSH tunnel
+    pthread_mutex_lock(&session_mutex);
+    ssh_session sess = session;
+    pthread_mutex_unlock(&session_mutex);
+    if (sess) {
+            ssh_channel channel = ssh_channel_new(session);
+            if (channel == NULL) {
+                LOGE("Failed to create SSH channel");
+                continue;
+            }
+
+            if (ssh_channel_open_forward(channel, params->remote_host,
+                                         params->remote_port, "localhost", params->local_port) != SSH_OK) {
+                LOGE("Failed to open SSH channel for forwarding: %s", ssh_get_error(session));
+                ssh_channel_free(channel);
+                continue;
+            }
+
+            int written = ssh_channel_write(channel, buffer, (uint32_t)received);
+            if (written <= 0) {
+                LOGE("ssh_channel_write failed: %s", ssh_get_error(session));
+                ssh_channel_close(channel);
+                ssh_channel_free(channel);
+                continue;
+            }
+            LOGI("Successfully wrote %d bytes to SSH channel", written);
+
+            // Optional: set a small timeout for reading response to avoid blocking indefinitely
+            ssh_channel_set_blocking(channel, 1);
+
+            int nbytes = ssh_channel_read_timeout(channel, buffer, sizeof(buffer), 0, 1000);
+            if (nbytes > 0) {
+                LOGI("Received %d bytes response from SSH channel", nbytes);
+                if (sendto(local_sock, buffer, nbytes, 0,
+                           (struct sockaddr*)&client_addr, client_len) < 0) {
+                    LOGE("sendto failed: errno=%d", errno);
                 }
-            } else {
-                // Fallback: echo data back if no SSH session
-                LOGI("No SSH session, echoing data back");
-                sendto(local_sock, buffer, received, 0, 
-                      (struct sockaddr*)&client_addr, client_len);
+            } else if (nbytes == SSH_ERROR) {
+                LOGE("ssh_channel_read_timeout error: %s", ssh_get_error(session));
+            }
+
+            ssh_channel_send_eof(channel);
+            ssh_channel_close(channel);
+            ssh_channel_free(channel);
+        } else {
+            // Fallback: echo data back if no SSH session
+            LOGI("No SSH session, echoing data back");
+            if (sendto(local_sock, buffer, received, 0,
+                       (struct sockaddr*)&client_addr, client_len) < 0) {
+                LOGE("sendto failed: errno=%d", errno);
             }
         }
     }
@@ -106,24 +140,30 @@ Java_com_example_sshtunnel_SshTunnelService_connectToServer(JNIEnv *env, jobject
 
     LOGI("Attempting to connect to %s:%d with user %s", host_str, port, username_str);
 
+    pthread_mutex_lock(&session_mutex);
     session = ssh_new();
     if (session == NULL) {
         LOGE("Failed to create SSH session");
+        pthread_mutex_unlock(&session_mutex);
         (*env)->ReleaseStringUTFChars(env, host, host_str);
         (*env)->ReleaseStringUTFChars(env, username, username_str);
         (*env)->ReleaseStringUTFChars(env, password, password_str);
         return JNI_FALSE;
     }
 
+    int verbosity = SSH_LOG_PROTOCOL;
+    ssh_options_set(session, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
     ssh_options_set(session, SSH_OPTIONS_HOST, host_str);
     ssh_options_set(session, SSH_OPTIONS_PORT, &port);
     ssh_options_set(session, SSH_OPTIONS_USER, username_str);
+    ssh_set_blocking(session, 1);
 
     int connection = ssh_connect(session);
     if (connection != SSH_OK) {
         LOGE("SSH connection failed: %s", ssh_get_error(session));
         ssh_free(session);
         session = NULL;
+        pthread_mutex_unlock(&session_mutex);
         (*env)->ReleaseStringUTFChars(env, host, host_str);
         (*env)->ReleaseStringUTFChars(env, username, username_str);
         (*env)->ReleaseStringUTFChars(env, password, password_str);
@@ -132,10 +172,11 @@ Java_com_example_sshtunnel_SshTunnelService_connectToServer(JNIEnv *env, jobject
 
     int auth = ssh_userauth_password(session, username_str, password_str);
     if (auth != SSH_AUTH_SUCCESS) {
-        LOGE("SSH password authentication failed");
+        LOGE("SSH password authentication failed: %s", ssh_get_error(session));
         ssh_disconnect(session);
         ssh_free(session);
         session = NULL;
+        pthread_mutex_unlock(&session_mutex);
         (*env)->ReleaseStringUTFChars(env, host, host_str);
         (*env)->ReleaseStringUTFChars(env, username, username_str);
         (*env)->ReleaseStringUTFChars(env, password, password_str);
@@ -146,6 +187,7 @@ Java_com_example_sshtunnel_SshTunnelService_connectToServer(JNIEnv *env, jobject
     (*env)->ReleaseStringUTFChars(env, username, username_str);
     (*env)->ReleaseStringUTFChars(env, password, password_str);
 
+    pthread_mutex_unlock(&session_mutex);
     LOGI("SSH connection established successfully");
     return JNI_TRUE;
 }
@@ -159,9 +201,11 @@ Java_com_example_sshtunnel_SshTunnelService_connectWithKey(JNIEnv *env, jobject 
 
     LOGI("Attempting to connect to %s:%d with user %s using key %s", host_str, port, username_str, privateKey_str);
 
+    pthread_mutex_lock(&session_mutex);
     session = ssh_new();
     if (session == NULL) {
         LOGE("Failed to create SSH session");
+        pthread_mutex_unlock(&session_mutex);
         (*env)->ReleaseStringUTFChars(env, host, host_str);
         (*env)->ReleaseStringUTFChars(env, username, username_str);
         (*env)->ReleaseStringUTFChars(env, privateKeyPath, privateKey_str);
@@ -169,15 +213,19 @@ Java_com_example_sshtunnel_SshTunnelService_connectWithKey(JNIEnv *env, jobject 
         return JNI_FALSE;
     }
 
+    int verbosity = SSH_LOG_PROTOCOL;
+    ssh_options_set(session, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
     ssh_options_set(session, SSH_OPTIONS_HOST, host_str);
     ssh_options_set(session, SSH_OPTIONS_PORT, &port);
     ssh_options_set(session, SSH_OPTIONS_USER, username_str);
+    ssh_set_blocking(session, 1);
 
     int connection = ssh_connect(session);
     if (connection != SSH_OK) {
         LOGE("SSH connection failed: %s", ssh_get_error(session));
         ssh_free(session);
         session = NULL;
+        pthread_mutex_unlock(&session_mutex);
         (*env)->ReleaseStringUTFChars(env, host, host_str);
         (*env)->ReleaseStringUTFChars(env, username, username_str);
         (*env)->ReleaseStringUTFChars(env, privateKeyPath, privateKey_str);
@@ -197,10 +245,11 @@ Java_com_example_sshtunnel_SshTunnelService_connectWithKey(JNIEnv *env, jobject 
         }
         
         if (auth != SSH_AUTH_SUCCESS) {
-            LOGE("SSH key authentication failed");
+            LOGE("SSH key authentication failed: %s", ssh_get_error(session));
             ssh_disconnect(session);
             ssh_free(session);
             session = NULL;
+            pthread_mutex_unlock(&session_mutex);
             (*env)->ReleaseStringUTFChars(env, host, host_str);
             (*env)->ReleaseStringUTFChars(env, username, username_str);
             (*env)->ReleaseStringUTFChars(env, privateKeyPath, privateKey_str);
@@ -214,6 +263,7 @@ Java_com_example_sshtunnel_SshTunnelService_connectWithKey(JNIEnv *env, jobject 
     (*env)->ReleaseStringUTFChars(env, privateKeyPath, privateKey_str);
     if (passphrase_str) (*env)->ReleaseStringUTFChars(env, passphrase, passphrase_str);
 
+    pthread_mutex_unlock(&session_mutex);
     LOGI("SSH key authentication successful");
     return JNI_TRUE;
 }
@@ -222,12 +272,14 @@ JNIEXPORT void JNICALL
 Java_com_example_sshtunnel_SshTunnelService_disconnect(JNIEnv *env, jobject obj) {
     tunnel_active = 0;
     
+    pthread_mutex_lock(&session_mutex);
     if (session != NULL) {
         ssh_disconnect(session);
         ssh_free(session);
         session = NULL;
         LOGI("SSH connection closed");
     }
+    pthread_mutex_unlock(&session_mutex);
 }
 
 JNIEXPORT jboolean JNICALL
@@ -237,12 +289,29 @@ Java_com_example_sshtunnel_SshTunnelService_forwardPort(JNIEnv *env, jobject obj
         return JNI_FALSE;
     }
 
+    // Prevent starting multiple forwarding threads
+    if (tunnel_active) {
+        LOGI("UDP forwarding already active, skipping duplicate start");
+        return JNI_TRUE;
+    }
+
     const char *remote_host_str = (*env)->GetStringUTFChars(env, remote_host, 0);
     
     tunnel_params_t* params = malloc(sizeof(tunnel_params_t));
+    if (!params) {
+        LOGE("malloc failed for tunnel_params_t");
+        (*env)->ReleaseStringUTFChars(env, remote_host, remote_host_str);
+        return JNI_FALSE;
+    }
     params->local_port = local_port;
     params->remote_port = remote_port;
     params->remote_host = strdup(remote_host_str);
+    if (!params->remote_host) {
+        LOGE("strdup failed for remote_host");
+        free(params);
+        (*env)->ReleaseStringUTFChars(env, remote_host, remote_host_str);
+        return JNI_FALSE;
+    }
     
     (*env)->ReleaseStringUTFChars(env, remote_host, remote_host_str);
     
