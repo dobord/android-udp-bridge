@@ -1,0 +1,69 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-Debug-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.6.0"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "sshtunnel",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "ssh_stub::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ssh_stub-Debug-035f3d9a1d198d23a5b3.json",
+					"name" : "ssh_stub",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ssh_tunnel::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ssh_tunnel-Debug-3aad2bf2664e9e89af7c.json",
+					"name" : "ssh_tunnel",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/.cxx/Debug/38231x1x/armeabi-v7a",
+		"source" : "/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/cpp"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 3
+	}
+}

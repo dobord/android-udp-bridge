@@ -1,8 +1,10 @@
 # ninja log v5
-0	24	1754634345819200147	build.ninja	ae401aea87442f64
-0	147	1754633697771184203	CMakeFiles/ssh_tunnel.dir/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/jni/ssh_tunnel.c.o	9d6dd0f134b5f2ac
-0	2	0	clean	2d2f43cf2094d251
-147	401	1754633698025184209	/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/build/intermediates/cxx/Debug/38231x1x/obj/arm64-v8a/libssh_tunnel.so	a21d048a4ad548e6
-1	578	1754634346436200163	CMakeFiles/ssh_tunnel.dir/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/jni/libssh_mock.c.o	cae8a287ff1565b6
+1	28	1754635084411218320	build.ninja	ae401aea87442f64
 0	579	1754634346435200163	CMakeFiles/ssh_tunnel.dir/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/jni/ssh_tunnel.c.o	9d6dd0f134b5f2ac
+1	578	1754634346436200163	CMakeFiles/ssh_tunnel.dir/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/jni/libssh_mock.c.o	cae8a287ff1565b6
+0	2	0	clean	2d2f43cf2094d251
 579	810	1754634346680200169	/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/build/intermediates/cxx/Debug/38231x1x/obj/arm64-v8a/libssh_tunnel.so	ecc97613d862cd8a
+8	979	1754635085504218347	CMakeFiles/ssh_stub.dir/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/prebuilt/libssh/libssh_stub.c.o	6f154bd2fc3d2c5c
+9	982	1754635085508218347	CMakeFiles/ssh_tunnel.dir/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/jni/ssh_tunnel.c.o	27eae6f34b94ae19
+979	1172	1754635085683218351	libssh_stub.a	2a0bff19cf2565df
+1172	1544	1754635086102218362	/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/build/intermediates/cxx/Debug/38231x1x/obj/arm64-v8a/libssh_tunnel.so	a23fff153dca55ee

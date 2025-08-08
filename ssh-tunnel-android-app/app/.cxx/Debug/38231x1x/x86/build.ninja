@@ -41,25 +41,51 @@ include CMakeFiles/rules.ninja
 
 cmake_ninja_workdir = /workspaces/android-udp-bridge/ssh-tunnel-android-app/app/.cxx/Debug/38231x1x/x86/
 # =============================================================================
+# Object build statements for STATIC_LIBRARY target ssh_stub
+
+
+#############################################
+# Order-only phony target for ssh_stub
+
+build cmake_object_order_depends_target_ssh_stub: phony || CMakeFiles/ssh_stub.dir
+
+build CMakeFiles/ssh_stub.dir/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/prebuilt/libssh/libssh_stub.c.o: C_COMPILER__ssh_stub_Debug /workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/prebuilt/libssh/libssh_stub.c || cmake_object_order_depends_target_ssh_stub
+  DEP_FILE = CMakeFiles/ssh_stub.dir/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/prebuilt/libssh/libssh_stub.c.o.d
+  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -mstackrealign -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info  -fPIC
+  INCLUDES = -I/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/cpp/../prebuilt/libssh/include
+  OBJECT_DIR = CMakeFiles/ssh_stub.dir
+  OBJECT_FILE_DIR = CMakeFiles/ssh_stub.dir/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/prebuilt/libssh
+
+
+# =============================================================================
+# Link build statements for STATIC_LIBRARY target ssh_stub
+
+
+#############################################
+# Link the static library libssh_stub.a
+
+build libssh_stub.a: C_STATIC_LIBRARY_LINKER__ssh_stub_Debug CMakeFiles/ssh_stub.dir/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/prebuilt/libssh/libssh_stub.c.o
+  LANGUAGE_COMPILE_FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -mstackrealign -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info
+  OBJECT_DIR = CMakeFiles/ssh_stub.dir
+  POST_BUILD = :
+  PRE_LINK = :
+  TARGET_FILE = libssh_stub.a
+  TARGET_PDB = ssh_stub.a.dbg
+
+# =============================================================================
 # Object build statements for SHARED_LIBRARY target ssh_tunnel
 
 
 #############################################
 # Order-only phony target for ssh_tunnel
 
-build cmake_object_order_depends_target_ssh_tunnel: phony || CMakeFiles/ssh_tunnel.dir
+build cmake_object_order_depends_target_ssh_tunnel: phony || cmake_object_order_depends_target_ssh_stub
 
 build CMakeFiles/ssh_tunnel.dir/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/jni/ssh_tunnel.c.o: C_COMPILER__ssh_tunnel_Debug /workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/jni/ssh_tunnel.c || cmake_object_order_depends_target_ssh_tunnel
   DEFINES = -Dssh_tunnel_EXPORTS
   DEP_FILE = CMakeFiles/ssh_tunnel.dir/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/jni/ssh_tunnel.c.o.d
-  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -mstackrealign -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info  -fPIC -Wall -Wextra
-  OBJECT_DIR = CMakeFiles/ssh_tunnel.dir
-  OBJECT_FILE_DIR = CMakeFiles/ssh_tunnel.dir/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/jni
-
-build CMakeFiles/ssh_tunnel.dir/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/jni/libssh_mock.c.o: C_COMPILER__ssh_tunnel_Debug /workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/jni/libssh_mock.c || cmake_object_order_depends_target_ssh_tunnel
-  DEFINES = -Dssh_tunnel_EXPORTS
-  DEP_FILE = CMakeFiles/ssh_tunnel.dir/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/jni/libssh_mock.c.o.d
-  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -mstackrealign -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info  -fPIC -Wall -Wextra
+  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -mstackrealign -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info  -fPIC -Wall -Wextra -DHAVE_LIBSSH
+  INCLUDES = -I/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/cpp/../prebuilt/libssh/include
   OBJECT_DIR = CMakeFiles/ssh_tunnel.dir
   OBJECT_FILE_DIR = CMakeFiles/ssh_tunnel.dir/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/jni
 
@@ -71,10 +97,10 @@ build CMakeFiles/ssh_tunnel.dir/workspaces/android-udp-bridge/ssh-tunnel-android
 #############################################
 # Link the shared library /workspaces/android-udp-bridge/ssh-tunnel-android-app/app/build/intermediates/cxx/Debug/38231x1x/obj/x86/libssh_tunnel.so
 
-build /workspaces/android-udp-bridge/ssh-tunnel-android-app/app/build/intermediates/cxx/Debug/38231x1x/obj/x86/libssh_tunnel.so: C_SHARED_LIBRARY_LINKER__ssh_tunnel_Debug CMakeFiles/ssh_tunnel.dir/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/jni/ssh_tunnel.c.o CMakeFiles/ssh_tunnel.dir/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/jni/libssh_mock.c.o | /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/i686-linux-android/21/liblog.so
+build /workspaces/android-udp-bridge/ssh-tunnel-android-app/app/build/intermediates/cxx/Debug/38231x1x/obj/x86/libssh_tunnel.so: C_SHARED_LIBRARY_LINKER__ssh_tunnel_Debug CMakeFiles/ssh_tunnel.dir/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/jni/ssh_tunnel.c.o | libssh_stub.a /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/i686-linux-android/21/liblog.so || libssh_stub.a
   LANGUAGE_COMPILE_FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -mstackrealign -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info
   LINK_FLAGS = -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--fatal-warnings -Wl,--gc-sections -Wl,--no-undefined -Qunused-arguments
-  LINK_LIBRARIES = /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/i686-linux-android/21/liblog.so  -latomic -lm
+  LINK_LIBRARIES = libssh_stub.a  /opt/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/i686-linux-android/21/liblog.so  -latomic -lm
   OBJECT_DIR = CMakeFiles/ssh_tunnel.dir
   POST_BUILD = :
   PRE_LINK = :
@@ -111,6 +137,8 @@ build rebuild_cache: phony CMakeFiles/rebuild_cache.util
 
 build libssh_tunnel.so: phony /workspaces/android-udp-bridge/ssh-tunnel-android-app/app/build/intermediates/cxx/Debug/38231x1x/obj/x86/libssh_tunnel.so
 
+build ssh_stub: phony libssh_stub.a
+
 build ssh_tunnel: phony /workspaces/android-udp-bridge/ssh-tunnel-android-app/app/build/intermediates/cxx/Debug/38231x1x/obj/x86/libssh_tunnel.so
 
 # =============================================================================
@@ -121,7 +149,7 @@ build ssh_tunnel: phony /workspaces/android-udp-bridge/ssh-tunnel-android-app/ap
 #############################################
 # Folder: /workspaces/android-udp-bridge/ssh-tunnel-android-app/app/.cxx/Debug/38231x1x/x86
 
-build all: phony /workspaces/android-udp-bridge/ssh-tunnel-android-app/app/build/intermediates/cxx/Debug/38231x1x/obj/x86/libssh_tunnel.so
+build all: phony libssh_stub.a /workspaces/android-udp-bridge/ssh-tunnel-android-app/app/build/intermediates/cxx/Debug/38231x1x/obj/x86/libssh_tunnel.so
 
 # =============================================================================
 # Built-in targets
