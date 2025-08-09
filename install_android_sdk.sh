@@ -20,8 +20,9 @@ sudo chown $USER:$USER $ANDROID_HOME
 
 # Download Android Command Line Tools
 cd /tmp
-wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-unzip -q commandlinetools-linux-9477386_latest.zip
+CMDLINE_TOOLS_FILE="commandlinetools-linux-11076708_latest.zip"
+wget -q "https://dl.google.com/android/repository/$CMDLINE_TOOLS_FILE"
+unzip -q "$CMDLINE_TOOLS_FILE"
 mkdir -p $ANDROID_HOME/cmdline-tools
 mv cmdline-tools $ANDROID_HOME/cmdline-tools/latest
 

@@ -1,0 +1,148 @@
+name: Pull Request Check
+
+on:
+  pull_request_target:
+    branches: [ main, openssl ]
+    paths:
+      - 'ssh-tunnel-android-app/**'
+      - '.github/workflows/**'
+      - '*.sh'
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  lint-and-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+        
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+        
+    - name: Setup Android NDK and Build Tools
+      run: |
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;26.3.11579264" || true
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0" || true
+        
+    - name: Make gradlew executable
+      run: chmod +x ssh-tunnel-android-app/gradlew
+      
+    - name: Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+          
+    - name: Run Gradle checks
+      working-directory: ssh-tunnel-android-app
+      run: |
+        ./gradlew check --no-daemon --stacktrace
+        ./gradlew lint --no-daemon --stacktrace
+        
+    - name: Upload lint results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: lint-results
+        path: ssh-tunnel-android-app/app/build/reports/lint-results*.html
+        
+    - name: Comment PR with lint results
+      if: always() && github.event_name == 'pull_request_target'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+          
+          try {
+            const lintDir = 'ssh-tunnel-android-app/app/build/reports/';
+            const files = fs.readdirSync(lintDir);
+            const lintFiles = files.filter(f => f.startsWith('lint-results'));
+            
+            let comment = '## 🔍 Lint Results\n\n';
+            
+            if (lintFiles.length > 0) {
+              comment += `Found ${lintFiles.length} lint report(s). Check the artifacts for detailed results.\n`;
+            } else {
+              comment += '✅ No lint issues found!\n';
+            }
+            
+            comment += '\n📊 **Build Status**: ${{ job.status }}\n';
+            comment += '🏗️ **Workflow**: ${{ github.workflow }}\n';
+            comment += '🔗 **Run**: [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n';
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+          } catch (error) {
+            console.log('Error reading lint results:', error);
+          }
+
+  quick-build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+        
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+        
+    - name: Setup Android NDK and Build Tools
+      run: |
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;26.3.11579264" || true
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0" || true
+        
+    - name: Make gradlew executable
+      run: chmod +x ssh-tunnel-android-app/gradlew
+      
+    - name: Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+          
+    - name: Build with mock libraries (quick check)
+      working-directory: ssh-tunnel-android-app
+      run: |
+        # Remove prebuilt libs to force mock build
+        rm -rf app/src/main/prebuilt/
+        ./gradlew assembleDebug --no-daemon --stacktrace
+        
+    - name: Upload quick build APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: pr-quick-build
+        path: ssh-tunnel-android-app/app/build/outputs/apk/debug/app-debug.apk

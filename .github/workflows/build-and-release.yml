@@ -1,0 +1,364 @@
+name: Build and Release Android App
+
+on:
+  push:
+    branches: [ main, openssl ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-dependencies:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm64-v8a, armeabi-v7a, x86_64, x86]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      with:
+        api-level: '34'
+        build-tools: '34.0.0'
+        ndk-version: '26.3.11579264'
+        
+    - name: Set up build environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake ninja-build pkg-config
+        sudo apt-get install -y autotools-dev autoconf automake libtool
+        sudo apt-get install -y perl wget curl unzip util-linux
+        echo "✅ Установлены необходимые пакеты включая util-linux (flock)"
+        
+    - name: Setup Android NDK
+      run: |
+        # Убеждаемся, что NDK доступен
+        export ANDROID_NDK_HOME=$ANDROID_HOME/ndk/26.3.11579264
+        echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME" >> $GITHUB_ENV
+        echo "Проверяем доступность toolchain для ${{ matrix.arch }}..."
+        ls -la $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/ | head -10
+        
+        # Проверяем конкретные компиляторы для архитектуры
+        case "${{ matrix.arch }}" in
+          "arm64-v8a")
+            ls -la $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android*-clang* || true
+            ;;
+          "armeabi-v7a")
+            ls -la $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi*-clang* || true
+            ;;
+          "x86")
+            ls -la $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/i686-linux-android*-clang* || true
+            ;;
+          "x86_64")
+            ls -la $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android*-clang* || true
+            ;;
+        esac
+        
+    - name: Setup Android environment
+      run: |
+        echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+        echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/26.3.11579264" >> $GITHUB_ENV
+        echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
+        echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
+        
+    - name: Validate build environment for ${{ matrix.arch }}
+      run: |
+        echo "🔍 Проверяем окружение для сборки ${{ matrix.arch }}"
+        echo "NDK_PATH: $ANDROID_NDK_HOME"
+        echo "ANDROID_ABI: ${{ matrix.arch }}"
+        
+        # Проверяем наличие необходимых инструментов
+        which perl
+        which cmake
+        which make
+        which flock
+        
+        # Показываем версии
+        perl --version | head -2
+        cmake --version | head -1
+        make --version | head -1
+        echo "flock version: $(flock --version 2>&1 | head -1)"
+        
+    - name: Pre-download sources to avoid conflicts
+      run: |
+        echo "📥 Предварительно скачиваем исходники для избежания конфликтов..."
+        
+        # Создаём общую директорию для кеша исходников
+        mkdir -p /tmp/source_cache
+        
+        # Скачиваем OpenSSL, если ещё не скачан
+        if [ ! -f "/tmp/source_cache/openssl-3.5.0.tar.gz" ]; then
+          echo "⬇️ Скачиваем OpenSSL..."
+          cd /tmp/source_cache
+          wget -O "openssl-3.5.0.tar.gz" "https://github.com/openssl/openssl/releases/download/openssl-3.5.0/openssl-3.5.0.tar.gz"
+        fi
+        
+        # Скачиваем libssh, если ещё не скачан  
+        if [ ! -f "/tmp/source_cache/libssh-0.11.2.tar.xz" ]; then
+          echo "⬇️ Скачиваем libssh..."
+          cd /tmp/source_cache
+          wget "https://www.libssh.org/files/0.11/libssh-0.11.2.tar.xz"
+        fi
+        
+        echo "✅ Исходники предварительно скачаны"
+        
+    - name: Build OpenSSL and libssh for ${{ matrix.arch }}
+      run: |
+        chmod +x ./build_openssl.sh
+        export ANDROID_ABI=${{ matrix.arch }}
+        # Создаём изолированную рабочую директорию для каждой архитектуры
+        export ARCH_WORK_DIR="$(pwd)/build_${{ matrix.arch }}"
+        mkdir -p "$ARCH_WORK_DIR"
+        echo "🚀 Запускаем сборку для архитектуры: ${{ matrix.arch }}"
+        echo "📁 Рабочая директория: $ARCH_WORK_DIR"
+        
+        # Используем блокировку файлов для безопасности
+        export USE_FILE_LOCKS=1
+        
+        ./build_openssl.sh
+        
+    - name: Validate build results for ${{ matrix.arch }}
+      run: |
+        echo "🔍 Проверяем результаты сборки для ${{ matrix.arch }}"
+        
+        PREBUILT_DIR="ssh-tunnel-android-app/app/src/main/prebuilt"
+        
+        # Добавляем небольшую задержку для избежания race conditions при записи файлов
+        sleep $((RANDOM % 5 + 1))
+        
+        # Проверяем OpenSSL
+        if [ -f "$PREBUILT_DIR/openssl/${{ matrix.arch }}/lib/libssl.a" ] && \
+           [ -f "$PREBUILT_DIR/openssl/${{ matrix.arch }}/lib/libcrypto.a" ]; then
+          echo "✅ OpenSSL библиотеки для ${{ matrix.arch }} собраны успешно"
+          ls -la "$PREBUILT_DIR/openssl/${{ matrix.arch }}/lib/"
+        else
+          echo "❌ OpenSSL библиотеки для ${{ matrix.arch }} не найдены"
+          echo "Проверяем структуру директории..."
+          find "$PREBUILT_DIR/openssl/${{ matrix.arch }}/" -type f 2>/dev/null || echo "Директория не существует"
+          exit 1
+        fi
+        
+        # Проверяем libssh
+        if [ -f "$PREBUILT_DIR/libssh/${{ matrix.arch }}/lib/libssh.a" ]; then
+          echo "✅ libssh библиотека для ${{ matrix.arch }} собрана успешно"
+          ls -la "$PREBUILT_DIR/libssh/${{ matrix.arch }}/lib/"
+        else
+          echo "❌ libssh библиотека для ${{ matrix.arch }} не найдена"
+          echo "Проверяем структуру директории..."
+          find "$PREBUILT_DIR/libssh/${{ matrix.arch }}/" -type f 2>/dev/null || echo "Директория не существует"
+          exit 1
+        fi
+        
+        # Показываем размеры библиотек
+        echo "📊 Размеры библиотек для ${{ matrix.arch }}:"
+        du -h "$PREBUILT_DIR/openssl/${{ matrix.arch }}/lib/"*.a
+        du -h "$PREBUILT_DIR/libssh/${{ matrix.arch }}/lib/"*.a
+        
+    - name: Upload prebuilt libraries
+      uses: actions/upload-artifact@v4
+      with:
+        name: prebuilt-libs-${{ matrix.arch }}
+        path: |
+          ssh-tunnel-android-app/app/src/main/prebuilt/openssl/${{ matrix.arch }}/
+          ssh-tunnel-android-app/app/src/main/prebuilt/libssh/${{ matrix.arch }}/
+        retention-days: 1
+
+  build-android:
+    needs: build-dependencies
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      with:
+        api-level: '34'
+        build-tools: '34.0.0'
+        ndk-version: '26.3.11579264'
+        
+    - name: Download prebuilt libraries
+      uses: actions/download-artifact@v4
+      with:
+        pattern: prebuilt-libs-*
+        merge-multiple: true
+        path: ssh-tunnel-android-app/app/src/main/prebuilt/
+        
+    - name: Verify downloaded libraries structure
+      run: |
+        echo "🔍 Проверяем структуру скачанных библиотек..."
+        find ssh-tunnel-android-app/app/src/main/prebuilt/ -name "*.a" -o -name "*.so" | sort
+        
+        echo "📊 Размеры библиотек по архитектурам:"
+        for arch in arm64-v8a armeabi-v7a x86_64 x86; do
+          if [ -d "ssh-tunnel-android-app/app/src/main/prebuilt/openssl/$arch" ]; then
+            echo "📁 $arch OpenSSL:"
+            du -h ssh-tunnel-android-app/app/src/main/prebuilt/openssl/$arch/lib/*.a 2>/dev/null || echo "   Нет файлов .a"
+          fi
+          if [ -d "ssh-tunnel-android-app/app/src/main/prebuilt/libssh/$arch" ]; then
+            echo "📁 $arch libssh:"  
+            du -h ssh-tunnel-android-app/app/src/main/prebuilt/libssh/$arch/lib/*.a 2>/dev/null || echo "   Нет файлов .a"
+          fi
+        done
+        
+    - name: Make gradlew executable
+      run: chmod +x ssh-tunnel-android-app/gradlew
+      
+    - name: Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+          
+    - name: Build Debug APK
+      working-directory: ssh-tunnel-android-app
+      run: ./gradlew assembleDebug --no-daemon --stacktrace
+      
+    - name: Build Release APK
+      working-directory: ssh-tunnel-android-app
+      run: ./gradlew assembleRelease --no-daemon --stacktrace
+      
+    - name: Sign Release APK
+      if: startsWith(github.ref, 'refs/tags/')
+      working-directory: ssh-tunnel-android-app
+      run: |
+        # Create keystore if it doesn't exist (for demo purposes)
+        if [ ! -f app/release-key.jks ]; then
+          keytool -genkey -v -keystore app/release-key.jks -alias release \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass android -keypass android \
+            -dname "CN=Android Debug,O=Android,C=US"
+        fi
+        
+        # Sign the APK
+        $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
+          --ks app/release-key.jks \
+          --ks-key-alias release \
+          --ks-pass pass:android \
+          --key-pass pass:android \
+          --out app/build/outputs/apk/release/app-release-signed.apk \
+          app/build/outputs/apk/release/app-release-unsigned.apk
+          
+    - name: Upload Debug APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-debug
+        path: ssh-tunnel-android-app/app/build/outputs/apk/debug/app-debug.apk
+        
+    - name: Upload Release APK
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-release
+        path: ssh-tunnel-android-app/app/build/outputs/apk/release/app-release-signed.apk
+
+  test:
+    needs: build-android
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download Debug APK
+      uses: actions/download-artifact@v4
+      with:
+        name: app-debug
+        path: .
+        
+    - name: Test APK installation
+      run: |
+        chmod +x ./test_apk.sh
+        ./test_apk.sh app-debug.apk || true
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [build-android, test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download Release APK
+      uses: actions/download-artifact@v4
+      with:
+        name: app-release
+        path: .
+        
+    - name: Download Debug APK
+      uses: actions/download-artifact@v4
+      with:
+        name: app-debug
+        path: .
+        
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        echo "RELEASE_NOTES<<EOF" >> $GITHUB_OUTPUT
+        echo "# SSH Tunnel Android App ${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        echo "" >> $GITHUB_OUTPUT
+        echo "## Changes in this release:" >> $GITHUB_OUTPUT
+        echo "- Android UDP bridge with SSH tunnel support" >> $GITHUB_OUTPUT
+        echo "- OpenSSL/mbedTLS crypto backend" >> $GITHUB_OUTPUT
+        echo "- Support for password and key authentication" >> $GITHUB_OUTPUT
+        echo "" >> $GITHUB_OUTPUT
+        echo "## Downloads:" >> $GITHUB_OUTPUT
+        echo "- **app-release-signed.apk** - Production release (recommended)" >> $GITHUB_OUTPUT
+        echo "- **app-debug.apk** - Debug version with logging" >> $GITHUB_OUTPUT
+        echo "" >> $GITHUB_OUTPUT
+        echo "## Installation:" >> $GITHUB_OUTPUT
+        echo "1. Enable 'Unknown sources' in Android settings" >> $GITHUB_OUTPUT
+        echo "2. Download and install the APK" >> $GITHUB_OUTPUT
+        echo "3. Grant necessary permissions" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: Release ${{ github.ref_name }}
+        body: ${{ steps.release_notes.outputs.RELEASE_NOTES }}
+        files: |
+          app-release-signed.apk
+          app-debug.apk
+        draft: false
+        prerelease: false
+        tag_name: ${{ github.ref_name }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-info:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Build Information
+      run: |
+        echo "🏗️ Build Information"
+        echo "===================="
+        echo "Repository: ${{ github.repository }}"
+        echo "Branch: ${{ github.ref_name }}"
+        echo "Commit: ${{ github.sha }}"
+        echo "Actor: ${{ github.actor }}"
+        echo "Event: ${{ github.event_name }}"
+        echo "Workflow: ${{ github.workflow }}"
+        echo "Job: ${{ github.job }}"
+        echo "Run ID: ${{ github.run_id }}"
+        echo "Run Number: ${{ github.run_number }}"
