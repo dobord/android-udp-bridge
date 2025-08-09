@@ -124,6 +124,13 @@ build_for_abi() {
 
     # Настройка путей для Android toolchain
     TOOLCHAIN="$NDK_PATH/toolchains/llvm/prebuilt/linux-x86_64"
+    
+    # Проверим, что toolchain существует
+    if [ ! -d "$TOOLCHAIN" ]; then
+        echo "Ошибка: Android toolchain не найден в $TOOLCHAIN"
+        exit 1
+    fi
+    
     export AR="$TOOLCHAIN/bin/llvm-ar"
     export CC="$TOOLCHAIN/bin/${TOOLCHAIN_PREFIX}${MIN_API_LEVEL}-clang"
     export CXX="$TOOLCHAIN/bin/${TOOLCHAIN_PREFIX}${MIN_API_LEVEL}-clang++"
@@ -131,6 +138,14 @@ build_for_abi() {
     export STRIP="$TOOLCHAIN/bin/llvm-strip"
     export RANLIB="$TOOLCHAIN/bin/llvm-ranlib"
     export PATH="$TOOLCHAIN/bin:$PATH"
+    
+    # Дополнительные переменные для OpenSSL
+    export ANDROID_NDK_ROOT="$NDK_PATH"
+    export CROSS_COMPILE="${TOOLCHAIN_PREFIX}${MIN_API_LEVEL}-"
+    
+    echo "Настроены переменные окружения для $ABI:"
+    echo "  CC: $CC"
+    echo "  Toolchain: $TOOLCHAIN"
 
     # Чистим каталоги сборки для предотвращения конфликтов
     rm -rf "$BUILD_DIR" "$OPENSSL_BUILD_DIR"
@@ -138,12 +153,24 @@ build_for_abi() {
 
     # 1) Сборка OpenSSL (статические библиотеки)
     echo "Сборка OpenSSL для архитектуры: $ABI"
-    cd "$OPENSSL_SOURCE_DIR"
+    
+    # Копируем исходники OpenSSL в build директорию для изоляции
+    OPENSSL_BUILD_SOURCE="$OPENSSL_BUILD_DIR/openssl-$OPENSSL_VERSION"
+    rm -rf "$OPENSSL_BUILD_SOURCE"
+    cp -r "$OPENSSL_SOURCE_DIR" "$OPENSSL_BUILD_SOURCE"
+    cd "$OPENSSL_BUILD_SOURCE"
     
     # Очищаем предыдущую конфигурацию
-    make clean || true
+    if [ -f Makefile ]; then
+        make clean || true
+    fi
     
     # Конфигурируем OpenSSL для Android
+    echo "Конфигурируем OpenSSL с параметрами:"
+    echo "  Target: $OPENSSL_ARCH"
+    echo "  API Level: $MIN_API_LEVEL"
+    echo "  Install Dir: $OPENSSL_INSTALL_DIR"
+    
     ./Configure $OPENSSL_ARCH \
         -D__ANDROID_API__=$MIN_API_LEVEL \
         --prefix="$OPENSSL_INSTALL_DIR" \
@@ -152,15 +179,46 @@ build_for_abi() {
         no-tests \
         no-ui-console \
         no-docs \
-        -fPIC
+        -fPIC \
+        -static
+    
+    # Проверяем, что Configure прошел успешно
+    if [ ! -f Makefile ]; then
+        echo "Ошибка: OpenSSL Configure не создал Makefile"
+        echo "Проверьте логи выше для деталей ошибки"
+        exit 1
+    fi
     
     # Собираем и устанавливаем
+    echo "Компилируем OpenSSL..."
     make -j$(nproc)
+    
+    echo "Устанавливаем OpenSSL..."
     make install_sw
+    
+    # Проверяем результат
+    if [ ! -f "$OPENSSL_INSTALL_DIR/lib/libssl.a" ] || [ ! -f "$OPENSSL_INSTALL_DIR/lib/libcrypto.a" ]; then
+        echo "Ошибка: OpenSSL библиотеки не найдены после установки"
+        echo "Ожидались: $OPENSSL_INSTALL_DIR/lib/libssl.a и libcrypto.a"
+        exit 1
+    fi
+    
     echo "✅ OpenSSL для $ABI установлен в $OPENSSL_INSTALL_DIR"
 
     # 2) Сборка libssh со связкой на OpenSSL
+    echo "Сборка libssh для архитектуры: $ABI"
     cd "$BUILD_DIR"
+    
+    # Проверяем, что OpenSSL библиотеки доступны
+    if [ ! -f "$OPENSSL_INSTALL_DIR/lib/libssl.a" ] || [ ! -f "$OPENSSL_INSTALL_DIR/lib/libcrypto.a" ]; then
+        echo "Ошибка: OpenSSL библиотеки не найдены для libssh сборки"
+        exit 1
+    fi
+    
+    echo "Конфигурируем libssh с параметрами:"
+    echo "  OpenSSL Root: $OPENSSL_INSTALL_DIR"
+    echo "  Install Dir: $INSTALL_DIR"
+    echo "  ABI: $ANDROID_ABI"
     
     # Конфигурация CMake для Android
     cmake "$SOURCE_DIR" \
@@ -169,7 +227,7 @@ build_for_abi() {
         -DCMAKE_ANDROID_NDK="$NDK_PATH" \
         -DCMAKE_ANDROID_API=$MIN_API_LEVEL \
         -DCMAKE_ANDROID_STL_TYPE=c++_shared \
-        -DCMAKE_C_FLAGS="-DS_IWRITE=S_IWUSR" \
+        -DCMAKE_C_FLAGS="-DS_IWRITE=S_IWUSR -fPIC" \
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_INSTALL_PREFIX="$INSTALL_DIR" \
         -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
@@ -191,9 +249,30 @@ build_for_abi() {
         -DOPENSSL_CRYPTO_LIBRARY="$OPENSSL_INSTALL_DIR/lib/libcrypto.a" \
         -DOPENSSL_SSL_LIBRARY="$OPENSSL_INSTALL_DIR/lib/libssl.a"
     
+    # Проверяем, что CMake конфигурация прошла успешно
+    if [ $? -ne 0 ]; then
+        echo "Ошибка: CMake конфигурация libssh не удалась"
+        exit 1
+    fi
+    
     # Сборка и установка
+    echo "Компилируем libssh..."
     cmake --build . --config Release -- -j$(nproc)
+    
+    if [ $? -ne 0 ]; then
+        echo "Ошибка: Компиляция libssh не удалась"
+        exit 1
+    fi
+    
+    echo "Устанавливаем libssh..."
     cmake --install .
+    
+    # Проверяем результат
+    if [ ! -f "$INSTALL_DIR/lib/libssh.a" ]; then
+        echo "Ошибка: libssh библиотека не найдена после установки"
+        echo "Ожидалась: $INSTALL_DIR/lib/libssh.a"
+        exit 1
+    fi
     
     echo "✅ Сборка для $ABI завершена"
 }
