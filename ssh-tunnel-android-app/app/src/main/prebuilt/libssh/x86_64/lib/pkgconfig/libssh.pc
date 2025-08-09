@@ -1,0 +1,10 @@
+prefix=/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/prebuilt/libssh/x86_64
+exec_prefix=${prefix}
+libdir=/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/prebuilt/libssh/x86_64/lib
+includedir=/workspaces/android-udp-bridge/ssh-tunnel-android-app/app/src/main/prebuilt/libssh/x86_64/include
+
+Name: libssh
+Description: The SSH Library
+Version: 0.11.2
+Libs: -L${libdir} -lssh
+Cflags: -I${includedir}
