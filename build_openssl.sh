@@ -45,7 +45,14 @@ else
 fi
 
 # Рабочие директории
-WORK_DIR="$(pwd)/openssl_build"
+if [ -n "$ARCH_WORK_DIR" ]; then
+    # Используем изолированную директорию для CI/CD (каждая архитектура в своей папке)
+    WORK_DIR="$ARCH_WORK_DIR/openssl_build"
+    echo "🔧 Используем изолированную рабочую директорию: $WORK_DIR"
+else
+    # Локальная сборка - используем общую директорию
+    WORK_DIR="$(pwd)/openssl_build"
+fi
 SOURCE_DIR="$WORK_DIR/libssh-$LIBSSH_VERSION"
 BUILD_BASE_DIR="$WORK_DIR/build"
 # Устанавливаем прямо в пребилды Android модуля
@@ -60,22 +67,69 @@ echo "Создаём рабочие директории..."
 mkdir -p "$WORK_DIR"
 mkdir -p "$INSTALL_BASE_DIR"
 
-# Скачиваем OpenSSL, если ещё не скачан
+# Скачиваем OpenSSL, если ещё не скачан (с блокировкой для CI)
 if [ ! -f "$OPENSSL_WORK_DIR/openssl-$OPENSSL_VERSION.tar.gz" ]; then
     echo "Скачиваем OpenSSL $OPENSSL_VERSION..."
     mkdir -p "$OPENSSL_WORK_DIR"
     cd "$OPENSSL_WORK_DIR"
-    wget -O "openssl-$OPENSSL_VERSION.tar.gz" "https://github.com/openssl/openssl/releases/download/openssl-$OPENSSL_VERSION/openssl-$OPENSSL_VERSION.tar.gz"
-    tar -xf "openssl-$OPENSSL_VERSION.tar.gz"
+    
+    # Проверяем предварительно скачанные файлы из CI
+    if [ -f "/tmp/source_cache/openssl-$OPENSSL_VERSION.tar.gz" ]; then
+        echo "📦 Используем предварительно скачанный OpenSSL из кеша"
+        cp "/tmp/source_cache/openssl-$OPENSSL_VERSION.tar.gz" .
+        tar -xf "openssl-$OPENSSL_VERSION.tar.gz"
+    # В CI используем блокировку на основе архитектуры
+    elif [ -n "$ANDROID_ABI" ] && [ -n "$ARCH_WORK_DIR" ]; then
+        LOCK_FILE="/tmp/openssl_download_${ANDROID_ABI}.lock"
+        (
+            # Получаем эксклюзивную блокировку на 300 секунд
+            flock -x -w 300 200
+            if [ ! -f "openssl-$OPENSSL_VERSION.tar.gz" ]; then
+                echo "🔒 Блокировка получена для $ANDROID_ABI, скачиваем OpenSSL..."
+                wget -O "openssl-$OPENSSL_VERSION.tar.gz" "https://github.com/openssl/openssl/releases/download/openssl-$OPENSSL_VERSION/openssl-$OPENSSL_VERSION.tar.gz"
+                tar -xf "openssl-$OPENSSL_VERSION.tar.gz"
+            else
+                echo "📁 OpenSSL уже скачан другим процессом"
+            fi
+        ) 200>"$LOCK_FILE"
+    else
+        # Локальная сборка - простое скачивание
+        wget -O "openssl-$OPENSSL_VERSION.tar.gz" "https://github.com/openssl/openssl/releases/download/openssl-$OPENSSL_VERSION/openssl-$OPENSSL_VERSION.tar.gz"
+        tar -xf "openssl-$OPENSSL_VERSION.tar.gz"
+    fi
 fi
 
-# Скачиваем libssh, если ещё не скачан
+# Скачиваем libssh, если ещё не скачан (с блокировкой для CI)
 if [ ! -f "$WORK_DIR/libssh-$LIBSSH_VERSION.tar.xz" ]; then
     echo "Скачиваем libssh $LIBSSH_VERSION..."
     cd "$WORK_DIR"
-    # Начиная с 0.11 используется каталог 0.11
-    wget "https://www.libssh.org/files/0.11/libssh-$LIBSSH_VERSION.tar.xz"
-    tar -xf "libssh-$LIBSSH_VERSION.tar.xz"
+    
+    # Проверяем предварительно скачанные файлы из CI
+    if [ -f "/tmp/source_cache/libssh-$LIBSSH_VERSION.tar.xz" ]; then
+        echo "📦 Используем предварительно скачанный libssh из кеша"
+        cp "/tmp/source_cache/libssh-$LIBSSH_VERSION.tar.xz" .
+        tar -xf "libssh-$LIBSSH_VERSION.tar.xz"
+    # В CI используем блокировку на основе архитектуры
+    elif [ -n "$ANDROID_ABI" ] && [ -n "$ARCH_WORK_DIR" ]; then
+        LOCK_FILE="/tmp/libssh_download_${ANDROID_ABI}.lock"
+        (
+            # Получаем эксклюзивную блокировку на 300 секунд
+            flock -x -w 300 200
+            if [ ! -f "libssh-$LIBSSH_VERSION.tar.xz" ]; then
+                echo "🔒 Блокировка получена для $ANDROID_ABI, скачиваем libssh..."
+                # Начиная с 0.11 используется каталог 0.11
+                wget "https://www.libssh.org/files/0.11/libssh-$LIBSSH_VERSION.tar.xz"
+                tar -xf "libssh-$LIBSSH_VERSION.tar.xz"
+            else
+                echo "📁 libssh уже скачан другим процессом"
+            fi
+        ) 200>"$LOCK_FILE"
+    else
+        # Локальная сборка - простое скачивание
+        # Начиная с 0.11 используется каталог 0.11
+        wget "https://www.libssh.org/files/0.11/libssh-$LIBSSH_VERSION.tar.xz"
+        tar -xf "libssh-$LIBSSH_VERSION.tar.xz"
+    fi
 fi
 
 # Функция для получения флагов компиляции для конкретной архитектуры
