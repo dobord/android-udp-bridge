@@ -42,7 +42,7 @@ get_arch_flags() {
             LDFLAGS=""
             ;;
         "x86_64")
-            CFLAGS="-march=x86-64 -msse4.2 -mpopcnt -m64 -fPIC"
+            CFLAGS="-march=x86-64 -msse4.2 -mpopcnt -m64 -fPIC -Wno-macro-redefined"
             LDFLAGS=""
             ;;
         *)

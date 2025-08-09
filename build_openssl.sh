@@ -101,8 +101,8 @@ get_arch_flags() {
             LDFLAGS=""
             ;;
         "x86_64")
-            # Флаги для x86_64 - оптимизация для современных процессоров
-            CFLAGS="-march=x86-64 -msse4.2 -mpopcnt -m64 -fPIC"
+            # Флаги для x86_64 - оптимизация для современных процессоров (исправленные для Android)
+            CFLAGS="-march=x86-64 -msse4.2 -mpopcnt -m64 -fPIC -Wno-macro-redefined"
             LDFLAGS=""
             ;;
         *)
@@ -230,9 +230,9 @@ build_for_abi() {
     echo "  API Level: $MIN_API_LEVEL"
     echo "  Install Dir: $OPENSSL_INSTALL_DIR"
     
-    # Специальные настройки для ARMv7 чтобы избежать проблем линковки
-    if [ "$ABI" = "armeabi-v7a" ]; then
-        echo "Применяем специальные настройки для ARMv7..."
+    # Специальные настройки для ARMv7 и x86_64 чтобы избежать проблем линковки
+    if [ "$ABI" = "armeabi-v7a" ] || [ "$ABI" = "x86_64" ]; then
+        echo "Применяем специальные настройки для $ABI..."
         ./Configure $OPENSSL_ARCH \
             -D__ANDROID_API__=$MIN_API_LEVEL \
             --prefix="$OPENSSL_INSTALL_DIR" \
@@ -264,17 +264,17 @@ build_for_abi() {
     
     # Собираем и устанавливаем
     echo "Компилируем OpenSSL..."
-    if [ "$ABI" = "armeabi-v7a" ]; then
-        # Для ARMv7 собираем только библиотеки без приложений
-        echo "Сборка только библиотек для ARMv7..."
+    if [ "$ABI" = "armeabi-v7a" ] || [ "$ABI" = "x86_64" ]; then
+        # Для ARMv7 и x86_64 собираем только библиотеки без приложений
+        echo "Сборка только библиотек для $ABI..."
         make -j$(nproc) build_libs
     else
         make -j$(nproc)
     fi
     
     echo "Устанавливаем OpenSSL..."
-    if [ "$ABI" = "armeabi-v7a" ]; then
-        # Для ARMv7 устанавливаем только библиотеки
+    if [ "$ABI" = "armeabi-v7a" ] || [ "$ABI" = "x86_64" ]; then
+        # Для ARMv7 и x86_64 устанавливаем только библиотеки
         make install_dev
     else
         make install_sw
