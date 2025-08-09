@@ -34,8 +34,8 @@ get_arch_flags() {
             LDFLAGS="-Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384"
             ;;
         "armeabi-v7a")
-            CFLAGS="-march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 -mthumb -fPIC"
-            LDFLAGS="-Wl,--fix-cortex-a8"
+            CFLAGS="-march=armv7-a -mfloat-abi=softfp -mfpu=neon -mthumb -fPIC"
+            LDFLAGS="-Wl,--fix-cortex-a8 -Wl,-m,armelf_linux_eabi"
             ;;
         "x86")
             CFLAGS="-march=i686 -msse3 -fPIC"
