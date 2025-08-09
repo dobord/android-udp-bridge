@@ -34,8 +34,17 @@ OPENSSL_VERSION="3.5.0"
 MIN_API_LEVEL=24
 # Флаги для 16K страниц (Android 15)
 MAX_PAGE_LDFLAGS="-Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384"
-# Ограничиваемся arm64-v8a для ускорения и соответствия настройкам приложения
-ABIS=("arm64-v8a")
+
+# Определяем архитектуры для сборки
+if [ -n "$ANDROID_ABI" ]; then
+    # Если задана переменная ANDROID_ABI (например, в CI), используем только её
+    ABIS=("$ANDROID_ABI")
+    echo "🎯 Сборка для архитектуры из ANDROID_ABI: $ANDROID_ABI"
+else
+    # По умолчанию собираем все основные архитектуры
+    ABIS=("arm64-v8a" "armeabi-v7a" "x86_64" "x86")
+    echo "🔄 Сборка для всех архитектур: ${ABIS[*]}"
+fi
 
 # Рабочие директории
 WORK_DIR="$(pwd)/openssl_build"

@@ -43,12 +43,14 @@ jobs:
     - name: Build OpenSSL for ${{ matrix.arch }}
       run: |
         chmod +x ./build_openssl.sh
-        ANDROID_ABI=${{ matrix.arch }} ./build_openssl.sh
+        export ANDROID_ABI=${{ matrix.arch }}
+        ./build_openssl.sh
         
     - name: Build libssh for ${{ matrix.arch }}
       run: |
         chmod +x ./build_libssh_openssl.sh
-        ANDROID_ABI=${{ matrix.arch }} ./build_libssh_openssl.sh
+        export ANDROID_ABI=${{ matrix.arch }}
+        ./build_libssh_openssl.sh
         
     - name: Upload prebuilt libraries
       uses: actions/upload-artifact@v4
