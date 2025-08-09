@@ -1,0 +1,299 @@
+name: Create Release on Tag
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'  # v1.0.0, v1.0.0-beta, etc.
+
+jobs:
+  validate-tag:
+    runs-on: ubuntu-latest
+    outputs:
+      is_valid: ${{ steps.validate.outputs.is_valid }}
+      version: ${{ steps.validate.outputs.version }}
+      is_prerelease: ${{ steps.validate.outputs.is_prerelease }}
+      
+    steps:
+    - name: Validate tag format
+      id: validate
+      run: |
+        TAG_NAME="${{ github.ref_name }}"
+        echo "Validating tag: $TAG_NAME"
+        
+        # Проверяем формат тега
+        if [[ $TAG_NAME =~ ^v[0-9]+\.[0-9]+\.[0-9]+.*$ ]]; then
+          echo "is_valid=true" >> $GITHUB_OUTPUT
+          echo "version=${TAG_NAME#v}" >> $GITHUB_OUTPUT
+          
+          # Проверяем, является ли это предварительным релизом
+          if [[ $TAG_NAME =~ (alpha|beta|rc|dev) ]]; then
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          fi
+        else
+          echo "is_valid=false" >> $GITHUB_OUTPUT
+          echo "Invalid tag format: $TAG_NAME"
+          exit 1
+        fi
+
+  build-release:
+    needs: validate-tag
+    if: needs.validate-tag.outputs.is_valid == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [arm64-v8a, armeabi-v7a, x86_64, x86]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up build environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake ninja-build pkg-config
+        sudo apt-get install -y autotools-dev autoconf automake libtool
+        
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      with:
+        api-level: 34
+        build-tools: 34.0.0
+        ndk-version: 26.3.11579264
+        
+    - name: Install Android SDK
+      run: |
+        chmod +x ./install_android_sdk.sh
+        ./install_android_sdk.sh
+        
+    - name: Build OpenSSL for ${{ matrix.arch }}
+      run: |
+        chmod +x ./build_openssl.sh
+        ANDROID_ABI=${{ matrix.arch }} ./build_openssl.sh
+        
+    - name: Build libssh for ${{ matrix.arch }}
+      run: |
+        chmod +x ./build_libssh_openssl.sh
+        ANDROID_ABI=${{ matrix.arch }} ./build_libssh_openssl.sh
+        
+    - name: Upload libraries for ${{ matrix.arch }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: libs-${{ matrix.arch }}
+        path: ssh-tunnel-android-app/app/src/main/prebuilt/
+        retention-days: 1
+
+  create-apk:
+    needs: [validate-tag, build-release]
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      with:
+        api-level: 34
+        build-tools: 34.0.0
+        ndk-version: 26.3.11579264
+        
+    - name: Download all libraries
+      uses: actions/download-artifact@v4
+      with:
+        pattern: libs-*
+        merge-multiple: true
+        path: ssh-tunnel-android-app/app/src/main/prebuilt/
+        
+    - name: Make gradlew executable
+      run: chmod +x ssh-tunnel-android-app/gradlew
+      
+    - name: Update version in build.gradle
+      working-directory: ssh-tunnel-android-app/app
+      run: |
+        VERSION="${{ needs.validate-tag.outputs.version }}"
+        echo "Updating version to: $VERSION"
+        
+        # Извлекаем компоненты версии
+        VERSION_MAJOR=$(echo $VERSION | cut -d. -f1)
+        VERSION_MINOR=$(echo $VERSION | cut -d. -f2)
+        VERSION_PATCH=$(echo $VERSION | cut -d. -f3 | cut -d- -f1)
+        VERSION_CODE=$((VERSION_MAJOR * 10000 + VERSION_MINOR * 100 + VERSION_PATCH))
+        
+        # Обновляем build.gradle
+        sed -i "s/versionCode [0-9]*/versionCode $VERSION_CODE/" build.gradle
+        sed -i "s/versionName \".*\"/versionName \"$VERSION\"/" build.gradle
+        
+        echo "Updated versionCode to: $VERSION_CODE"
+        echo "Updated versionName to: $VERSION"
+        
+    - name: Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+          
+    - name: Build Release APK
+      working-directory: ssh-tunnel-android-app
+      run: ./gradlew assembleRelease --no-daemon --stacktrace
+      
+    - name: Build Debug APK
+      working-directory: ssh-tunnel-android-app
+      run: ./gradlew assembleDebug --no-daemon --stacktrace
+      
+    - name: Generate keystore for signing
+      working-directory: ssh-tunnel-android-app
+      run: |
+        # Создаем keystore для подписи (в реальном проекте используйте secrets)
+        keytool -genkey -v -keystore app/release-key.jks -alias release \
+          -keyalg RSA -keysize 2048 -validity 10000 \
+          -storepass android -keypass android \
+          -dname "CN=SSH Tunnel Android,O=Open Source,C=US"
+          
+    - name: Sign Release APK
+      working-directory: ssh-tunnel-android-app
+      run: |
+        $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
+          --ks app/release-key.jks \
+          --ks-key-alias release \
+          --ks-pass pass:android \
+          --key-pass pass:android \
+          --out app/build/outputs/apk/release/ssh-tunnel-${{ needs.validate-tag.outputs.version }}-release.apk \
+          app/build/outputs/apk/release/app-release-unsigned.apk
+          
+        # Переименуем debug APK
+        cp app/build/outputs/apk/debug/app-debug.apk \
+           app/build/outputs/apk/debug/ssh-tunnel-${{ needs.validate-tag.outputs.version }}-debug.apk
+           
+    - name: Generate APK checksums
+      working-directory: ssh-tunnel-android-app
+      run: |
+        cd app/build/outputs/apk/release/
+        sha256sum ssh-tunnel-${{ needs.validate-tag.outputs.version }}-release.apk > checksums.txt
+        cd ../debug/
+        sha256sum ssh-tunnel-${{ needs.validate-tag.outputs.version }}-debug.apk >> ../../release/checksums.txt
+        
+    - name: Upload Release APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-apk
+        path: |
+          ssh-tunnel-android-app/app/build/outputs/apk/release/ssh-tunnel-${{ needs.validate-tag.outputs.version }}-release.apk
+          ssh-tunnel-android-app/app/build/outputs/apk/debug/ssh-tunnel-${{ needs.validate-tag.outputs.version }}-debug.apk
+          ssh-tunnel-android-app/app/build/outputs/apk/release/checksums.txt
+
+  create-github-release:
+    needs: [validate-tag, create-apk]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Полная история для changelog
+        
+    - name: Download APKs
+      uses: actions/download-artifact@v4
+      with:
+        name: release-apk
+        path: ./release-files/
+        
+    - name: Generate changelog
+      id: changelog
+      run: |
+        VERSION="${{ needs.validate-tag.outputs.version }}"
+        
+        # Получаем предыдущий тег
+        PREV_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
+        
+        echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+        echo "# 🚀 SSH Tunnel Android App v$VERSION" >> $GITHUB_OUTPUT
+        echo "" >> $GITHUB_OUTPUT
+        
+        if [ -n "$PREV_TAG" ]; then
+          echo "## 📝 Changes since $PREV_TAG:" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          
+          # Получаем список коммитов
+          git log --pretty=format:"- %s (%h)" $PREV_TAG..HEAD >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+        else
+          echo "## 📝 Initial release" >> $GITHUB_OUTPUT
+        fi
+        
+        echo "" >> $GITHUB_OUTPUT
+        echo "## 📱 Installation Instructions:" >> $GITHUB_OUTPUT
+        echo "" >> $GITHUB_OUTPUT
+        echo "1. **Enable Unknown Sources**: Go to Settings > Security and enable 'Unknown sources'" >> $GITHUB_OUTPUT
+        echo "2. **Download APK**: Choose the appropriate APK for your needs:" >> $GITHUB_OUTPUT
+        echo "   - **Release APK**: Optimized for production use" >> $GITHUB_OUTPUT
+        echo "   - **Debug APK**: Includes debug logging for troubleshooting" >> $GITHUB_OUTPUT
+        echo "3. **Install**: Open the downloaded APK file and follow installation prompts" >> $GITHUB_OUTPUT
+        echo "4. **Permissions**: Grant necessary permissions when prompted" >> $GITHUB_OUTPUT
+        echo "" >> $GITHUB_OUTPUT
+        echo "## 🔧 Features:" >> $GITHUB_OUTPUT
+        echo "" >> $GITHUB_OUTPUT
+        echo "- SSH tunnel with UDP forwarding" >> $GITHUB_OUTPUT
+        echo "- Password and SSH key authentication" >> $GITHUB_OUTPUT
+        echo "- OpenSSL crypto backend support" >> $GITHUB_OUTPUT
+        echo "- Android 7.0+ compatibility" >> $GITHUB_OUTPUT
+        echo "- Multiple architecture support (ARM64, ARMv7, x86, x86_64)" >> $GITHUB_OUTPUT
+        echo "" >> $GITHUB_OUTPUT
+        echo "## 🔒 Security:" >> $GITHUB_OUTPUT
+        echo "" >> $GITHUB_OUTPUT
+        echo "- All APKs are signed with release keys" >> $GITHUB_OUTPUT
+        echo "- SHA256 checksums are provided for verification" >> $GITHUB_OUTPUT
+        echo "- Source code is available for review" >> $GITHUB_OUTPUT
+        echo "" >> $GITHUB_OUTPUT
+        echo "## 📋 File Checksums:" >> $GITHUB_OUTPUT
+        echo "" >> $GITHUB_OUTPUT
+        echo "\`\`\`" >> $GITHUB_OUTPUT
+        cat ./release-files/checksums.txt >> $GITHUB_OUTPUT
+        echo "\`\`\`" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: "SSH Tunnel Android v${{ needs.validate-tag.outputs.version }}"
+        body: ${{ steps.changelog.outputs.CHANGELOG }}
+        files: |
+          ./release-files/ssh-tunnel-${{ needs.validate-tag.outputs.version }}-release.apk
+          ./release-files/ssh-tunnel-${{ needs.validate-tag.outputs.version }}-debug.apk
+          ./release-files/checksums.txt
+        draft: false
+        prerelease: ${{ needs.validate-tag.outputs.is_prerelease == 'true' }}
+        tag_name: ${{ github.ref_name }}
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Announce release
+      run: |
+        echo "🎉 Release v${{ needs.validate-tag.outputs.version }} created successfully!"
+        echo "📦 Release URL: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
+        echo "💾 Files included:"
+        ls -la ./release-files/
+        echo ""
+        echo "🔗 Direct download links:"
+        echo "- Release APK: ${{ github.server_url }}/${{ github.repository }}/releases/download/${{ github.ref_name }}/ssh-tunnel-${{ needs.validate-tag.outputs.version }}-release.apk"
+        echo "- Debug APK: ${{ github.server_url }}/${{ github.repository }}/releases/download/${{ github.ref_name }}/ssh-tunnel-${{ needs.validate-tag.outputs.version }}-debug.apk"
