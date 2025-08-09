@@ -265,8 +265,8 @@ build_for_abi() {
     # Собираем и устанавливаем
     echo "Компилируем OpenSSL..."
     if [ "$ABI" = "armeabi-v7a" ] || [ "$ABI" = "x86_64" ]; then
-        # Для ARMv7 и x86_64 собираем только библиотеки без приложений
-        echo "Сборка только библиотек для $ABI..."
+        # Для ARMv7 и x86_64 собираем все, но осторожно (apps могут вызвать проблемы при линковке)
+        echo "Сборка всех компонентов для $ABI (без приложений)..."
         make -j$(nproc) build_libs
     else
         make -j$(nproc)
@@ -274,8 +274,17 @@ build_for_abi() {
     
     echo "Устанавливаем OpenSSL..."
     if [ "$ABI" = "armeabi-v7a" ] || [ "$ABI" = "x86_64" ]; then
-        # Для ARMv7 и x86_64 устанавливаем только библиотеки
-        make install_dev
+        # Для ARMv7 и x86_64 устанавливаем только нужные компоненты
+        echo "Устанавливаем библиотеки и заголовочные файлы для $ABI..."
+        make install_ssldirs install_dev
+        # Проверяем и устанавливаем дополнительно, если нужно
+        if [ ! -f "$OPENSSL_INSTALL_DIR/include/openssl/des.h" ]; then
+            echo "Принудительно копируем заголовочные файлы..."
+            # Копируем заголовочные файлы напрямую
+            mkdir -p "$OPENSSL_INSTALL_DIR/include/openssl"
+            cp -r include/openssl/* "$OPENSSL_INSTALL_DIR/include/openssl/" 2>/dev/null || true
+            cp -r include/crypto/* "$OPENSSL_INSTALL_DIR/include/openssl/" 2>/dev/null || true
+        fi
     else
         make install_sw
     fi
