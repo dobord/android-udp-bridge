@@ -13,6 +13,7 @@ jobs:
   build-dependencies:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         arch: [arm64-v8a, armeabi-v7a, x86_64, x86]
     
@@ -23,9 +24,9 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
       with:
-        api-level: 34
-        build-tools: 34.0.0
-        ndk-version: 26.3.11579264
+        api-level: '34'
+        build-tools: '34.0.0'
+        ndk-version: '26.3.11579264'
         
     - name: Set up build environment
       run: |
@@ -39,7 +40,24 @@ jobs:
         # Убеждаемся, что NDK доступен
         export ANDROID_NDK_HOME=$ANDROID_HOME/ndk/26.3.11579264
         echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME" >> $GITHUB_ENV
+        echo "Проверяем доступность toolchain для ${{ matrix.arch }}..."
         ls -la $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/ | head -10
+        
+        # Проверяем конкретные компиляторы для архитектуры
+        case "${{ matrix.arch }}" in
+          "arm64-v8a")
+            ls -la $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android*-clang* || true
+            ;;
+          "armeabi-v7a")
+            ls -la $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi*-clang* || true
+            ;;
+          "x86")
+            ls -la $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/i686-linux-android*-clang* || true
+            ;;
+          "x86_64")
+            ls -la $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android*-clang* || true
+            ;;
+        esac
         
     - name: Setup Android environment
       run: |
@@ -48,17 +66,58 @@ jobs:
         echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
         echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
         
-    - name: Build OpenSSL for ${{ matrix.arch }}
+    - name: Validate build environment for ${{ matrix.arch }}
+      run: |
+        echo "🔍 Проверяем окружение для сборки ${{ matrix.arch }}"
+        echo "NDK_PATH: $ANDROID_NDK_HOME"
+        echo "ANDROID_ABI: ${{ matrix.arch }}"
+        
+        # Проверяем наличие необходимых инструментов
+        which perl
+        which cmake
+        which make
+        
+        # Показываем версии
+        perl --version | head -2
+        cmake --version | head -1
+        make --version | head -1
+        
+    - name: Build OpenSSL and libssh for ${{ matrix.arch }}
       run: |
         chmod +x ./build_openssl.sh
         export ANDROID_ABI=${{ matrix.arch }}
+        echo "🚀 Запускаем сборку для архитектуры: ${{ matrix.arch }}"
         ./build_openssl.sh
         
-    - name: Build libssh for ${{ matrix.arch }}
+    - name: Validate build results for ${{ matrix.arch }}
       run: |
-        chmod +x ./build_libssh_openssl.sh
-        export ANDROID_ABI=${{ matrix.arch }}
-        ./build_libssh_openssl.sh
+        echo "🔍 Проверяем результаты сборки для ${{ matrix.arch }}"
+        
+        PREBUILT_DIR="ssh-tunnel-android-app/app/src/main/prebuilt"
+        
+        # Проверяем OpenSSL
+        if [ -f "$PREBUILT_DIR/openssl/${{ matrix.arch }}/lib/libssl.a" ] && \
+           [ -f "$PREBUILT_DIR/openssl/${{ matrix.arch }}/lib/libcrypto.a" ]; then
+          echo "✅ OpenSSL библиотеки для ${{ matrix.arch }} собраны успешно"
+          ls -la "$PREBUILT_DIR/openssl/${{ matrix.arch }}/lib/"
+        else
+          echo "❌ OpenSSL библиотеки для ${{ matrix.arch }} не найдены"
+          exit 1
+        fi
+        
+        # Проверяем libssh
+        if [ -f "$PREBUILT_DIR/libssh/${{ matrix.arch }}/lib/libssh.a" ]; then
+          echo "✅ libssh библиотека для ${{ matrix.arch }} собрана успешно"
+          ls -la "$PREBUILT_DIR/libssh/${{ matrix.arch }}/lib/"
+        else
+          echo "❌ libssh библиотека для ${{ matrix.arch }} не найдена"
+          exit 1
+        fi
+        
+        # Показываем размеры библиотек
+        echo "📊 Размеры библиотек для ${{ matrix.arch }}:"
+        du -h "$PREBUILT_DIR/openssl/${{ matrix.arch }}/lib/"*.a
+        du -h "$PREBUILT_DIR/libssh/${{ matrix.arch }}/lib/"*.a
         
     - name: Upload prebuilt libraries
       uses: actions/upload-artifact@v4
@@ -85,9 +144,9 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
       with:
-        api-level: 34
-        build-tools: 34.0.0
-        ndk-version: 26.3.11579264
+        api-level: '34'
+        build-tools: '34.0.0'
+        ndk-version: '26.3.11579264'
         
     - name: Download prebuilt libraries
       uses: actions/download-artifact@v4
