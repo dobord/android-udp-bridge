@@ -19,13 +19,21 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
-// Direct mbedTLS includes for manual crypto initialization
+// Crypto library includes for manual crypto initialization
 #ifndef USE_LIBSSH_MOCK
+#ifdef USE_OPENSSL
+#include <openssl/rand.h>
+#include <openssl/err.h>
+#include <openssl/ssl.h>
+#include <openssl/crypto.h>
+#include <openssl/evp.h>
+#else
 #include <mbedtls/entropy.h>
 #include <mbedtls/ctr_drbg.h>
 #include <mbedtls/platform.h>
 #include <mbedtls/error.h>
 #include <mbedtls/threading.h>
+#endif
 #endif
 
 #define LOG_TAG "SSHTunnelApp"
@@ -39,10 +47,15 @@ static pthread_mutex_t session_mutex = PTHREAD_MUTEX_INITIALIZER;
 #ifndef USE_LIBSSH_MOCK
 static volatile int g_libssh_initialized = 0;
 
+#ifdef USE_OPENSSL
+// Global OpenSSL objects for manual crypto initialization
+static volatile int g_openssl_initialized = 0;
+#else
 // Global mbedTLS objects for manual crypto initialization
 static mbedtls_entropy_context g_entropy;
 static mbedtls_ctr_drbg_context g_ctr_drbg;
 static volatile int g_mbedtls_initialized = 0;
+#endif
 #endif
 
 #ifndef USE_LIBSSH_MOCK
@@ -76,6 +89,50 @@ static int android_entropy_source(void *data, unsigned char *output, size_t len,
     return 0;
 }
 
+#ifdef USE_OPENSSL
+// Direct OpenSSL initialization as workaround for libssh init failure
+static int init_openssl_directly() {
+    if (g_openssl_initialized) {
+        LOGI("OpenSSL already initialized");
+        return 0;
+    }
+    
+    LOGI("Initializing OpenSSL directly");
+    
+    // Initialize OpenSSL
+    SSL_library_init();
+    SSL_load_error_strings();
+    OpenSSL_add_all_algorithms();
+    
+    // Seed the random number generator
+    unsigned char entropy_buf[32];
+    size_t entropy_len;
+    if (android_entropy_source(NULL, entropy_buf, sizeof(entropy_buf), &entropy_len) == 0) {
+        RAND_seed(entropy_buf, (int)entropy_len);
+        LOGI("OpenSSL seeded with %zu bytes of entropy", entropy_len);
+    } else {
+        LOGE("Failed to seed OpenSSL with entropy");
+        return -1;
+    }
+    
+    // Test random number generation
+    unsigned char test_buf[32];
+    if (RAND_bytes(test_buf, sizeof(test_buf)) != 1) {
+        LOGE("OpenSSL random number generation test failed");
+        return -1;
+    }
+    
+    LOGI("OpenSSL initialized successfully");
+    g_openssl_initialized = 1;
+    return 0;
+}
+
+// Custom crypto initialization function for OpenSSL
+static int force_crypto_init() {
+    LOGI("Forcing OpenSSL crypto initialization");
+    return init_openssl_directly();
+}
+#else
 // Direct mbedTLS initialization as workaround for libssh init failure
 static int init_mbedtls_directly() {
     if (g_mbedtls_initialized) {
@@ -133,7 +190,7 @@ static int init_mbedtls_directly() {
 
 // Custom crypto initialization function that mimics what libssh should do
 static int force_crypto_init() {
-    LOGI("Forcing crypto initialization");
+    LOGI("Forcing mbedTLS crypto initialization");
     
     // Initialize platform
     int ret = mbedtls_platform_setup(NULL);
@@ -149,6 +206,7 @@ static int force_crypto_init() {
     
     return 0;
 }
+#endif
 // Enhanced initialization with entropy source
 static int init_libssh_with_entropy() {
     LOGI("Attempting to initialize libssh with custom entropy source");
@@ -251,13 +309,22 @@ JNIEXPORT void JNICALL JNI_OnUnload(JavaVM* vm, void* reserved) {
         g_libssh_initialized = 0;
     }
     
-    // Clean up mbedTLS
+    // Clean up crypto library
+#ifdef USE_OPENSSL
+    if (g_openssl_initialized) {
+        EVP_cleanup();
+        ERR_free_strings();
+        g_openssl_initialized = 0;
+        LOGI("OpenSSL cleanup completed");
+    }
+#else
     if (g_mbedtls_initialized) {
         mbedtls_ctr_drbg_free(&g_ctr_drbg);
         mbedtls_entropy_free(&g_entropy);
         g_mbedtls_initialized = 0;
         LOGI("mbedTLS cleanup completed");
     }
+#endif
 }
 #endif
 
