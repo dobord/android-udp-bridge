@@ -230,8 +230,8 @@ build_for_abi() {
     echo "  API Level: $MIN_API_LEVEL"
     echo "  Install Dir: $OPENSSL_INSTALL_DIR"
     
-    # Специальные настройки для ARMv7 и x86_64 чтобы избежать проблем линковки
-    if [ "$ABI" = "armeabi-v7a" ] || [ "$ABI" = "x86_64" ]; then
+    # Специальные настройки для ARMv7, x86 и x86_64 чтобы избежать проблем линковки
+    if [ "$ABI" = "armeabi-v7a" ] || [ "$ABI" = "x86_64" ] || [ "$ABI" = "x86" ]; then
         echo "Применяем специальные настройки для $ABI..."
         ./Configure $OPENSSL_ARCH \
             -D__ANDROID_API__=$MIN_API_LEVEL \
@@ -264,8 +264,8 @@ build_for_abi() {
     
     # Собираем и устанавливаем
     echo "Компилируем OpenSSL..."
-    if [ "$ABI" = "armeabi-v7a" ] || [ "$ABI" = "x86_64" ]; then
-        # Для ARMv7 и x86_64 собираем все, но осторожно (apps могут вызвать проблемы при линковке)
+    if [ "$ABI" = "armeabi-v7a" ] || [ "$ABI" = "x86_64" ] || [ "$ABI" = "x86" ]; then
+        # Для ARMv7, x86 и x86_64 собираем все, но осторожно (apps могут вызвать проблемы при линковке)
         echo "Сборка всех компонентов для $ABI (без приложений)..."
         make -j$(nproc) build_libs
     else
@@ -273,8 +273,8 @@ build_for_abi() {
     fi
     
     echo "Устанавливаем OpenSSL..."
-    if [ "$ABI" = "armeabi-v7a" ] || [ "$ABI" = "x86_64" ]; then
-        # Для ARMv7 и x86_64 устанавливаем только нужные компоненты
+    if [ "$ABI" = "armeabi-v7a" ] || [ "$ABI" = "x86_64" ] || [ "$ABI" = "x86" ]; then
+        # Для ARMv7, x86 и x86_64 устанавливаем только нужные компоненты
         echo "Устанавливаем библиотеки и заголовочные файлы для $ABI..."
         make install_ssldirs install_dev
         # Проверяем и устанавливаем дополнительно, если нужно
