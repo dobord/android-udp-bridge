@@ -20,9 +20,10 @@
 - **Обоснование**: Поддержка 16K страниц для Android 15+, базовый ARMv8-A
 
 #### ARMv7 (armeabi-v7a)
-- `CFLAGS`: `-march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 -mthumb -fPIC`
-- `LDFLAGS`: `-Wl,--fix-cortex-a8`
-- **Обоснование**: Исправление известной проблемы Cortex-A8, NEON поддержка, Thumb для уменьшения размера
+- `CFLAGS`: `-march=armv7-a -mfloat-abi=softfp -mfpu=neon -mthumb -fPIC`
+- `LDFLAGS`: `-Wl,--fix-cortex-a8 -Wl,-m,armelf_linux_eabi`
+- **Обоснование**: Исправление известной проблемы Cortex-A8, NEON поддержка, Thumb для уменьшения размера, специальный линкер для Android ARMv7
+- **Специальные настройки OpenSSL**: `no-apps` и `build_libs` для избежания проблем линковки
 
 #### x86 (x86)
 - `CFLAGS`: `-march=i686 -msse3 -fPIC`
@@ -51,6 +52,15 @@ ndk-version: '26.3.11579264'
 - Проверка наличия библиотек
 - Вывод размеров файлов
 - Проверка toolchain для каждой архитектуры
+
+### 4. Проблемы линковки для ARMv7
+
+**Проблема**: Ошибка линковки `ld.lld: error: is incompatible with armelf_linux_eabi` при сборке OpenSSL для ARMv7.
+
+**Решение**: 
+- Добавлен флаг `-Wl,-m,armelf_linux_eabi` для принудительного использования правильной ABI
+- Для ARMv7 OpenSSL собирается с опциями `no-apps` и `build_libs` для избежания проблем с приложениями
+- Изменен FPU с `vfpv3-d16` на `neon` для лучшей совместимости
 
 ## Структура изменений
 

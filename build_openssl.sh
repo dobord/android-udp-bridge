@@ -91,9 +91,9 @@ get_arch_flags() {
             LDFLAGS="-Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384"
             ;;
         "armeabi-v7a")
-            # Флаги для ARMv7 - совместимость с thumb и NEON
-            CFLAGS="-march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 -mthumb -fPIC"
-            LDFLAGS="-Wl,--fix-cortex-a8"
+            # Флаги для ARMv7 - совместимость с thumb и NEON (исправленные для Android)
+            CFLAGS="-march=armv7-a -mfloat-abi=softfp -mfpu=neon -mthumb -fPIC"
+            LDFLAGS="-Wl,--fix-cortex-a8 -Wl,-m,armelf_linux_eabi"
             ;;
         "x86")
             # Флаги для x86 - поддержка SSE и совместимость (упрощённые флаги)
@@ -230,15 +230,30 @@ build_for_abi() {
     echo "  API Level: $MIN_API_LEVEL"
     echo "  Install Dir: $OPENSSL_INSTALL_DIR"
     
-    ./Configure $OPENSSL_ARCH \
-        -D__ANDROID_API__=$MIN_API_LEVEL \
-        --prefix="$OPENSSL_INSTALL_DIR" \
-        --openssldir="$OPENSSL_INSTALL_DIR" \
-        no-shared \
-        no-tests \
-        no-ui-console \
-        no-docs \
-        -static
+    # Специальные настройки для ARMv7 чтобы избежать проблем линковки
+    if [ "$ABI" = "armeabi-v7a" ]; then
+        echo "Применяем специальные настройки для ARMv7..."
+        ./Configure $OPENSSL_ARCH \
+            -D__ANDROID_API__=$MIN_API_LEVEL \
+            --prefix="$OPENSSL_INSTALL_DIR" \
+            --openssldir="$OPENSSL_INSTALL_DIR" \
+            no-shared \
+            no-tests \
+            no-ui-console \
+            no-docs \
+            no-apps \
+            -static
+    else
+        ./Configure $OPENSSL_ARCH \
+            -D__ANDROID_API__=$MIN_API_LEVEL \
+            --prefix="$OPENSSL_INSTALL_DIR" \
+            --openssldir="$OPENSSL_INSTALL_DIR" \
+            no-shared \
+            no-tests \
+            no-ui-console \
+            no-docs \
+            -static
+    fi
     
     # Проверяем, что Configure прошел успешно
     if [ ! -f Makefile ]; then
@@ -249,10 +264,21 @@ build_for_abi() {
     
     # Собираем и устанавливаем
     echo "Компилируем OpenSSL..."
-    make -j$(nproc)
+    if [ "$ABI" = "armeabi-v7a" ]; then
+        # Для ARMv7 собираем только библиотеки без приложений
+        echo "Сборка только библиотек для ARMv7..."
+        make -j$(nproc) build_libs
+    else
+        make -j$(nproc)
+    fi
     
     echo "Устанавливаем OpenSSL..."
-    make install_sw
+    if [ "$ABI" = "armeabi-v7a" ]; then
+        # Для ARMv7 устанавливаем только библиотеки
+        make install_dev
+    else
+        make install_sw
+    fi
     
     # Проверяем результат
     if [ ! -f "$OPENSSL_INSTALL_DIR/lib/libssl.a" ] || [ ! -f "$OPENSSL_INSTALL_DIR/lib/libcrypto.a" ]; then
