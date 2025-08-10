@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  udp-bridge-server:
+    build: .
+    container_name: udp-bridge-server
+    ports:
+      - "2222:22"           # SSH port
+      - "8080:8080"         # Bridge TCP port
+      - "5060:5060/udp"     # UDP forwarding port (example for SIP)
+    environment:
+      - TARGET_UDP_HOST=${TARGET_UDP_HOST:-127.0.0.1}
+      - TARGET_UDP_PORT=${TARGET_UDP_PORT:-5060}
+      - BRIDGE_TCP_PORT=8080
+      - CLIENT_TIMEOUT=300
+      - MAX_CLIENTS=1000
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - SSH_USER=sshuser
+      - SSH_PASSWORD=sshpassword
+    volumes:
+      - ./logs:/opt/udp-bridge/logs
+      - ./ssh_keys:/etc/ssh/keys:ro
+    restart: unless-stopped
+    networks:
+      - udp-bridge-net
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "22"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  udp-bridge-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

@@ -1,0 +1,43 @@
+# SSH Server Configuration for UDP Bridge
+Port 22
+Protocol 2
+
+# Host keys
+HostKey /etc/ssh/ssh_host_rsa_key
+HostKey /etc/ssh/ssh_host_ecdsa_key
+HostKey /etc/ssh/ssh_host_ed25519_key
+
+# Authentication
+PermitRootLogin no
+PasswordAuthentication yes
+PubkeyAuthentication yes
+AuthorizedKeysFile .ssh/authorized_keys
+
+# Security settings
+PermitEmptyPasswords no
+ChallengeResponseAuthentication no
+UsePAM yes
+
+# Tunneling
+AllowTcpForwarding yes
+GatewayPorts no
+X11Forwarding no
+
+# Connection settings
+ClientAliveInterval 60
+ClientAliveCountMax 3
+MaxAuthTries 3
+MaxSessions 10
+
+# Logging
+SyslogFacility AUTH
+LogLevel INFO
+
+# Subsystem
+Subsystem sftp /usr/lib/openssh/sftp-server
+
+# User restrictions
+AllowUsers sshuser
+
+# Banner
+Banner none
