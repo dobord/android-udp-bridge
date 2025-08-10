@@ -21,6 +21,7 @@
 
 // UDP Bridge Protocol integration
 #include "udp_bridge_protocol.h"
+#include "udp_listener.h"
 
 // Crypto library includes for manual crypto initialization
 #ifndef USE_LIBSSH_MOCK
@@ -47,6 +48,10 @@
 static ssh_session session = NULL;
 static int tunnel_active = 0;
 static pthread_mutex_t session_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+// UDP Bridge listener integration
+static udp_listener_ctx_t* udp_listener = NULL;
+static pthread_mutex_t udp_listener_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 #ifndef USE_LIBSSH_MOCK
 static volatile int g_libssh_initialized = 0;
@@ -546,22 +551,93 @@ JNIEXPORT void JNICALL Java_com_example_sshtunnel_SSHTunnelService_disconnect(JN
     pthread_mutex_unlock(&session_mutex);
 }
 
-// Simplified tunnel function (rest would need similar treatment)
+// Enhanced tunnel function with UDP bridge integration
 JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SSHTunnelService_startTunnel(
     JNIEnv *env, jobject obj, jstring remote_host, jint remote_port, jint local_port) {
     
-    (void)env; (void)obj; (void)remote_host; (void)remote_port; (void)local_port;
+    (void)obj; // Suppress unused parameter warning
     
-    LOGI("Mock tunnel started successfully");
+    const char *remote_host_str = (*env)->GetStringUTFChars(env, remote_host, 0);
+    
+    LOGI("Starting UDP bridge tunnel to %s:%d, local port: %d", remote_host_str, remote_port, local_port);
+    
+    pthread_mutex_lock(&udp_listener_mutex);
+    
+    // Stop existing listener if running
+    if (udp_listener) {
+        udp_listener_stop(udp_listener);
+        udp_listener_destroy(udp_listener);
+        udp_listener = NULL;
+    }
+    
+    // Create new UDP listener
+    udp_listener = udp_listener_create(local_port);
+    if (!udp_listener) {
+        LOGE("Failed to create UDP listener");
+        pthread_mutex_unlock(&udp_listener_mutex);
+        (*env)->ReleaseStringUTFChars(env, remote_host, remote_host_str);
+        return -1;
+    }
+    
+    // Configure bridge server (using remote_host as bridge server)
+    if (udp_listener_set_bridge_server(udp_listener, remote_host_str, remote_port) != 0) {
+        LOGE("Failed to configure bridge server");
+        udp_listener_destroy(udp_listener);
+        udp_listener = NULL;
+        pthread_mutex_unlock(&udp_listener_mutex);
+        (*env)->ReleaseStringUTFChars(env, remote_host, remote_host_str);
+        return -1;
+    }
+    
+    // Connect to bridge server
+    if (udp_listener_connect_bridge(udp_listener) != 0) {
+        LOGE("Failed to connect to bridge server");
+        udp_listener_destroy(udp_listener);
+        udp_listener = NULL;
+        pthread_mutex_unlock(&udp_listener_mutex);
+        (*env)->ReleaseStringUTFChars(env, remote_host, remote_host_str);
+        return -1;
+    }
+    
+    // Start UDP listener
+    if (udp_listener_start(udp_listener) != 0) {
+        LOGE("Failed to start UDP listener");
+        udp_listener_destroy(udp_listener);
+        udp_listener = NULL;
+        pthread_mutex_unlock(&udp_listener_mutex);
+        (*env)->ReleaseStringUTFChars(env, remote_host, remote_host_str);
+        return -1;
+    }
+    
     tunnel_active = 1;
-    return 0; // Mock success
+    pthread_mutex_unlock(&udp_listener_mutex);
+    
+    (*env)->ReleaseStringUTFChars(env, remote_host, remote_host_str);
+    
+    LOGI("UDP bridge tunnel started successfully");
+    return 0;
 }
 
 JNIEXPORT void JNICALL Java_com_example_sshtunnel_SSHTunnelService_stopTunnel(JNIEnv *env, jobject obj) {
     (void)env; (void)obj; // Suppress unused parameter warnings
     
-    LOGI("Stopping tunnel");
+    LOGI("Stopping UDP bridge tunnel");
+    
+    pthread_mutex_lock(&udp_listener_mutex);
+    
+    if (udp_listener) {
+        // Stop and destroy UDP listener
+        udp_listener_stop(udp_listener);
+        udp_listener_disconnect_bridge(udp_listener);
+        udp_listener_destroy(udp_listener);
+        udp_listener = NULL;
+        LOGI("UDP listener stopped and destroyed");
+    }
+    
     tunnel_active = 0;
+    pthread_mutex_unlock(&udp_listener_mutex);
+    
+    LOGI("UDP bridge tunnel stopped");
 }
 
 JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SSHTunnelService_isConnected(JNIEnv *env, jobject obj) {
@@ -572,4 +648,76 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SSHTunnelService_isConnect
     pthread_mutex_unlock(&session_mutex);
     
     return connected;
+}
+
+// UDP Bridge specific JNI functions
+
+// Get UDP bridge statistics
+JNIEXPORT jstring JNICALL Java_com_example_sshtunnel_SSHTunnelService_getUdpBridgeStats(JNIEnv *env, jobject obj) {
+    (void)obj; // Suppress unused parameter warning
+    
+    pthread_mutex_lock(&udp_listener_mutex);
+    
+    if (!udp_listener) {
+        pthread_mutex_unlock(&udp_listener_mutex);
+        return (*env)->NewStringUTF(env, "UDP Bridge not active");
+    }
+    
+    uint64_t packets_rx, packets_tx, bytes_rx, bytes_tx;
+    uint32_t errors;
+    
+    udp_listener_get_stats(udp_listener, &packets_rx, &packets_tx, &bytes_rx, &bytes_tx, &errors);
+    
+    pthread_mutex_unlock(&udp_listener_mutex);
+    
+    // Format statistics string
+    char stats_buffer[512];
+    snprintf(stats_buffer, sizeof(stats_buffer),
+        "Packets RX: %llu, TX: %llu\nBytes RX: %llu, TX: %llu\nErrors: %u\nStatus: %s",
+        (unsigned long long)packets_rx, (unsigned long long)packets_tx,
+        (unsigned long long)bytes_rx, (unsigned long long)bytes_tx,
+        errors, udp_listener_is_running(udp_listener) ? "Running" : "Stopped");
+    
+    return (*env)->NewStringUTF(env, stats_buffer);
+}
+
+// Check if UDP bridge is running
+JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SSHTunnelService_isUdpBridgeRunning(JNIEnv *env, jobject obj) {
+    (void)env; (void)obj; // Suppress unused parameter warnings
+    
+    pthread_mutex_lock(&udp_listener_mutex);
+    jboolean running = (udp_listener && udp_listener_is_running(udp_listener)) ? JNI_TRUE : JNI_FALSE;
+    pthread_mutex_unlock(&udp_listener_mutex);
+    
+    return running;
+}
+
+// Reset UDP bridge statistics
+JNIEXPORT void JNICALL Java_com_example_sshtunnel_SSHTunnelService_resetUdpBridgeStats(JNIEnv *env, jobject obj) {
+    (void)env; (void)obj; // Suppress unused parameter warnings
+    
+    pthread_mutex_lock(&udp_listener_mutex);
+    
+    if (udp_listener) {
+        udp_listener_reset_stats(udp_listener);
+        LOGI("UDP bridge statistics reset");
+    }
+    
+    pthread_mutex_unlock(&udp_listener_mutex);
+}
+
+// Get client count from UDP bridge
+JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SSHTunnelService_getUdpBridgeClientCount(JNIEnv *env, jobject obj) {
+    (void)env; (void)obj; // Suppress unused parameter warnings
+    
+    pthread_mutex_lock(&udp_listener_mutex);
+    
+    jint client_count = 0;
+    if (udp_listener && udp_listener->protocol_ctx && udp_listener->protocol_ctx->client_manager) {
+        client_count = (jint)client_manager_get_count(udp_listener->protocol_ctx->client_manager);
+    }
+    
+    pthread_mutex_unlock(&udp_listener_mutex);
+    
+    return client_count;
 }

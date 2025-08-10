@@ -6,7 +6,7 @@ include $(CLEAR_VARS)
 LIBRARY_NAME := ssh_tunnel
 
 # Specify the source files
-LOCAL_SRC_FILES := ssh_tunnel.c udp_bridge_protocol.c udp_bridge_test.c client_manager.c
+LOCAL_SRC_FILES := ssh_tunnel.c udp_bridge_protocol.c udp_bridge_test.c client_manager.c udp_listener.c
 
 # Include headers
 LOCAL_C_INCLUDES := $(LOCAL_PATH)

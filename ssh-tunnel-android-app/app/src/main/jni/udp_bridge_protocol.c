@@ -306,6 +306,92 @@ int android_cleanup_expired_clients(android_protocol_ctx_t* ctx) {
     return client_manager_auto_cleanup(ctx->client_manager);
 }
 
+// Bridge connection management implementation
+int android_bridge_connect(android_protocol_ctx_t* ctx, const char* server_host, int server_port) {
+    if (!ctx || !server_host || server_port <= 0) {
+        LOGE("Invalid parameters for bridge connection");
+        return -1;
+    }
+    
+    LOGI("Connecting to bridge server %s:%d", server_host, server_port);
+    
+    // Close existing connection if any
+    if (ctx->tcp_socket >= 0) {
+        close(ctx->tcp_socket);
+        ctx->tcp_socket = -1;
+    }
+    
+    // Create TCP socket
+    ctx->tcp_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (ctx->tcp_socket < 0) {
+        LOGE("Failed to create TCP socket: %s", strerror(errno));
+        return -1;
+    }
+    
+    // Set socket timeout
+    struct timeval timeout;
+    timeout.tv_sec = 10;  // 10 seconds
+    timeout.tv_usec = 0;
+    if (setsockopt(ctx->tcp_socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
+        LOGW("Failed to set socket receive timeout: %s", strerror(errno));
+    }
+    if (setsockopt(ctx->tcp_socket, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout)) < 0) {
+        LOGW("Failed to set socket send timeout: %s", strerror(errno));
+    }
+    
+    // Setup server address
+    struct sockaddr_in server_addr;
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(server_port);
+    
+    if (inet_pton(AF_INET, server_host, &server_addr.sin_addr) <= 0) {
+        LOGE("Invalid server address: %s", server_host);
+        close(ctx->tcp_socket);
+        ctx->tcp_socket = -1;
+        return -1;
+    }
+    
+    // Connect to server
+    if (connect(ctx->tcp_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
+        LOGE("Failed to connect to bridge server %s:%d: %s", server_host, server_port, strerror(errno));
+        close(ctx->tcp_socket);
+        ctx->tcp_socket = -1;
+        return -1;
+    }
+    
+    LOGI("Successfully connected to bridge server %s:%d", server_host, server_port);
+    return 0;
+}
+
+// Bridge disconnection
+void android_bridge_disconnect(android_protocol_ctx_t* ctx) {
+    if (!ctx) return;
+    
+    if (ctx->tcp_socket >= 0) {
+        LOGI("Disconnecting from bridge server");
+        close(ctx->tcp_socket);
+        ctx->tcp_socket = -1;
+    }
+}
+
+// Check bridge connection status
+int android_bridge_is_connected(android_protocol_ctx_t* ctx) {
+    if (!ctx || ctx->tcp_socket < 0) {
+        return 0;
+    }
+    
+    // Try to send a ping to check connection
+    char test_byte = 0;
+    ssize_t result = send(ctx->tcp_socket, &test_byte, 0, MSG_DONTWAIT | MSG_NOSIGNAL);
+    if (result < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+        LOGW("Bridge connection appears to be broken: %s", strerror(errno));
+        return 0;
+    }
+    
+    return 1;
+}
+
 // JNI function to get client statistics (useful for debugging)
 JNIEXPORT jstring JNICALL Java_com_example_udpbridge_UdpBridgeProtocol_getClientStats(JNIEnv *env, jobject thiz) {
     if (!g_protocol_ctx || !g_protocol_ctx->client_manager) {
