@@ -131,6 +131,11 @@ int ssh_options_set(ssh_session session, ssh_options_e type, const void* value) 
 			break;
 		case SSH_OPTIONS_LOG_VERBOSITY:
 			break;
+		case SSH_OPTIONS_CIPHERS_C_S:
+		case SSH_OPTIONS_CIPHERS_S_C:
+		case SSH_OPTIONS_KEY_EXCHANGE:
+			// Mock implementation - just ignore these crypto options
+			break;
 	}
 	return SSH_OK;
 }

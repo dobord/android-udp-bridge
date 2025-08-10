@@ -207,6 +207,8 @@ static int force_crypto_init() {
     return 0;
 }
 #endif
+
+#ifndef USE_LIBSSH_MOCK
 // Enhanced initialization with entropy source
 static int init_libssh_with_entropy() {
     LOGI("Attempting to initialize libssh with custom entropy source");
@@ -251,6 +253,7 @@ static int init_libssh_with_entropy() {
     }
 }
 #endif
+
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
     (void)vm; (void)reserved;  // Suppress unused parameter warnings
     // Avoid process kill on SIGPIPE when writing to a closed socket/channel
@@ -500,6 +503,7 @@ Java_com_example_sshtunnel_SshTunnelService_connectToServer(JNIEnv *env, jobject
     
     ssh_set_blocking(session, 1);
 
+#ifndef USE_LIBSSH_MOCK
     // CRITICAL: Force entropy initialization before any crypto operations
     LOGI("Forcing entropy initialization before ssh_connect");
     unsigned char entropy_buf[64];
@@ -522,6 +526,9 @@ Java_com_example_sshtunnel_SshTunnelService_connectToServer(JNIEnv *env, jobject
     } else {
         LOGE("Critical: Unable to generate entropy before ssh_connect - expect crashes");
     }
+#else
+    LOGI("Mock mode: Skipping entropy initialization");
+#endif
 
     LOGI("Attempting SSH connection to %s:%d with enhanced crypto options", host_str, port);
     int connection = ssh_connect(session);
