@@ -159,6 +159,22 @@ jobs:
         ls -la app/src/main/jni/ssh_tunnel.c
         ls -la app/src/main/cpp/CMakeLists.txt
         
+        # Check if ssh_tunnel.c contains USE_LIBSSH_MOCK guards
+        echo "🔍 Checking USE_LIBSSH_MOCK guards in ssh_tunnel.c..."
+        if grep -q "USE_LIBSSH_MOCK" app/src/main/jni/ssh_tunnel.c; then
+          echo "✅ USE_LIBSSH_MOCK guards found in ssh_tunnel.c"
+        else
+          echo "❌ USE_LIBSSH_MOCK guards not found in ssh_tunnel.c"
+        fi
+        
+        # Check libssh_mock.h for required constants
+        echo "🔍 Checking libssh_mock.h for required constants..."
+        if grep -q "SSH_OPTIONS_CIPHERS_C_S" app/src/main/jni/libssh_mock.h; then
+          echo "✅ Required SSH_OPTIONS constants found in libssh_mock.h"
+        else
+          echo "❌ Required SSH_OPTIONS constants missing in libssh_mock.h"
+        fi
+        
         # Show CMakeLists.txt structure 
         echo "📋 CMakeLists.txt content (first 30 lines):"
         head -30 app/src/main/cpp/CMakeLists.txt
@@ -184,6 +200,10 @@ jobs:
         EOFCMAKE
         
         echo "✅ Simplified CMakeLists.txt created for mock build"
+        
+        # Show the new CMakeLists.txt content  
+        echo "📋 New CMakeLists.txt content:"
+        cat app/src/main/cpp/CMakeLists.txt
         
         # Temporarily enable only one ABI for quick mock build
         echo "📱 Temporarily setting single ABI for quick mock build..."
