@@ -183,13 +183,20 @@ int android_protocol_init(android_protocol_ctx_t* ctx, int local_port) {
     }
     
     memset(ctx, 0, sizeof(android_protocol_ctx_t));
-    ctx->next_client_id = 1;
     ctx->tcp_socket = -1;
     ctx->udp_socket = -1;
     ctx->local_port = local_port;
     
+    // Initialize client manager
+    ctx->client_manager = client_manager_create(0, 0);  // Use default values
+    if (!ctx->client_manager) {
+        LOGE("Failed to create client manager");
+        return -1;
+    }
+    
     if (pthread_mutex_init(&ctx->mutex, NULL) != 0) {
         LOGE("Failed to initialize mutex");
+        client_manager_destroy(ctx->client_manager);
         return -1;
     }
     
@@ -198,6 +205,7 @@ int android_protocol_init(android_protocol_ctx_t* ctx, int local_port) {
     if (ctx->udp_socket < 0) {
         LOGE("Failed to create UDP socket: %s", strerror(errno));
         pthread_mutex_destroy(&ctx->mutex);
+        client_manager_destroy(ctx->client_manager);
         return -1;
     }
     
@@ -212,10 +220,11 @@ int android_protocol_init(android_protocol_ctx_t* ctx, int local_port) {
         LOGE("Failed to bind UDP socket to port %d: %s", local_port, strerror(errno));
         close(ctx->udp_socket);
         pthread_mutex_destroy(&ctx->mutex);
+        client_manager_destroy(ctx->client_manager);
         return -1;
     }
     
-    LOGI("Protocol initialized on UDP port %d", local_port);
+    LOGI("Protocol initialized on UDP port %d with client manager", local_port);
     return 0;
 }
 
@@ -237,157 +246,87 @@ void android_protocol_cleanup(android_protocol_ctx_t* ctx) {
         ctx->udp_socket = -1;
     }
     
-    // Free client list
-    android_client_t* current = ctx->clients;
-    while (current) {
-        android_client_t* next = current->next;
-        free(current);
-        current = next;
-    }
-    ctx->clients = NULL;
-    
     pthread_mutex_unlock(&ctx->mutex);
     pthread_mutex_destroy(&ctx->mutex);
+    
+    // Destroy client manager
+    if (ctx->client_manager) {
+        client_manager_destroy(ctx->client_manager);
+        ctx->client_manager = NULL;
+    }
     
     LOGI("Protocol cleanup completed");
 }
 
-android_client_t* android_find_or_create_client(android_protocol_ctx_t* ctx, struct sockaddr_in* addr) {
-    if (!ctx || !addr) {
+uint32_t android_add_or_update_client(android_protocol_ctx_t* ctx, struct sockaddr_in* addr) {
+    if (!ctx || !addr || !ctx->client_manager) {
+        LOGE("Invalid parameters for android_add_or_update_client");
+        return 0;
+    }
+    
+    uint32_t client_id = client_manager_add_client(ctx->client_manager, addr);
+    if (client_id > 0) {
+        LOGD("Client added/updated: ID=%u, addr=%s:%d", 
+             client_id, inet_ntoa(addr->sin_addr), ntohs(addr->sin_port));
+    }
+    
+    return client_id;
+}
+
+client_entry_t* android_find_client_by_id(android_protocol_ctx_t* ctx, uint32_t client_id) {
+    if (!ctx || !ctx->client_manager || client_id == 0) {
         return NULL;
     }
     
-    pthread_mutex_lock(&ctx->mutex);
-    
-    // Search for existing client
-    android_client_t* current = ctx->clients;
-    while (current) {
-        if (current->addr.sin_addr.s_addr == addr->sin_addr.s_addr &&
-            current->addr.sin_port == addr->sin_port) {
-            current->last_activity = time(NULL);
-            pthread_mutex_unlock(&ctx->mutex);
-            return current;
-        }
-        current = current->next;
-    }
-    
-    // Create new client
-    android_client_t* new_client = malloc(sizeof(android_client_t));
-    if (!new_client) {
-        LOGE("Failed to allocate memory for new client");
-        pthread_mutex_unlock(&ctx->mutex);
+    return client_manager_find_by_id(ctx->client_manager, client_id);
+}
+
+client_entry_t* android_find_client_by_addr(android_protocol_ctx_t* ctx, struct sockaddr_in* addr) {
+    if (!ctx || !ctx->client_manager || !addr) {
         return NULL;
     }
     
-    new_client->client_id = ctx->next_client_id++;
-    new_client->addr = *addr;
-    new_client->last_activity = time(NULL);
-    new_client->packet_count = 0;
-    new_client->next = ctx->clients;
-    ctx->clients = new_client;
-    
-    LOGI("Created new client with ID %d", new_client->client_id);
-    
-    pthread_mutex_unlock(&ctx->mutex);
-    return new_client;
+    return client_manager_find_by_addr(ctx->client_manager, addr);
 }
 
-android_client_t* android_find_client_by_id(android_protocol_ctx_t* ctx, uint32_t client_id) {
-    if (!ctx) {
-        return NULL;
+int android_update_client_stats(android_protocol_ctx_t* ctx, uint32_t client_id, 
+                               uint32_t bytes_received, uint32_t bytes_sent) {
+    if (!ctx || !ctx->client_manager) {
+        return -1;
     }
     
-    pthread_mutex_lock(&ctx->mutex);
-    
-    android_client_t* current = ctx->clients;
-    while (current) {
-        if (current->client_id == client_id) {
-            pthread_mutex_unlock(&ctx->mutex);
-            return current;
-        }
-        current = current->next;
-    }
-    
-    pthread_mutex_unlock(&ctx->mutex);
-    return NULL;
+    return client_manager_update_stats(ctx->client_manager, client_id, bytes_received, bytes_sent);
 }
 
-int android_send_protocol_message(android_protocol_ctx_t* ctx, message_type_t type, 
-                                 uint32_t client_id, const void* data, size_t size) {
-    if (!ctx || ctx->tcp_socket < 0) {
+int android_cleanup_expired_clients(android_protocol_ctx_t* ctx) {
+    if (!ctx || !ctx->client_manager) {
         return -1;
     }
     
-    char buffer[PROTOCOL_MAX_PAYLOAD_SIZE + UDP_BRIDGE_HEADER_SIZE];
-    int message_size = protocol_create_message(buffer, sizeof(buffer), type, client_id, FLAG_NONE, data, size);
-    
-    if (message_size < 0) {
-        LOGE("Failed to create protocol message");
-        return -1;
-    }
-    
-    ssize_t sent = send(ctx->tcp_socket, buffer, message_size, 0);
-    if (sent != message_size) {
-        LOGE("Failed to send protocol message: %s", strerror(errno));
-        return -1;
-    }
-    
-    LOGD("Sent %s message (client_id=%d, size=%d)", protocol_message_type_string(type), client_id, message_size);
-    return 0;
+    return client_manager_auto_cleanup(ctx->client_manager);
 }
 
-int android_bridge_connect(android_protocol_ctx_t* ctx, const char* server_host, int server_port) {
-    if (!ctx || !server_host) {
-        return -1;
+// JNI function to get client statistics (useful for debugging)
+JNIEXPORT jstring JNICALL Java_com_example_udpbridge_UdpBridgeProtocol_getClientStats(JNIEnv *env, jobject thiz) {
+    if (!g_protocol_ctx || !g_protocol_ctx->client_manager) {
+        return (*env)->NewStringUTF(env, "No client manager available");
     }
     
-    if (ctx->tcp_socket >= 0) {
-        close(ctx->tcp_socket);
-    }
+    uint32_t client_count = client_manager_get_count(g_protocol_ctx->client_manager);
+    char stats_buffer[256];
+    snprintf(stats_buffer, sizeof(stats_buffer), 
+             "Active clients: %u", client_count);
     
-    ctx->tcp_socket = socket(AF_INET, SOCK_STREAM, 0);
-    if (ctx->tcp_socket < 0) {
-        LOGE("Failed to create TCP socket: %s", strerror(errno));
-        return -1;
-    }
-    
-    struct sockaddr_in server_addr;
-    memset(&server_addr, 0, sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(server_port);
-    
-    if (inet_pton(AF_INET, server_host, &server_addr.sin_addr) <= 0) {
-        LOGE("Invalid server address: %s", server_host);
-        close(ctx->tcp_socket);
-        ctx->tcp_socket = -1;
-        return -1;
-    }
-    
-    if (connect(ctx->tcp_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
-        LOGE("Failed to connect to bridge server %s:%d: %s", server_host, server_port, strerror(errno));
-        close(ctx->tcp_socket);
-        ctx->tcp_socket = -1;
-        return -1;
-    }
-    
-    LOGI("Connected to bridge server %s:%d", server_host, server_port);
-    return 0;
+    return (*env)->NewStringUTF(env, stats_buffer);
 }
 
-void android_bridge_disconnect(android_protocol_ctx_t* ctx) {
-    if (!ctx) {
-        return;
+// JNI function to manually trigger client cleanup
+JNIEXPORT jint JNICALL Java_com_example_udpbridge_UdpBridgeProtocol_cleanupExpiredClients(JNIEnv *env, jobject thiz) {
+    if (!g_protocol_ctx || !g_protocol_ctx->client_manager) {
+        return -1;
     }
     
-    if (ctx->tcp_socket >= 0) {
-        close(ctx->tcp_socket);
-        ctx->tcp_socket = -1;
-        LOGI("Disconnected from bridge server");
-    }
-}
-
-int android_bridge_is_connected(android_protocol_ctx_t* ctx) {
-    return (ctx && ctx->tcp_socket >= 0) ? 1 : 0;
+    return android_cleanup_expired_clients(g_protocol_ctx);
 }
 
 // JNI interface implementation
