@@ -61,6 +61,14 @@ uint32_t client_table_add(client_table_t* table, int tcp_socket);
 client_entry_t* client_table_find(client_table_t* table, uint32_t client_id);
 
 /**
+ * Find client by TCP socket
+ * @param table Client table
+ * @param tcp_socket TCP socket to search for
+ * @return Pointer to client entry or NULL if not found
+ */
+client_entry_t* client_table_find_by_socket(client_table_t* table, int tcp_socket);
+
+/**
  * Remove a client by ID
  * @param table Client table
  * @param client_id Client ID to remove

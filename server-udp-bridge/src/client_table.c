@@ -139,6 +139,24 @@ client_entry_t* client_table_find(client_table_t* table, uint32_t client_id) {
     return NULL;
 }
 
+client_entry_t* client_table_find_by_socket(client_table_t* table, int tcp_socket) {
+    if (!table || tcp_socket < 0) return NULL;
+    
+    pthread_mutex_lock(&table->mutex);
+    
+    client_entry_t* current = table->head;
+    while (current) {
+        if (current->tcp_socket == tcp_socket) {
+            pthread_mutex_unlock(&table->mutex);
+            return current;
+        }
+        current = current->next;
+    }
+    
+    pthread_mutex_unlock(&table->mutex);
+    return NULL;
+}
+
 int client_table_remove(client_table_t* table, uint32_t client_id) {
     if (!table || client_id == 0) return -1;
     
@@ -367,13 +385,19 @@ void client_table_stop_cleanup(client_table_t* table) {
 
 static void* cleanup_thread_func(void* arg) {
     client_table_t* table = (client_table_t*)arg;
+    time_t sleep_interval = table->timeout_seconds / 2;
     
-    printf("Cleanup thread started, checking every %ld seconds\n", 
-           table->timeout_seconds / 2);
+    // Ensure minimum sleep interval of 1 second, maximum 10 seconds
+    if (sleep_interval < 1) sleep_interval = 1;
+    if (sleep_interval > 10) sleep_interval = 10;
+    
+    printf("Cleanup thread started, checking every %ld seconds\n", sleep_interval);
     
     while (table->cleanup_running) {
-        // Sleep for half the timeout period
-        sleep(table->timeout_seconds / 2);
+        // Use shorter sleep intervals for faster shutdown
+        for (int i = 0; i < sleep_interval && table->cleanup_running; i++) {
+            sleep(1);
+        }
         
         if (!table->cleanup_running) break;
         
