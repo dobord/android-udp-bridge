@@ -19,6 +19,9 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
+// UDP Bridge Protocol integration
+#include "udp_bridge_protocol.h"
+
 // Crypto library includes for manual crypto initialization
 #ifndef USE_LIBSSH_MOCK
 #ifdef USE_OPENSSL
