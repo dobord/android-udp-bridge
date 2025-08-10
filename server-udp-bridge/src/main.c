@@ -55,6 +55,119 @@ int parse_target(const char* target, char* host, int* port) {
     return 0;
 }
 
+// Function prototypes
+void handle_client_connection(int client_socket, uint32_t client_id, 
+                             udp_forwarder_t* forwarder, client_table_t* clients);
+
+// Client connection handler
+void handle_client_connection(int client_socket, uint32_t client_id, 
+                             udp_forwarder_t* forwarder, client_table_t* clients) {
+    char buffer[4096];
+    int keepalive = 1;
+    
+    // Set socket to non-blocking for timeout handling
+    struct timeval timeout;
+    timeout.tv_sec = 30;  // 30 seconds timeout
+    timeout.tv_usec = 0;
+    setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+    
+    printf("Handling client %u connection\n", client_id);
+    
+    while (keepalive && running) {
+        // Receive data from client
+        ssize_t received = recv(client_socket, buffer, sizeof(buffer), 0);
+        
+        if (received <= 0) {
+            if (received == 0) {
+                printf("Client %u disconnected\n", client_id);
+            } else {
+                if (errno != EAGAIN && errno != EWOULDBLOCK) {
+                    printf("Client %u receive error: %s\n", client_id, strerror(errno));
+                }
+            }
+            break;
+        }
+        
+        // Update client activity
+        client_table_update_activity(clients, client_id);
+        
+        // Parse protocol message
+        udp_bridge_header_t header;
+        if (protocol_parse_header(buffer, received, &header) != 0) {
+            printf("Client %u sent invalid protocol message\n", client_id);
+            continue;
+        }
+        
+        // Verify client ID matches
+        if (header.client_id != client_id) {
+            printf("Client %u sent message with wrong client_id %u\n", client_id, header.client_id);
+            continue;
+        }
+        
+        // Handle different message types
+        switch (header.message_type) {
+            case MSG_DATA: {
+                // Extract UDP payload and forward it
+                if (header.payload_size > 0 && received >= (ssize_t)(sizeof(header) + header.payload_size)) {
+                    const char* payload = buffer + sizeof(header);
+                    
+                    printf("Client %u: forwarding %u bytes to UDP target\n", client_id, header.payload_size);
+                    
+                    // Forward to UDP target
+                    int result = udp_forwarder_send(forwarder, client_id, payload, header.payload_size);
+                    if (result < 0) {
+                        printf("Failed to forward UDP data for client %u\n", client_id);
+                    }
+                } else {
+                    printf("Client %u sent invalid MSG_DATA (payload_size=%u, received=%zd)\n", 
+                           client_id, header.payload_size, received);
+                }
+                break;
+            }
+            
+            case MSG_CLIENT_REGISTER: {
+                printf("Client %u sent registration request\n", client_id);
+                // Send confirmation back
+                char response[256];
+                int resp_size = protocol_create_message(response, sizeof(response), MSG_CLIENT_REGISTER, 
+                                                       client_id, 0, NULL, 0);
+                if (resp_size > 0) {
+                    send(client_socket, response, resp_size, 0);
+                }
+                break;
+            }
+            
+            case MSG_PING: {
+                printf("Client %u sent ping\n", client_id);
+                // Send pong back
+                char response[256];
+                int resp_size = protocol_create_message(response, sizeof(response), MSG_PONG, 
+                                                       client_id, 0, NULL, 0);
+                if (resp_size > 0) {
+                    send(client_socket, response, resp_size, 0);
+                }
+                break;
+            }
+            
+            case MSG_CLIENT_TIMEOUT: {
+                printf("Client %u requested disconnect\n", client_id);
+                keepalive = 0;
+                break;
+            }
+            
+            default: {
+                printf("Client %u sent unknown message type: %u\n", client_id, header.message_type);
+                break;
+            }
+        }
+    }
+    
+    // Cleanup
+    printf("Closing connection for client %u\n", client_id);
+    close(client_socket);
+    client_table_remove(clients, client_id);
+}
+
 int main(int argc, char* argv[]) {
     // Default configuration
     int listen_port = 8080;
@@ -101,6 +214,33 @@ int main(int argc, char* argv[]) {
                 print_usage(argv[0]);
                 return 1;
         }
+    }
+    
+    // Override with environment variables if set
+    const char* env_port = getenv("BRIDGE_TCP_PORT");
+    if (env_port) {
+        listen_port = atoi(env_port);
+        printf("Using port from environment: %d\n", listen_port);
+    }
+    
+    const char* env_target_host = getenv("TARGET_UDP_HOST");
+    const char* env_target_port = getenv("TARGET_UDP_PORT");
+    if (env_target_host && env_target_port) {
+        strncpy(target_host, env_target_host, sizeof(target_host) - 1);
+        target_port = atoi(env_target_port);
+        printf("Using target from environment: %s:%d\n", target_host, target_port);
+    }
+    
+    const char* env_max_clients = getenv("MAX_CLIENTS");
+    if (env_max_clients) {
+        max_clients = atoi(env_max_clients);
+        printf("Using max clients from environment: %u\n", max_clients);
+    }
+    
+    const char* env_timeout = getenv("CLIENT_TIMEOUT");
+    if (env_timeout) {
+        client_timeout = atoi(env_timeout);
+        printf("Using client timeout from environment: %ld\n", client_timeout);
     }
     
     printf("=== UDP Bridge Server ===\n");
@@ -170,8 +310,7 @@ int main(int argc, char* argv[]) {
     printf("Server listening on port %d...\n", listen_port);
     printf("Press Ctrl+C to stop\n\n");
     
-    // Initialize UDP forwarder (TODO: implement udp_forwarder module)
-    /*
+    // Initialize UDP forwarder
     udp_forwarder_t* forwarder = udp_forwarder_create(target_host, target_port, global_client_table);
     if (!forwarder) {
         fprintf(stderr, "Failed to create UDP forwarder\n");
@@ -179,8 +318,17 @@ int main(int argc, char* argv[]) {
         client_table_destroy(global_client_table);
         return 1;
     }
-    */
-    printf("UDP forwarder: %s:%d (not implemented yet)\n", target_host, target_port);
+    
+    // Start UDP forwarder
+    if (udp_forwarder_start(forwarder) != 0) {
+        fprintf(stderr, "Failed to start UDP forwarder\n");
+        udp_forwarder_destroy(forwarder);
+        close(server_socket);
+        client_table_destroy(global_client_table);
+        return 1;
+    }
+    
+    printf("UDP forwarder started: %s:%d\n", target_host, target_port);
     
     // Main server loop
     while (running) {
@@ -206,8 +354,15 @@ int main(int argc, char* argv[]) {
         if (activity == 0) {
             // Timeout - print stats every few seconds
             static int stats_counter = 0;
-            if (++stats_counter >= 5) {
-                printf("Active clients: %u\n", client_table_get_count(global_client_table));
+            if (++stats_counter >= 10) {  // Every 10 seconds
+                uint32_t active_clients = client_table_get_count(global_client_table);
+                printf("\n=== Server Statistics ===\n");
+                printf("Active clients: %u\n", active_clients);
+                
+                // Print UDP forwarder stats
+                udp_forwarder_print_stats(forwarder);
+                printf("========================\n\n");
+                
                 stats_counter = 0;
             }
             continue;
@@ -238,32 +393,17 @@ int main(int argc, char* argv[]) {
         
         printf("Assigned client ID: %u\n", client_id);
         
-        // TODO: Here we would normally start a thread to handle this client
-        // For now, just close the connection after a brief demo
-        
-        // Send a demo protocol message
-        char demo_message[256];
-        const char* demo_data = "Welcome to UDP Bridge Server!";
-        int message_size = protocol_create_message(demo_message, sizeof(demo_message), MSG_DATA, client_id, 
-                                                  0, demo_data, strlen(demo_data));
-        
-        if (message_size > 0) {
-            ssize_t sent = send(client_socket, demo_message, message_size, 0);
-            if (sent > 0) {
-                printf("Sent demo message to client %u\n", client_id);
-            }
-        }
-        
-        // Close connection after demo (in real implementation, keep it open)
-        sleep(1);
-        client_table_remove(global_client_table, client_id);
+        // Handle client connection in a separate thread or with select
+        // For now, implement basic protocol handling in main thread
+        handle_client_connection(client_socket, client_id, forwarder, global_client_table);
     }
     
     printf("\nShutting down server...\n");
     
     // Cleanup
     close(server_socket);
-    // udp_forwarder_destroy(forwarder);  // TODO: implement
+    udp_forwarder_stop(forwarder);
+    udp_forwarder_destroy(forwarder);
     client_table_destroy(global_client_table);
     
     printf("Server shutdown complete\n");
