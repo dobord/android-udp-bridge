@@ -22,6 +22,7 @@
 // UDP Bridge Protocol integration
 #include "udp_bridge_protocol.h"
 #include "udp_listener.h"
+#include "tcp_connection_manager.h" // Add TCP Connection Manager
 
 // Crypto library includes for manual crypto initialization
 #ifndef USE_LIBSSH_MOCK
@@ -52,6 +53,10 @@ static pthread_mutex_t session_mutex = PTHREAD_MUTEX_INITIALIZER;
 // UDP Bridge listener integration
 static udp_listener_ctx_t* udp_listener = NULL;
 static pthread_mutex_t udp_listener_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+// TCP Connection Manager for bridge communication
+static tcp_connection_manager_t* tcp_connection_manager = NULL;
+static pthread_mutex_t tcp_manager_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 #ifndef USE_LIBSSH_MOCK
 static volatile int g_libssh_initialized = 0;
@@ -589,7 +594,52 @@ JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SSHTunnelService_startTunnel(
         return -1;
     }
     
-    // Connect to bridge server
+    // Initialize TCP Connection Manager if not already done
+    pthread_mutex_lock(&tcp_manager_mutex);
+    if (!tcp_connection_manager) {
+        tcp_connection_manager = tcp_connection_manager_create();
+        if (!tcp_connection_manager) {
+            LOGE("Failed to create TCP Connection Manager");
+            pthread_mutex_unlock(&tcp_manager_mutex);
+            udp_listener_destroy(udp_listener);
+            udp_listener = NULL;
+            pthread_mutex_unlock(&udp_listener_mutex);
+            (*env)->ReleaseStringUTFChars(env, remote_host, remote_host_str);
+            return -1;
+        }
+        
+        // Configure reconnection settings
+        tcp_reconnect_config_t reconnect_config;
+        reconnect_config.enabled = 1;
+        reconnect_config.max_attempts = 10;
+        reconnect_config.initial_delay_ms = 1000;
+        reconnect_config.max_delay_ms = 30000;
+        reconnect_config.backoff_multiplier = 2.0f;
+        reconnect_config.jitter_ms = 500;
+        tcp_connection_manager_configure_reconnect(tcp_connection_manager, &reconnect_config);
+        
+        LOGI("TCP Connection Manager created and configured");
+    }
+    
+    // Set protocol context for TCP manager
+    if (udp_listener->protocol_ctx) {
+        tcp_connection_manager_set_protocol_context(tcp_connection_manager, udp_listener->protocol_ctx);
+    }
+    
+    // Connect TCP manager to bridge server
+    if (tcp_connection_manager_connect(tcp_connection_manager, remote_host_str, remote_port) != 0) {
+        LOGE("Failed to connect TCP manager to bridge server");
+        pthread_mutex_unlock(&tcp_manager_mutex);
+        udp_listener_destroy(udp_listener);
+        udp_listener = NULL;
+        pthread_mutex_unlock(&udp_listener_mutex);
+        (*env)->ReleaseStringUTFChars(env, remote_host, remote_host_str);
+        return -1;
+    }
+    
+    pthread_mutex_unlock(&tcp_manager_mutex);
+    
+    // Connect to bridge server (legacy support)
     if (udp_listener_connect_bridge(udp_listener) != 0) {
         LOGE("Failed to connect to bridge server");
         udp_listener_destroy(udp_listener);
@@ -622,6 +672,14 @@ JNIEXPORT void JNICALL Java_com_example_sshtunnel_SSHTunnelService_stopTunnel(JN
     (void)env; (void)obj; // Suppress unused parameter warnings
     
     LOGI("Stopping UDP bridge tunnel");
+    
+    // Disconnect TCP Connection Manager first
+    pthread_mutex_lock(&tcp_manager_mutex);
+    if (tcp_connection_manager) {
+        tcp_connection_manager_disconnect(tcp_connection_manager);
+        LOGI("TCP Connection Manager disconnected");
+    }
+    pthread_mutex_unlock(&tcp_manager_mutex);
     
     pthread_mutex_lock(&udp_listener_mutex);
     
@@ -720,4 +778,211 @@ JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SSHTunnelService_getUdpBridgeC
     pthread_mutex_unlock(&udp_listener_mutex);
     
     return client_count;
+}
+
+// TCP Connection Manager JNI functions
+
+// Initialize TCP Connection Manager
+JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SSHTunnelService_initTcpManager(JNIEnv *env, jobject obj) {
+    (void)env; (void)obj; // Suppress unused parameter warnings
+    
+    pthread_mutex_lock(&tcp_manager_mutex);
+    
+    if (tcp_connection_manager) {
+        LOGW("TCP Connection Manager already initialized");
+        pthread_mutex_unlock(&tcp_manager_mutex);
+        return 0;
+    }
+    
+    tcp_connection_manager = tcp_connection_manager_create();
+    if (!tcp_connection_manager) {
+        LOGE("Failed to create TCP Connection Manager");
+        pthread_mutex_unlock(&tcp_manager_mutex);
+        return -1;
+    }
+    
+    LOGI("TCP Connection Manager initialized successfully");
+    pthread_mutex_unlock(&tcp_manager_mutex);
+    return 0;
+}
+
+// Connect TCP manager to bridge server
+JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SSHTunnelService_connectTcpBridge(
+    JNIEnv *env, jobject obj, jstring server_host, jint server_port) {
+    
+    (void)obj; // Suppress unused parameter warning
+    
+    const char *host_str = (*env)->GetStringUTFChars(env, server_host, 0);
+    
+    pthread_mutex_lock(&tcp_manager_mutex);
+    
+    if (!tcp_connection_manager) {
+        LOGE("TCP Connection Manager not initialized");
+        pthread_mutex_unlock(&tcp_manager_mutex);
+        (*env)->ReleaseStringUTFChars(env, server_host, host_str);
+        return -1;
+    }
+    
+    LOGI("Connecting TCP bridge to %s:%d", host_str, server_port);
+    
+    int result = tcp_connection_manager_connect(tcp_connection_manager, host_str, server_port);
+    
+    pthread_mutex_unlock(&tcp_manager_mutex);
+    (*env)->ReleaseStringUTFChars(env, server_host, host_str);
+    
+    if (result == 0) {
+        LOGI("Successfully connected to TCP bridge server");
+    } else {
+        LOGE("Failed to connect to TCP bridge server");
+    }
+    
+    return result;
+}
+
+// Disconnect TCP bridge
+JNIEXPORT void JNICALL Java_com_example_sshtunnel_SSHTunnelService_disconnectTcpBridge(JNIEnv *env, jobject obj) {
+    (void)env; (void)obj; // Suppress unused parameter warnings
+    
+    pthread_mutex_lock(&tcp_manager_mutex);
+    
+    if (tcp_connection_manager) {
+        LOGI("Disconnecting TCP bridge");
+        tcp_connection_manager_disconnect(tcp_connection_manager);
+    }
+    
+    pthread_mutex_unlock(&tcp_manager_mutex);
+}
+
+// Check TCP bridge connection status
+JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SSHTunnelService_isTcpBridgeConnected(JNIEnv *env, jobject obj) {
+    (void)env; (void)obj; // Suppress unused parameter warnings
+    
+    pthread_mutex_lock(&tcp_manager_mutex);
+    
+    jboolean connected = JNI_FALSE;
+    if (tcp_connection_manager) {
+        connected = tcp_connection_manager_is_connected(tcp_connection_manager) ? JNI_TRUE : JNI_FALSE;
+    }
+    
+    pthread_mutex_unlock(&tcp_manager_mutex);
+    
+    return connected;
+}
+
+// Get TCP bridge connection state
+JNIEXPORT jstring JNICALL Java_com_example_sshtunnel_SSHTunnelService_getTcpBridgeState(JNIEnv *env, jobject obj) {
+    (void)obj; // Suppress unused parameter warning
+    
+    pthread_mutex_lock(&tcp_manager_mutex);
+    
+    const char* state_str = "NOT_INITIALIZED";
+    if (tcp_connection_manager) {
+        tcp_connection_state_t state = tcp_connection_manager_get_state(tcp_connection_manager);
+        state_str = tcp_connection_state_string(state);
+    }
+    
+    pthread_mutex_unlock(&tcp_manager_mutex);
+    
+    return (*env)->NewStringUTF(env, state_str);
+}
+
+// Get TCP bridge statistics
+JNIEXPORT jstring JNICALL Java_com_example_sshtunnel_SSHTunnelService_getTcpBridgeStats(JNIEnv *env, jobject obj) {
+    (void)obj; // Suppress unused parameter warning
+    
+    pthread_mutex_lock(&tcp_manager_mutex);
+    
+    if (!tcp_connection_manager) {
+        pthread_mutex_unlock(&tcp_manager_mutex);
+        return (*env)->NewStringUTF(env, "TCP Connection Manager not initialized");
+    }
+    
+    tcp_connection_stats_t stats = tcp_connection_manager_get_stats(tcp_connection_manager);
+    const char* last_error = tcp_connection_manager_get_last_error(tcp_connection_manager);
+    
+    pthread_mutex_unlock(&tcp_manager_mutex);
+    
+    // Format statistics string
+    char stats_buffer[1024];
+    snprintf(stats_buffer, sizeof(stats_buffer),
+        "Bytes TX: %llu, RX: %llu\n"
+        "Messages TX: %u, RX: %u\n"
+        "Reconnects: %u\n"
+        "Uptime: %ld seconds\n"
+        "Last Activity: %ld\n"
+        "Last Error: %s",
+        (unsigned long long)stats.bytes_sent,
+        (unsigned long long)stats.bytes_received,
+        stats.messages_sent,
+        stats.messages_received,
+        stats.reconnect_count,
+        time(NULL) - stats.connection_start_time,
+        stats.last_activity,
+        last_error);
+    
+    return (*env)->NewStringUTF(env, stats_buffer);
+}
+
+// Configure TCP reconnection
+JNIEXPORT void JNICALL Java_com_example_sshtunnel_SSHTunnelService_configureTcpReconnect(
+    JNIEnv *env, jobject obj, jboolean enabled, jint max_attempts, jint initial_delay_ms, jint max_delay_ms) {
+    
+    (void)env; (void)obj; // Suppress unused parameter warnings
+    
+    pthread_mutex_lock(&tcp_manager_mutex);
+    
+    if (!tcp_connection_manager) {
+        LOGW("TCP Connection Manager not initialized");
+        pthread_mutex_unlock(&tcp_manager_mutex);
+        return;
+    }
+    
+    tcp_reconnect_config_t config;
+    config.enabled = enabled ? 1 : 0;
+    config.max_attempts = max_attempts;
+    config.initial_delay_ms = initial_delay_ms;
+    config.max_delay_ms = max_delay_ms;
+    config.backoff_multiplier = 2.0f;
+    config.jitter_ms = 500;
+    
+    tcp_connection_manager_configure_reconnect(tcp_connection_manager, &config);
+    
+    pthread_mutex_unlock(&tcp_manager_mutex);
+    
+    LOGI("TCP reconnection configured: enabled=%s, max_attempts=%d", 
+         enabled ? "true" : "false", max_attempts);
+}
+
+// Send ping through TCP bridge
+JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SSHTunnelService_sendTcpBridgePing(JNIEnv *env, jobject obj) {
+    (void)env; (void)obj; // Suppress unused parameter warnings
+    
+    pthread_mutex_lock(&tcp_manager_mutex);
+    
+    if (!tcp_connection_manager) {
+        LOGE("TCP Connection Manager not initialized");
+        pthread_mutex_unlock(&tcp_manager_mutex);
+        return -1;
+    }
+    
+    int result = tcp_connection_manager_send_ping(tcp_connection_manager);
+    
+    pthread_mutex_unlock(&tcp_manager_mutex);
+    
+    return result;
+}
+
+// Cleanup TCP Connection Manager
+JNIEXPORT void JNICALL Java_com_example_sshtunnel_SSHTunnelService_cleanupTcpManager(JNIEnv *env, jobject obj) {
+    (void)env; (void)obj; // Suppress unused parameter warnings
+    
+    pthread_mutex_lock(&tcp_manager_mutex);
+    
+    if (tcp_connection_manager) {
+        LOGI("Cleaning up TCP Connection Manager");
+        tcp_connection_manager_destroy(tcp_connection_manager);
+        tcp_connection_manager = NULL;
+    }
+    
+    pthread_mutex_unlock(&tcp_manager_mutex);
 }
