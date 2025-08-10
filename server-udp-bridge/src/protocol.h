@@ -69,6 +69,43 @@ uint32_t protocol_calculate_checksum(const void* data, size_t size);
 const char* protocol_message_type_string(message_type_t type);
 const char* protocol_error_string(uint32_t error_code);
 
+/**
+ * Validate complete protocol message including checksum
+ * @param buffer Buffer containing complete message
+ * @param buffer_size Size of the buffer
+ * @return ERROR_NONE if valid, error code if invalid
+ */
+int protocol_validate_message(const char* buffer, size_t buffer_size);
+
+/**
+ * Extract payload from message buffer
+ * @param buffer Message buffer
+ * @param buffer_size Size of the message buffer
+ * @param payload Output pointer to payload (points into buffer)
+ * @param payload_size Output size of payload
+ * @return ERROR_NONE on success, error code on failure
+ */
+int protocol_extract_payload(const char* buffer, size_t buffer_size, 
+                            const char** payload, uint32_t* payload_size);
+
+/**
+ * Get total message size (header + payload) from header
+ * @param header Protocol header
+ * @return Total message size in bytes
+ */
+size_t protocol_get_message_size(const udp_bridge_header_t* header);
+
+/**
+ * Create a simple message with no payload
+ * @param buffer Output buffer
+ * @param buffer_size Size of output buffer
+ * @param type Message type
+ * @param client_id Client identifier
+ * @return Number of bytes written on success, negative error code on failure
+ */
+int protocol_create_simple_message(char* buffer, size_t buffer_size, 
+                                  message_type_t type, uint32_t client_id);
+
 // Helper macros
 #define PROTOCOL_MESSAGE_SIZE(payload_size) (UDP_BRIDGE_HEADER_SIZE + (payload_size))
 #define PROTOCOL_MAX_PAYLOAD_SIZE (65536 - UDP_BRIDGE_HEADER_SIZE)

@@ -174,6 +174,72 @@ void test_string_functions() {
     test_assert(strcmp(protocol_error_string(99), "Unknown error") == 0, "Error string for unknown error");
 }
 
+// Test message validation
+void test_message_validation() {
+    char buffer[1024];
+    const char* payload = "Test payload";
+    
+    // Create valid message
+    int size = protocol_create_message(buffer, sizeof(buffer), MSG_DATA, 
+                                     123, FLAG_NONE, payload, strlen(payload));
+    test_assert(size > 0, "Message creation succeeds");
+    
+    // Validate complete message
+    int result = protocol_validate_message(buffer, size);
+    test_assert(result == ERROR_NONE, "Valid message passes validation");
+    
+    // Test corrupted checksum
+    char corrupted[1024];
+    memcpy(corrupted, buffer, size);
+    corrupted[UDP_BRIDGE_HEADER_SIZE - 1] ^= 0xFF;  // Corrupt checksum
+    result = protocol_validate_message(corrupted, size);
+    test_assert(result == ERROR_INVALID_CHECKSUM, "Corrupted checksum detected");
+    
+    // Test incomplete buffer
+    result = protocol_validate_message(buffer, UDP_BRIDGE_HEADER_SIZE - 1);
+    test_assert(result == ERROR_INVALID_HEADER, "Incomplete buffer rejected");
+}
+
+// Test payload extraction
+void test_payload_extraction() {
+    char buffer[1024];
+    const char* test_payload = "Extract this payload";
+    uint32_t payload_size = strlen(test_payload);
+    
+    // Create message with payload
+    int size = protocol_create_message(buffer, sizeof(buffer), MSG_DATA, 
+                                     456, FLAG_NONE, test_payload, payload_size);
+    test_assert(size > 0, "Message with payload created");
+    
+    // Extract payload
+    const char* extracted_payload;
+    uint32_t extracted_size;
+    int result = protocol_extract_payload(buffer, size, &extracted_payload, &extracted_size);
+    
+    test_assert(result == ERROR_NONE, "Payload extraction succeeds");
+    test_assert(extracted_size == payload_size, "Extracted size matches original");
+    test_assert(memcmp(extracted_payload, test_payload, payload_size) == 0, "Extracted data matches original");
+    
+    // Test message without payload
+    int size_no_payload = protocol_create_simple_message(buffer, sizeof(buffer), MSG_PING, 789);
+    result = protocol_extract_payload(buffer, size_no_payload, &extracted_payload, &extracted_size);
+    test_assert(result == ERROR_NONE, "Empty payload extraction succeeds");
+    test_assert(extracted_size == 0, "Empty payload has zero size");
+}
+
+// Test message size calculation
+void test_message_size() {
+    udp_bridge_header_t header;
+    
+    header.payload_size = 0;
+    test_assert(protocol_get_message_size(&header) == UDP_BRIDGE_HEADER_SIZE, "Empty message size correct");
+    
+    header.payload_size = 100;
+    test_assert(protocol_get_message_size(&header) == UDP_BRIDGE_HEADER_SIZE + 100, "Message with payload size correct");
+    
+    test_assert(protocol_get_message_size(NULL) == 0, "NULL header returns zero size");
+}
+
 int main() {
     printf("Running UDP Bridge Protocol Tests\n");
     printf("=================================\n\n");
@@ -184,6 +250,12 @@ int main() {
     test_message_checksum();
     test_edge_cases();
     test_string_functions();
+    test_message_validation();
+    test_payload_extraction();
+    test_message_size();
+    test_message_validation();
+    test_payload_extraction();
+    test_message_size();
     
     printf("\nTest Results:\n");
     printf("=============\n");
