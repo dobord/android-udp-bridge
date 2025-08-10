@@ -17,6 +17,9 @@ typedef enum {
 	SSH_OPTIONS_HOST,
 	SSH_OPTIONS_PORT,
 	SSH_OPTIONS_USER,
+	SSH_OPTIONS_CIPHERS_C_S,
+	SSH_OPTIONS_CIPHERS_S_C,
+	SSH_OPTIONS_KEY_EXCHANGE,
 } ssh_options_e;
 
 ssh_session ssh_new(void);
