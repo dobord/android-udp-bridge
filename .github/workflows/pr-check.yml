@@ -138,11 +138,60 @@ jobs:
       working-directory: ssh-tunnel-android-app
       run: |
         # Remove prebuilt libs to force mock build
+        echo "🗑️ Removing prebuilt libraries to force mock build..."
         rm -rf app/src/main/prebuilt/
-        ./gradlew assembleDebug --no-daemon --stacktrace
+        
+        # Verify mock files exist
+        echo "🔍 Checking mock implementation files..."
+        ls -la app/src/main/jni/libssh_mock.*
+        
+        # Temporarily enable all ABIs for mock build (since we don't have arch-specific deps)
+        echo "📱 Temporarily enabling all ABIs for mock build..."
+        cp app/build.gradle app/build.gradle.backup
+        sed -i 's/abiFilters "arm64-v8a"/abiFilters "arm64-v8a", "armeabi-v7a", "x86", "x86_64"/' app/build.gradle
+        
+        # Show updated ABI filters
+        echo "📱 Updated ABI filters in build.gradle:"
+        grep -A5 -B5 "abiFilters" app/build.gradle || echo "No abiFilters found"
+        
+        # Build with mock (should use libssh_mock.c)
+        echo "🔨 Starting Gradle build with mock libraries..."
+        ./gradlew assembleDebug --no-daemon --stacktrace --info 2>&1 | tee build.log
+        
+        # Check CMake messages for mock usage
+        echo "🔍 Checking CMake messages for mock library detection..."
+        if grep -q "Falling back to mock implementation" build.log; then
+          echo "✅ CMake correctly detected missing libraries and fell back to mock"
+        elif grep -q "libssh_mock.c" build.log; then
+          echo "✅ CMake is building with mock implementation"
+        else
+          echo "⚠️ Could not confirm mock library usage from build log"
+          echo "📋 CMake related messages:"
+          grep -i "cmake\|mock\|libssh\|prebuilt" build.log | head -20 || echo "No relevant messages found"
+        fi
+        
+        # Restore original build.gradle
+        mv app/build.gradle.backup app/build.gradle
+        
+        # Check if build succeeded
+        if [ -f "app/build/outputs/apk/debug/app-debug.apk" ]; then
+          echo "✅ Mock build successful!"
+          ls -la app/build/outputs/apk/debug/app-debug.apk
+          
+          # Show APK info
+          echo "📦 APK info:"
+          unzip -l app/build/outputs/apk/debug/app-debug.apk | grep "\.so" || echo "No native libraries found"
+        else
+          echo "❌ Mock build failed!"
+          echo "📋 Last 50 lines of build log:"
+          tail -50 build.log
+          exit 1
+        fi
         
     - name: Upload quick build APK
+      if: success()
       uses: actions/upload-artifact@v4
       with:
         name: pr-quick-build
         path: ssh-tunnel-android-app/app/build/outputs/apk/debug/app-debug.apk
+        if-no-files-found: error
