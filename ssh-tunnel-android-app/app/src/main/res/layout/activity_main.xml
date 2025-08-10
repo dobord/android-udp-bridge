@@ -173,13 +173,130 @@
             android:text="@string/start_forwarding_button"
             android:enabled="false" />
 
+        <!-- UDP Bridge Section -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#cccccc"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="16dp" />
+
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Note: This app creates a UDP tunnel through SSH connection. Local UDP traffic will be forwarded to the remote server through the SSH tunnel."
+            android:text="UDP Bridge Settings"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/bridge_enabled_switch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Enable UDP Bridge"
+            android:layout_marginBottom="12dp" />
+
+        <EditText
+            android:id="@+id/bridge_host_edit_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Bridge Server Host"
+            android:inputType="text"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/bridge_port_edit_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Bridge Server Port (8080)"
+            android:inputType="number"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/bridge_local_port_edit_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Bridge Local UDP Port (5060)"
+            android:inputType="number"
+            android:layout_marginBottom="8dp" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/auto_reconnect_switch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Auto Reconnect"
+            android:layout_marginBottom="12dp" />
+
+        <EditText
+            android:id="@+id/connection_timeout_edit_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Connection Timeout (seconds)"
+            android:inputType="number"
+            android:layout_marginBottom="16dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <Button
+                android:id="@+id/bridge_start_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Start Bridge"
+                android:layout_marginEnd="4dp"
+                android:enabled="false" />
+
+            <Button
+                android:id="@+id/bridge_stop_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Stop Bridge"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:enabled="false" />
+
+            <Button
+                android:id="@+id/bridge_config_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Settings"
+                android:layout_marginStart="4dp" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/bridge_status_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Bridge Status: Disconnected"
+            android:textSize="14sp"
+            android:layout_marginBottom="8dp"
+            android:background="#f0f0f0"
+            android:padding="8dp" />
+
+        <TextView
+            android:id="@+id/bridge_stats_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Statistics: N/A"
+            android:textSize="12sp"
+            android:layout_marginBottom="16dp"
+            android:background="#f8f8f8"
+            android:padding="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Note: UDP Bridge creates a direct protocol connection to bridge server for improved performance and client management."
             android:textSize="12sp"
             android:layout_marginTop="16dp"
-            android:background="#fffacd"
+            android:background="#e8f5e8"
             android:padding="8dp" />
 
     </LinearLayout>

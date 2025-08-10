@@ -21,8 +21,18 @@
             </intent-filter>
         </activity>
         
+        <activity
+            android:name="com.example.udpbridge.UdpBridgeConfigActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity" />
+        
         <service
             android:name=".SshTunnelService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+            
+        <service
+            android:name="com.example.udpbridge.UdpBridgeService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
             
