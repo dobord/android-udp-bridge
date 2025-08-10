@@ -9,6 +9,11 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
 jobs:
   build-dependencies:
     runs-on: ubuntu-latest
@@ -23,10 +28,11 @@ jobs:
       
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
-      with:
-        api-level: '34'
-        build-tools: '34.0.0'
-        ndk-version: '26.3.11579264'
+        
+    - name: Setup Android NDK and Build Tools
+      run: |
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;26.3.11579264" || true
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0" || true
         
     - name: Set up build environment
       run: |
@@ -185,10 +191,11 @@ jobs:
         
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
-      with:
-        api-level: '34'
-        build-tools: '34.0.0'
-        ndk-version: '26.3.11579264'
+        
+    - name: Setup Android NDK and Build Tools
+      run: |
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;26.3.11579264" || true
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0" || true
         
     - name: Download prebuilt libraries
       uses: actions/download-artifact@v4
