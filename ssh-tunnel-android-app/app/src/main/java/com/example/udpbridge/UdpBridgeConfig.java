@@ -12,7 +12,6 @@ public class UdpBridgeConfig {
     private static final String KEY_LOCAL_PORT = "local_port";
     private static final String KEY_BRIDGE_HOST = "bridge_host";
     private static final String KEY_BRIDGE_PORT = "bridge_port";
-    private static final String KEY_USE_NEW_PROTOCOL = "use_new_protocol";
     private static final String KEY_AUTO_RECONNECT = "auto_reconnect";
     private static final String KEY_CONNECTION_TIMEOUT = "connection_timeout";
     
@@ -20,7 +19,6 @@ public class UdpBridgeConfig {
     public static final int DEFAULT_LOCAL_PORT = 5060;
     public static final String DEFAULT_BRIDGE_HOST = "127.0.0.1";
     public static final int DEFAULT_BRIDGE_PORT = 8080;
-    public static final boolean DEFAULT_USE_NEW_PROTOCOL = false;
     public static final boolean DEFAULT_AUTO_RECONNECT = true;
     public static final int DEFAULT_CONNECTION_TIMEOUT = 30;
     
@@ -66,15 +64,6 @@ public class UdpBridgeConfig {
         prefs.edit().putInt(KEY_BRIDGE_PORT, port).apply();
     }
     
-    // New protocol toggle
-    public boolean useNewProtocol() {
-        return prefs.getBoolean(KEY_USE_NEW_PROTOCOL, DEFAULT_USE_NEW_PROTOCOL);
-    }
-    
-    public void setUseNewProtocol(boolean useNew) {
-        prefs.edit().putBoolean(KEY_USE_NEW_PROTOCOL, useNew).apply();
-    }
-    
     // Auto reconnect
     public boolean isAutoReconnectEnabled() {
         return prefs.getBoolean(KEY_AUTO_RECONNECT, DEFAULT_AUTO_RECONNECT);
@@ -102,7 +91,6 @@ public class UdpBridgeConfig {
         editor.putInt(KEY_LOCAL_PORT, DEFAULT_LOCAL_PORT);
         editor.putString(KEY_BRIDGE_HOST, DEFAULT_BRIDGE_HOST);
         editor.putInt(KEY_BRIDGE_PORT, DEFAULT_BRIDGE_PORT);
-        editor.putBoolean(KEY_USE_NEW_PROTOCOL, DEFAULT_USE_NEW_PROTOCOL);
         editor.putBoolean(KEY_AUTO_RECONNECT, DEFAULT_AUTO_RECONNECT);
         editor.putInt(KEY_CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT);
         editor.apply();
@@ -116,7 +104,6 @@ public class UdpBridgeConfig {
         summary.append("Bridge: ").append(isBridgeEnabled() ? "Enabled" : "Disabled").append("\n");
         summary.append("Local Port: ").append(getLocalPort()).append("\n");
         summary.append("Bridge Server: ").append(getBridgeHost()).append(":").append(getBridgePort()).append("\n");
-        summary.append("Protocol: ").append(useNewProtocol() ? "New" : "Legacy").append("\n");
         summary.append("Auto Reconnect: ").append(isAutoReconnectEnabled() ? "Yes" : "No").append("\n");
         summary.append("Timeout: ").append(getConnectionTimeout()).append("s");
         return summary.toString();
