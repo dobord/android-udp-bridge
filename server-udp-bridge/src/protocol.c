@@ -2,6 +2,8 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdlib.h>
 
 // CRC32 table for checksum calculation
 static const uint32_t crc32_table[256] = {
@@ -179,4 +181,86 @@ const char* protocol_error_string(uint32_t error_code) {
         case ERROR_INTERNAL_ERROR: return "Internal error";
         default: return "Unknown error";
     }
+}
+
+int protocol_validate_message(const char* buffer, size_t buffer_size) {
+    if (!buffer || buffer_size < UDP_BRIDGE_HEADER_SIZE) {
+        return ERROR_INVALID_HEADER;
+    }
+    
+    udp_bridge_header_t header;
+    int result = protocol_parse_header(buffer, buffer_size, &header);
+    if (result != ERROR_NONE) {
+        return result;
+    }
+    
+    // Check if buffer has enough space for payload
+    size_t total_size = UDP_BRIDGE_HEADER_SIZE + header.payload_size;
+    if (buffer_size < total_size) {
+        return ERROR_INVALID_HEADER;
+    }
+    
+    // Validate checksum
+    // Create a copy of the message with checksum set to 0
+    char* temp_buffer = malloc(total_size);
+    if (!temp_buffer) {
+        return ERROR_INTERNAL_ERROR;
+    }
+    
+    memcpy(temp_buffer, buffer, total_size);
+    
+    // Set checksum to 0 in the copy
+    udp_bridge_header_t* temp_header = (udp_bridge_header_t*)temp_buffer;
+    uint32_t original_checksum = ntohl(temp_header->checksum);
+    temp_header->checksum = 0;
+    
+    // Calculate expected checksum
+    uint32_t calculated_checksum = protocol_calculate_checksum(temp_buffer, total_size);
+    
+    free(temp_buffer);
+    
+    if (calculated_checksum != original_checksum) {
+        return ERROR_INVALID_CHECKSUM;
+    }
+    
+    return ERROR_NONE;
+}
+
+int protocol_extract_payload(const char* buffer, size_t buffer_size, 
+                           const char** payload, uint32_t* payload_size) {
+    if (!buffer || !payload || !payload_size) {
+        return ERROR_INVALID_HEADER;
+    }
+    
+    if (buffer_size < UDP_BRIDGE_HEADER_SIZE) {
+        return ERROR_INVALID_HEADER;
+    }
+    
+    udp_bridge_header_t header;
+    int result = protocol_parse_header(buffer, buffer_size, &header);
+    if (result != ERROR_NONE) {
+        return result;
+    }
+    
+    // Check if buffer has enough space for payload
+    if (buffer_size < UDP_BRIDGE_HEADER_SIZE + header.payload_size) {
+        return ERROR_INVALID_HEADER;
+    }
+    
+    *payload = buffer + UDP_BRIDGE_HEADER_SIZE;
+    *payload_size = header.payload_size;
+    
+    return ERROR_NONE;
+}
+
+size_t protocol_get_message_size(const udp_bridge_header_t* header) {
+    if (!header) {
+        return 0;
+    }
+    return UDP_BRIDGE_HEADER_SIZE + header->payload_size;
+}
+
+int protocol_create_simple_message(char* buffer, size_t buffer_size, 
+                                 message_type_t type, uint32_t client_id) {
+    return protocol_create_message(buffer, buffer_size, type, client_id, FLAG_NONE, NULL, 0);
 }
