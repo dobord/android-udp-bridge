@@ -8,23 +8,23 @@
 
 #ifndef __ANDROID__
 // Mock Android logging for testing
-#define LOG_TAG "TcpConnectionManager"
-#define LOGD(...) printf(__VA_ARGS__); printf("\n")
-#define LOGI(...) printf(__VA_ARGS__); printf("\n")
-#define LOGW(...) printf(__VA_ARGS__); printf("\n")
-#define LOGE(...) printf(__VA_ARGS__); printf("\n")
+#define TCP_LOG_TAG "TcpConnectionManager"
+#define TCP_LOGD(...) printf(__VA_ARGS__); printf("\n")
+#define TCP_LOGI(...) printf(__VA_ARGS__); printf("\n")
+#define TCP_LOGW(...) printf(__VA_ARGS__); printf("\n")
+#define TCP_LOGE(...) printf(__VA_ARGS__); printf("\n")
 #else
 #include <android/log.h>
 // Logging macros
-#define LOG_TAG "TcpConnectionManager"
-#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
-#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
-#define LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
-#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#define TCP_LOG_TAG "TcpConnectionManager"
+#define TCP_LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, TCP_LOG_TAG, __VA_ARGS__)
+#define TCP_LOGI(...) __android_log_print(ANDROID_LOG_INFO, TCP_LOG_TAG, __VA_ARGS__)
+#define TCP_LOGW(...) __android_log_print(ANDROID_LOG_WARN, TCP_LOG_TAG, __VA_ARGS__)
+#define TCP_LOGE(...) __android_log_print(ANDROID_LOG_ERROR, TCP_LOG_TAG, __VA_ARGS__)
 #endif
 
 // Forward declarations
-typedef struct android_protocol_ctx android_protocol_ctx_t;
+typedef struct tcp_protocol_ctx tcp_protocol_ctx_t;
 
 // Connection states
 typedef enum {
@@ -65,7 +65,7 @@ typedef struct {
     tcp_connection_state_t state;
     
     // Protocol integration
-    android_protocol_ctx_t* protocol_ctx;
+    tcp_protocol_ctx_t* protocol_ctx;
     
     // Threading
     pthread_t receiver_thread;
@@ -127,7 +127,7 @@ const char* tcp_connection_manager_get_last_error(tcp_connection_manager_t* mana
 
 // Protocol context integration
 void tcp_connection_manager_set_protocol_context(tcp_connection_manager_t* manager,
-                                                 android_protocol_ctx_t* protocol_ctx);
+                                                 tcp_protocol_ctx_t* protocol_ctx);
 
 // Response handling
 int tcp_connection_manager_wait_for_response(tcp_connection_manager_t* manager,
