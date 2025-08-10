@@ -24,26 +24,26 @@
 tcp_connection_manager_t* tcp_connection_manager_create(void) {
     tcp_connection_manager_t* manager = calloc(1, sizeof(tcp_connection_manager_t));
     if (!manager) {
-        LOGE("Failed to allocate memory for TCP connection manager");
+        TCP_LOGE("Failed to allocate memory for TCP connection manager");
         return NULL;
     }
     
     // Initialize mutex and condition variables
     if (pthread_mutex_init(&manager->state_mutex, NULL) != 0) {
-        LOGE("Failed to initialize state mutex");
+        TCP_LOGE("Failed to initialize state mutex");
         free(manager);
         return NULL;
     }
     
     if (pthread_cond_init(&manager->state_cond, NULL) != 0) {
-        LOGE("Failed to initialize state condition variable");
+        TCP_LOGE("Failed to initialize state condition variable");
         pthread_mutex_destroy(&manager->state_mutex);
         free(manager);
         return NULL;
     }
     
     if (pthread_mutex_init(&manager->stats_mutex, NULL) != 0) {
-        LOGE("Failed to initialize stats mutex");
+        TCP_LOGE("Failed to initialize stats mutex");
         pthread_cond_destroy(&manager->state_cond);
         pthread_mutex_destroy(&manager->state_mutex);
         free(manager);
@@ -51,7 +51,7 @@ tcp_connection_manager_t* tcp_connection_manager_create(void) {
     }
     
     if (pthread_mutex_init(&manager->response_mutex, NULL) != 0) {
-        LOGE("Failed to initialize response mutex");
+        TCP_LOGE("Failed to initialize response mutex");
         pthread_mutex_destroy(&manager->stats_mutex);
         pthread_cond_destroy(&manager->state_cond);
         pthread_mutex_destroy(&manager->state_mutex);
@@ -60,7 +60,7 @@ tcp_connection_manager_t* tcp_connection_manager_create(void) {
     }
     
     if (pthread_cond_init(&manager->response_cond, NULL) != 0) {
-        LOGE("Failed to initialize response condition variable");
+        TCP_LOGE("Failed to initialize response condition variable");
         pthread_mutex_destroy(&manager->response_mutex);
         pthread_mutex_destroy(&manager->stats_mutex);
         pthread_cond_destroy(&manager->state_cond);
@@ -83,7 +83,7 @@ tcp_connection_manager_t* tcp_connection_manager_create(void) {
     manager->reconnect_config.backoff_multiplier = DEFAULT_RECONNECT_BACKOFF_MULTIPLIER;
     manager->reconnect_config.jitter_ms = DEFAULT_RECONNECT_JITTER_MS;
     
-    LOGI("TCP connection manager created successfully");
+    TCP_LOGI("TCP connection manager created successfully");
     return manager;
 }
 
@@ -91,7 +91,7 @@ tcp_connection_manager_t* tcp_connection_manager_create(void) {
 void tcp_connection_manager_destroy(tcp_connection_manager_t* manager) {
     if (!manager) return;
     
-    LOGI("Destroying TCP connection manager");
+    TCP_LOGI("Destroying TCP connection manager");
     
     // Signal shutdown
     pthread_mutex_lock(&manager->state_mutex);
@@ -118,7 +118,7 @@ void tcp_connection_manager_destroy(tcp_connection_manager_t* manager) {
     pthread_mutex_destroy(&manager->state_mutex);
     
     free(manager);
-    LOGI("TCP connection manager destroyed");
+    TCP_LOGI("TCP connection manager destroyed");
 }
 
 // Set socket options for optimal performance
@@ -127,27 +127,27 @@ int tcp_connection_manager_set_socket_options(int socket_fd) {
     
     // Enable SO_REUSEADDR
     if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
-        LOGW("Failed to set SO_REUSEADDR: %s", strerror(errno));
+        TCP_LOGW("Failed to set SO_REUSEADDR: %s", strerror(errno));
     }
     
     // Enable TCP_NODELAY for low latency
     if (setsockopt(socket_fd, IPPROTO_TCP, TCP_NODELAY, &opt, sizeof(opt)) < 0) {
-        LOGW("Failed to set TCP_NODELAY: %s", strerror(errno));
+        TCP_LOGW("Failed to set TCP_NODELAY: %s", strerror(errno));
     }
     
     // Set socket to non-blocking mode
     int flags = fcntl(socket_fd, F_GETFL, 0);
     if (flags == -1) {
-        LOGE("Failed to get socket flags: %s", strerror(errno));
+        TCP_LOGE("Failed to get socket flags: %s", strerror(errno));
         return -1;
     }
     
     if (fcntl(socket_fd, F_SETFL, flags | O_NONBLOCK) == -1) {
-        LOGE("Failed to set socket to non-blocking: %s", strerror(errno));
+        TCP_LOGE("Failed to set socket to non-blocking: %s", strerror(errno));
         return -1;
     }
     
-    LOGD("Socket options configured successfully");
+    TCP_LOGD("Socket options configured successfully");
     return 0;
 }
 
@@ -156,7 +156,7 @@ int tcp_connection_manager_create_socket(tcp_connection_manager_t* manager) {
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0) {
         tcp_connection_manager_set_error(manager, "Failed to create socket");
-        LOGE("Failed to create socket: %s", strerror(errno));
+        TCP_LOGE("Failed to create socket: %s", strerror(errno));
         return -1;
     }
     
@@ -172,14 +172,14 @@ int tcp_connection_manager_create_socket(tcp_connection_manager_t* manager) {
 int tcp_connection_manager_connect(tcp_connection_manager_t* manager, 
                                   const char* server_host, int server_port) {
     if (!manager || !server_host) {
-        LOGE("Invalid parameters for connect");
+        TCP_LOGE("Invalid parameters for connect");
         return -1;
     }
     
     pthread_mutex_lock(&manager->state_mutex);
     
     if (manager->state == TCP_CONN_CONNECTED || manager->state == TCP_CONN_CONNECTING) {
-        LOGW("Already connected or connecting");
+        TCP_LOGW("Already connected or connecting");
         pthread_mutex_unlock(&manager->state_mutex);
         return 0;
     }
@@ -196,7 +196,7 @@ int tcp_connection_manager_connect(tcp_connection_manager_t* manager,
     
     pthread_mutex_unlock(&manager->state_mutex);
     
-    LOGI("Connecting to %s:%d", server_host, server_port);
+    TCP_LOGI("Connecting to %s:%d", server_host, server_port);
     
     // Create socket
     int sock = tcp_connection_manager_create_socket(manager);
@@ -211,7 +211,7 @@ int tcp_connection_manager_connect(tcp_connection_manager_t* manager,
     struct hostent* host_entry = gethostbyname(server_host);
     if (!host_entry) {
         tcp_connection_manager_set_error(manager, "Failed to resolve hostname");
-        LOGE("Failed to resolve hostname: %s", server_host);
+        TCP_LOGE("Failed to resolve hostname: %s", server_host);
         close(sock);
         pthread_mutex_lock(&manager->state_mutex);
         manager->state = TCP_CONN_ERROR;
@@ -230,7 +230,7 @@ int tcp_connection_manager_connect(tcp_connection_manager_t* manager,
     int result = connect(sock, (struct sockaddr*)&server_addr, sizeof(server_addr));
     if (result < 0 && errno != EINPROGRESS) {
         tcp_connection_manager_set_error(manager, "Connection failed");
-        LOGE("Connection failed: %s", strerror(errno));
+        TCP_LOGE("Connection failed: %s", strerror(errno));
         close(sock);
         pthread_mutex_lock(&manager->state_mutex);
         manager->state = TCP_CONN_ERROR;
@@ -250,7 +250,7 @@ int tcp_connection_manager_connect(tcp_connection_manager_t* manager,
     int select_result = select(sock + 1, NULL, &write_fds, &error_fds, &timeout);
     if (select_result <= 0) {
         tcp_connection_manager_set_error(manager, "Connection timeout or error");
-        LOGE("Connection timeout or select error: %s", strerror(errno));
+        TCP_LOGE("Connection timeout or select error: %s", strerror(errno));
         close(sock);
         pthread_mutex_lock(&manager->state_mutex);
         manager->state = TCP_CONN_ERROR;
@@ -263,7 +263,7 @@ int tcp_connection_manager_connect(tcp_connection_manager_t* manager,
     socklen_t len = sizeof(sock_error);
     if (getsockopt(sock, SOL_SOCKET, SO_ERROR, &sock_error, &len) < 0 || sock_error != 0) {
         tcp_connection_manager_set_error(manager, "Connection failed");
-        LOGE("Connection failed with error: %s", strerror(sock_error));
+        TCP_LOGE("Connection failed with error: %s", strerror(sock_error));
         close(sock);
         pthread_mutex_lock(&manager->state_mutex);
         manager->state = TCP_CONN_ERROR;
@@ -282,12 +282,12 @@ int tcp_connection_manager_connect(tcp_connection_manager_t* manager,
     
     // Start receiver thread
     if (pthread_create(&manager->receiver_thread, NULL, tcp_receiver_thread, manager) != 0) {
-        LOGE("Failed to create receiver thread");
+        TCP_LOGE("Failed to create receiver thread");
         tcp_connection_manager_disconnect(manager);
         return -1;
     }
     
-    LOGI("Successfully connected to %s:%d", server_host, server_port);
+    TCP_LOGI("Successfully connected to %s:%d", server_host, server_port);
     return 0;
 }
 
@@ -302,7 +302,7 @@ void tcp_connection_manager_disconnect(tcp_connection_manager_t* manager) {
         return;
     }
     
-    LOGI("Disconnecting TCP connection");
+    TCP_LOGI("Disconnecting TCP connection");
     
     manager->state = TCP_CONN_DISCONNECTED;
     
@@ -348,7 +348,7 @@ int tcp_connection_manager_send_message(tcp_connection_manager_t* manager,
                                        message_type_t type, uint32_t client_id,
                                        const void* payload, uint32_t payload_size) {
     if (!manager || !tcp_connection_manager_is_connected(manager)) {
-        LOGE("Cannot send message: not connected");
+        TCP_LOGE("Cannot send message: not connected");
         return -1;
     }
     
@@ -356,7 +356,7 @@ int tcp_connection_manager_send_message(tcp_connection_manager_t* manager,
     int message_size = protocol_create_message(buffer, sizeof(buffer), type, 
                                              client_id, FLAG_NONE, payload, payload_size);
     if (message_size < 0) {
-        LOGE("Failed to create protocol message");
+        TCP_LOGE("Failed to create protocol message");
         return -1;
     }
     
@@ -364,13 +364,13 @@ int tcp_connection_manager_send_message(tcp_connection_manager_t* manager,
     ssize_t sent = send(manager->socket_fd, buffer, message_size, MSG_NOSIGNAL);
     if (sent != message_size) {
         tcp_connection_manager_set_error(manager, "Failed to send message");
-        LOGE("Failed to send message: %s", strerror(errno));
+        TCP_LOGE("Failed to send message: %s", strerror(errno));
         tcp_connection_manager_trigger_reconnect(manager);
         return -1;
     }
     
     tcp_connection_manager_update_stats_sent(manager, sent, 1);
-    LOGD("Sent %s message (client_id=%u, size=%d)", 
+    TCP_LOGD("Sent %s message (client_id=%u, size=%d)", 
          protocol_message_type_string(type), client_id, message_size);
     
     return 0;
@@ -411,7 +411,7 @@ void tcp_connection_manager_configure_reconnect(tcp_connection_manager_t* manage
     manager->reconnect_config = *config;
     pthread_mutex_unlock(&manager->state_mutex);
     
-    LOGI("Reconnection configured: enabled=%d, max_attempts=%d", 
+    TCP_LOGI("Reconnection configured: enabled=%d, max_attempts=%d", 
          config->enabled, config->max_attempts);
 }
 
@@ -423,7 +423,7 @@ int tcp_connection_manager_enable_reconnect(tcp_connection_manager_t* manager, i
     manager->reconnect_config.enabled = enabled;
     pthread_mutex_unlock(&manager->state_mutex);
     
-    LOGI("Reconnection %s", enabled ? "enabled" : "disabled");
+    TCP_LOGI("Reconnection %s", enabled ? "enabled" : "disabled");
     return 0;
 }
 
@@ -437,7 +437,7 @@ void tcp_connection_manager_trigger_reconnect(tcp_connection_manager_t* manager)
         manager->state != TCP_CONN_RECONNECTING &&
         manager->state != TCP_CONN_DISCONNECTED) {
         
-        LOGI("Triggering reconnection");
+        TCP_LOGI("Triggering reconnection");
         manager->state = TCP_CONN_RECONNECTING;
         
         // Close current socket
@@ -450,7 +450,7 @@ void tcp_connection_manager_trigger_reconnect(tcp_connection_manager_t* manager)
         if (!manager->reconnect_thread) {
             if (pthread_create(&manager->reconnect_thread, NULL, 
                              tcp_reconnect_thread, manager) != 0) {
-                LOGE("Failed to create reconnection thread");
+                TCP_LOGE("Failed to create reconnection thread");
                 manager->state = TCP_CONN_ERROR;
             }
         }
@@ -483,7 +483,7 @@ void tcp_connection_manager_reset_stats(tcp_connection_manager_t* manager) {
     manager->stats.connection_start_time = time(NULL);
     pthread_mutex_unlock(&manager->stats_mutex);
     
-    LOGI("Connection statistics reset");
+    TCP_LOGI("Connection statistics reset");
 }
 
 // Get last error
@@ -496,14 +496,14 @@ const char* tcp_connection_manager_get_last_error(tcp_connection_manager_t* mana
 
 // Set protocol context
 void tcp_connection_manager_set_protocol_context(tcp_connection_manager_t* manager,
-                                                 android_protocol_ctx_t* protocol_ctx) {
+                                                 tcp_protocol_ctx_t* protocol_ctx) {
     if (!manager) return;
     
     pthread_mutex_lock(&manager->state_mutex);
     manager->protocol_ctx = protocol_ctx;
     pthread_mutex_unlock(&manager->state_mutex);
     
-    LOGI("Protocol context set");
+    TCP_LOGI("Protocol context set");
 }
 
 // Helper function to update sent statistics
@@ -542,7 +542,7 @@ void tcp_connection_manager_set_error(tcp_connection_manager_t* manager, const c
     manager->last_error[sizeof(manager->last_error) - 1] = '\0';
     manager->last_error_time = time(NULL);
     
-    LOGE("TCP connection error: %s", error);
+    TCP_LOGE("TCP connection error: %s", error);
 }
 
 // Convert state to string
@@ -586,7 +586,7 @@ void* tcp_receiver_thread(void* arg) {
     tcp_connection_manager_t* manager = (tcp_connection_manager_t*)arg;
     char buffer[TCP_BUFFER_SIZE];
     
-    LOGI("TCP receiver thread started");
+    TCP_LOGI("TCP receiver thread started");
     
     while (!manager->shutdown_flag) {
         pthread_mutex_lock(&manager->state_mutex);
@@ -606,7 +606,7 @@ void* tcp_receiver_thread(void* arg) {
         
         int select_result = select(sock + 1, &read_fds, NULL, NULL, &timeout);
         if (select_result < 0) {
-            LOGE("Select error in receiver thread: %s", strerror(errno));
+            TCP_LOGE("Select error in receiver thread: %s", strerror(errno));
             tcp_connection_manager_trigger_reconnect(manager);
             break;
         } else if (select_result == 0) {
@@ -618,9 +618,9 @@ void* tcp_receiver_thread(void* arg) {
             ssize_t received = recv(sock, buffer, sizeof(buffer), 0);
             if (received <= 0) {
                 if (received == 0) {
-                    LOGI("Connection closed by server");
+                    TCP_LOGI("Connection closed by server");
                 } else {
-                    LOGE("Receive error: %s", strerror(errno));
+                    TCP_LOGE("Receive error: %s", strerror(errno));
                 }
                 tcp_connection_manager_trigger_reconnect(manager);
                 break;
@@ -631,7 +631,7 @@ void* tcp_receiver_thread(void* arg) {
         }
     }
     
-    LOGI("TCP receiver thread finished");
+    TCP_LOGI("TCP receiver thread finished");
     return NULL;
 }
 
@@ -639,7 +639,7 @@ void* tcp_receiver_thread(void* arg) {
 void* tcp_reconnect_thread(void* arg) {
     tcp_connection_manager_t* manager = (tcp_connection_manager_t*)arg;
     
-    LOGI("TCP reconnection thread started");
+    TCP_LOGI("TCP reconnection thread started");
     
     while (!manager->shutdown_flag) {
         pthread_mutex_lock(&manager->state_mutex);
@@ -652,7 +652,7 @@ void* tcp_reconnect_thread(void* arg) {
         // Check if we've exceeded maximum attempts
         if (manager->reconnect_config.max_attempts > 0 && 
             manager->current_reconnect_attempt >= manager->reconnect_config.max_attempts) {
-            LOGE("Maximum reconnection attempts exceeded");
+            TCP_LOGE("Maximum reconnection attempts exceeded");
             manager->state = TCP_CONN_ERROR;
             pthread_cond_broadcast(&manager->state_cond);
             pthread_mutex_unlock(&manager->state_mutex);
@@ -664,7 +664,7 @@ void* tcp_reconnect_thread(void* arg) {
         
         pthread_mutex_unlock(&manager->state_mutex);
         
-        LOGI("Reconnection attempt %d after %d ms delay", 
+        TCP_LOGI("Reconnection attempt %d after %d ms delay", 
              manager->current_reconnect_attempt, delay);
         
         // Sleep with cancellation
@@ -679,7 +679,7 @@ void* tcp_reconnect_thread(void* arg) {
             manager->stats.reconnect_count++;
             pthread_mutex_unlock(&manager->stats_mutex);
             
-            LOGI("Reconnection successful after %d attempts", 
+            TCP_LOGI("Reconnection successful after %d attempts", 
                  manager->current_reconnect_attempt);
             break;
         }
@@ -690,7 +690,7 @@ void* tcp_reconnect_thread(void* arg) {
     manager->reconnect_thread = 0;
     pthread_mutex_unlock(&manager->state_mutex);
     
-    LOGI("TCP reconnection thread finished");
+    TCP_LOGI("TCP reconnection thread finished");
     return NULL;
 }
 
@@ -699,25 +699,25 @@ int tcp_connection_manager_handle_received_data(tcp_connection_manager_t* manage
                                                const char* data, size_t size) {
     if (!manager || !data || size == 0) return -1;
     
-    LOGD("Received %zu bytes of data", size);
+    TCP_LOGD("Received %zu bytes of data", size);
     
     // Parse protocol header
     udp_bridge_header_t header;
     int parse_result = protocol_parse_header(data, size, &header);
     if (parse_result < 0) {
-        LOGW("Failed to parse protocol header");
+        TCP_LOGW("Failed to parse protocol header");
         return -1;
     }
     
     // Validate header
     if (protocol_validate_header(&header) < 0) {
-        LOGW("Invalid protocol header");
+        TCP_LOGW("Invalid protocol header");
         return -1;
     }
     
     tcp_connection_manager_update_stats_received(manager, size, 1);
     
-    LOGD("Received %s message (client_id=%u, payload_size=%u)",
+    TCP_LOGD("Received %s message (client_id=%u, payload_size=%u)",
          protocol_message_type_string(header.message_type), 
          header.client_id, header.payload_size);
     
@@ -728,19 +728,19 @@ int tcp_connection_manager_handle_received_data(tcp_connection_manager_t* manage
             if (manager->protocol_ctx) {
                 const char* payload = data + UDP_BRIDGE_HEADER_SIZE;
                 // android_handle_protocol_response(manager->protocol_ctx, payload, header.payload_size);
-                LOGD("Would forward %u bytes to protocol context", header.payload_size);
+                TCP_LOGD("Would forward %u bytes to protocol context", header.payload_size);
             }
             break;
             
         case MSG_PONG:
-            LOGD("Received pong response");
+            TCP_LOGD("Received pong response");
             break;
             
         case MSG_ERROR: {
             error_payload_t error_payload;
             if (header.payload_size >= sizeof(error_payload)) {
                 memcpy(&error_payload, data + UDP_BRIDGE_HEADER_SIZE, sizeof(error_payload));
-                LOGE("Received error from server: %s (code=%u)", 
+                TCP_LOGE("Received error from server: %s (code=%u)", 
                      error_payload.error_message, error_payload.error_code);
                 tcp_connection_manager_set_error(manager, error_payload.error_message);
             }
@@ -748,7 +748,7 @@ int tcp_connection_manager_handle_received_data(tcp_connection_manager_t* manage
         }
         
         default:
-            LOGW("Received unknown message type: %d", header.message_type);
+            TCP_LOGW("Received unknown message type: %d", header.message_type);
             break;
     }
     

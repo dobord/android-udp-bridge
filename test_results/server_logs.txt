@@ -1,0 +1,14 @@
+Attaching to udp-bridge-server
+[36mudp-bridge-server    |[0m 2025-08-10 23:30:44,223 INFO Set uid to user 0 succeeded
+[36mudp-bridge-server    |[0m 2025-08-10 23:30:44,231 INFO RPC interface 'supervisor' initialized
+[36mudp-bridge-server    |[0m 2025-08-10 23:30:44,231 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+[36mudp-bridge-server    |[0m 2025-08-10 23:30:44,232 INFO supervisord started with pid 1
+[36mudp-bridge-server    |[0m 2025-08-10 23:30:45,235 INFO spawned: 'sshd' with pid 7
+[36mudp-bridge-server    |[0m 2025-08-10 23:30:45,237 INFO spawned: 'udp-bridge-server' with pid 8
+[36mudp-bridge-server    |[0m 2025-08-10 23:30:46,238 INFO success: sshd entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+[36mudp-bridge-server    |[0m 2025-08-10 23:30:46,238 INFO success: udp-bridge-server entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+[36mudp-bridge-server    |[0m 2025-08-10 23:38:26,767 INFO reaped unknown pid 144 (exit status 255)
+[36mudp-bridge-server    |[0m 2025-08-10 23:38:46,792 INFO reaped unknown pid 152 (exit status 255)
+[36mudp-bridge-server    |[0m 2025-08-10 23:39:46,865 INFO reaped unknown pid 176 (exit status 255)
+[36mudp-bridge-server    |[0m 2025-08-10 23:41:51,856 INFO reaped unknown pid 214 (exit status 255)
+[36mudp-bridge-server    |[0m 2025-08-10 23:43:37,048 INFO reaped unknown pid 252 (exit status 255)

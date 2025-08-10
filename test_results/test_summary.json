@@ -1,0 +1,16 @@
+{
+    "timestamp": "2025-08-11 02:44:19",
+    "summary": {
+        "total_tests": 7,
+        "passed": 5,
+        "failed": 2,
+        "success_rate": 71
+    },
+    "environment": {
+        "server_host": "localhost",
+        "ssh_port": 2222,
+        "bridge_port": 8080,
+        "udp_target_port": 5060
+    },
+    "status": "FAILED"
+}

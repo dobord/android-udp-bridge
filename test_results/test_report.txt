@@ -1,0 +1,15 @@
+=== UDP BRIDGE END-TO-END TEST REPORT ===
+Время тестирования: 2025-08-11 02:44:19
+
+Результаты:
+  Всего тестов: 7
+  Успешных: 5
+  Неудачных: 2
+  Процент успеха: 71%
+
+Статус: ЕСТЬ ОШИБКИ
+
+Файлы с результатами:
+  - Полный лог: test_results/e2e_test.log
+  - JSON отчет: test_results/test_summary.json
+  - Логи сервера: test_results/server_logs.txt

@@ -14,6 +14,10 @@ set(MBEDTLS_PREBUILT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../prebuilt/mbedtls)
 # Создаем нашу основную библиотеку
 add_library(ssh_tunnel SHARED
     ../jni/ssh_tunnel.c
+    ../jni/udp_listener.c
+    ../jni/tcp_connection_manager.c
+    ../jni/client_manager.c
+    ../jni/udp_bridge_protocol.c
 )
 
 # Импортируем реальную или моковую libssh в зависимости от наличия пребиилдов
