@@ -91,6 +91,34 @@ git push origin v1.0.0
 - Gradle 8.4+
 - Java 21
 
+### Prebuilt библиотеки
+
+Проект использует предварительно скомпилированные статические библиотеки (prebuilt) для ускорения сборки:
+
+**Доступные библиотеки:**
+- OpenSSL 3.5.0 + libssh 0.11.2
+- mbedTLS 2.28.7 + libssh 0.11.2
+
+**Архитектуры:** arm64-v8a, armeabi-v7a, x86_64, x86
+
+**Команды сборки prebuilt:**
+```bash
+# Сборка всех архитектур (по умолчанию)
+./build_openssl.sh                    # OpenSSL + libssh
+./build_mbedtls.sh                    # mbedTLS + libssh
+
+# Сборка конкретной архитектуры (для CI/CD)
+ANDROID_ABI=arm64-v8a ./build_openssl.sh
+ANDROID_ABI=x86_64 ./build_mbedtls.sh
+
+# Пустая переменная = все архитектуры
+ANDROID_ABI= ./build_openssl.sh
+```
+
+**Логика выбора архитектур:**
+- Без `ANDROID_ABI` или `ANDROID_ABI=""` → собираются **все ABI**
+- `ANDROID_ABI=конкретная_ABI` → собирается **только указанная ABI**
+
 ### Команды сборки
 ```bash
 # Сборка проекта
@@ -109,7 +137,7 @@ cd ssh-tunnel-android-app
 
 # 2) Собрать и установить prebuilt-библиотеки (mbedTLS + libssh)
 cd E:\projects\android-udp-bridge
-./build_libssh.bat
+./build_mbedtls.bat
 
 # 3) Собрать APK
 ./build_app.bat

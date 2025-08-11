@@ -70,17 +70,11 @@ jobs:
         echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
         echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
         
-    - name: Build OpenSSL for ${{ matrix.arch }}
+    - name: Build OpenSSL and libssh for ${{ matrix.arch }}
       run: |
         chmod +x ./build_openssl.sh
         export ANDROID_ABI=${{ matrix.arch }}
         ./build_openssl.sh
-        
-    - name: Build libssh for ${{ matrix.arch }}
-      run: |
-        chmod +x ./build_libssh_openssl.sh
-        export ANDROID_ABI=${{ matrix.arch }}
-        ./build_libssh_openssl.sh
         
     - name: Upload libraries for ${{ matrix.arch }}
       uses: actions/upload-artifact@v4

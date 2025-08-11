@@ -45,6 +45,15 @@ libssh_build/**/Makefile
 libssh_build/**/compile_commands.json
 libssh_build/**/install_manifest.txt
 
+# OpenSSL build directories (working directories for build_openssl.sh)
+openssl_build/
+
+# Alternative build directories (for renamed scripts)
+mbedtls_build/
+*_build/build/
+*_build/**/CMakeFiles/
+*_build/**/CMakeCache.txt
+
 mbedtls/build/
 mbedtls/**/build/
 mbedtls/**/CMakeFiles/
