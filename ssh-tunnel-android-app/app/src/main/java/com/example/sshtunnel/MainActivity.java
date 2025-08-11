@@ -538,4 +538,23 @@ public class MainActivity extends AppCompatActivity {
         }
         super.onDestroy();
     }
+    
+    /**
+     * Update all UI elements based on current service states
+     */
+    private void updateUI() {
+        // Update SSH tunnel UI
+        if (serviceBound && sshTunnelService != null) {
+            if (sshTunnelService.isConnected()) {
+                statusTextView.setText("Status: Connected");
+            } else {
+                statusTextView.setText("Status: Disconnected");
+            }
+        } else {
+            statusTextView.setText("Status: Service not available");
+        }
+        
+        // Update UDP Bridge UI
+        updateBridgeUI();
+    }
 }

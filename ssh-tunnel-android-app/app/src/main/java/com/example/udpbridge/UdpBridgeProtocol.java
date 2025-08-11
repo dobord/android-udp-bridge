@@ -25,7 +25,6 @@ public class UdpBridgeProtocol {
     public native int connectToBridge(String serverHost, int serverPort);
     public native void disconnectFromBridge();
     public native boolean isConnected();
-    public native int runSelfTest();
     
     // Instance variables
     private boolean initialized = false;
@@ -170,7 +169,7 @@ public class UdpBridgeProtocol {
      */
     public boolean runSelfTest() {
         try {
-            int result = runSelfTest();
+            int result = nativeRunSelfTest();
             if (result == 0) {
                 Log.i(TAG, "Self-test completed successfully");
                 return true;
@@ -183,4 +182,9 @@ public class UdpBridgeProtocol {
             return false;
         }
     }
+
+    /**
+     * Native method to run self-test
+     */
+    private native int nativeRunSelfTest();
 }
