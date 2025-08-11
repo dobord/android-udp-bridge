@@ -159,6 +159,25 @@ jobs:
         ls -la app/src/main/jni/ssh_tunnel.c
         ls -la app/src/main/cpp/CMakeLists.txt
         
+        # Verify all required source files for mock build exist
+        echo "🔍 Checking all required source files for mock build..."
+        required_files=(
+          "app/src/main/jni/ssh_tunnel.c"
+          "app/src/main/jni/udp_listener.c"
+          "app/src/main/jni/tcp_connection_manager.c"
+          "app/src/main/jni/client_manager.c"
+          "app/src/main/jni/udp_bridge_protocol.c"
+        )
+        
+        for file in "${required_files[@]}"; do
+          if [ ! -f "$file" ]; then
+            echo "❌ Required source file not found: $file"
+            exit 1
+          else
+            echo "✅ Found: $file"
+          fi
+        done
+        
         # Check if ssh_tunnel.c contains USE_LIBSSH_MOCK guards
         echo "🔍 Checking USE_LIBSSH_MOCK guards in ssh_tunnel.c..."
         if grep -q "USE_LIBSSH_MOCK" app/src/main/jni/ssh_tunnel.c; then
@@ -188,18 +207,44 @@ jobs:
         cmake_minimum_required(VERSION 3.18.1)
         project("sshtunnel")
         message(STATUS "Building with mock libssh implementation")
+        
+        # Create mock ssh library
         add_library(ssh STATIC ../jni/libssh_mock.c)
         target_include_directories(ssh PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../jni)
-        add_library(ssh_tunnel SHARED ../jni/ssh_tunnel.c)
+        
+        # Create main library with all required source files
+        add_library(ssh_tunnel SHARED 
+            ../jni/ssh_tunnel.c
+            ../jni/udp_listener.c
+            ../jni/tcp_connection_manager.c
+            ../jni/client_manager.c
+            ../jni/udp_bridge_protocol.c
+        )
+        
+        # Set compile definitions and include directories
         target_compile_definitions(ssh_tunnel PRIVATE USE_LIBSSH_MOCK=1)
         target_include_directories(ssh_tunnel PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../jni)
+        
+        # Find required libraries
         find_library(log-lib log)
+        
+        # Link libraries
         target_link_libraries(ssh_tunnel ssh ${log-lib})
-        target_compile_options(ssh_tunnel PRIVATE -Wall -Wextra)
+        
+        # Compile options (relaxed warnings for mock build)
+        target_compile_options(ssh_tunnel PRIVATE 
+            -Wall 
+            -Wno-unused-parameter 
+            -Wno-unused-variable 
+            -Wno-unused-function
+            -Wno-format-security
+            -Wno-incompatible-pointer-types
+            -Wno-macro-redefined
+        )
         target_link_options(ssh_tunnel PRIVATE -Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384)
         EOFCMAKE
         
-        echo "✅ Simplified CMakeLists.txt created for mock build"
+        echo "✅ Simplified CMakeLists.txt created for mock build (with all dependencies)"
         
         # Show the new CMakeLists.txt content  
         echo "📋 New CMakeLists.txt content:"
@@ -221,16 +266,21 @@ jobs:
         export NINJA_STATUS="[%f/%t] "
         export CMAKE_VERBOSE_MAKEFILE=ON
         
-        ./gradlew assembleDebug --no-daemon --stacktrace --debug 2>&1 | tee build.log
+        ./gradlew assembleDebug --no-daemon --stacktrace --info 2>&1 | tee build.log
         
         # Check for ninja/cmake errors first
         echo "🔍 Checking for CMake/ninja errors..."
-        if grep -A10 -B10 "ninja.*finished with non-zero exit value" build.log; then
+        if grep -q "ninja.*finished with non-zero exit value" build.log; then
           echo "❌ Ninja build failed!"
-          echo "📋 CMake output:"
-          grep -A20 -B20 "CMAKE" build.log | tail -50
-          echo "📋 Ninja output:"
-          grep -A20 -B20 "ninja" build.log | tail -50
+          echo "📋 Full build error output (last 50 lines):"
+          tail -50 build.log
+          echo ""
+          echo "📋 CMake configuration messages:"
+          grep -A10 -B5 "CMAKE\|cmake" build.log | tail -30 || echo "No CMake messages found"
+          echo ""
+          echo "📋 Specific error messages:"
+          grep -A5 -B5 "error:\|Error:\|FAILED:" build.log | tail -40 || echo "No specific error messages found"
+          exit 1
         fi
         
         # Check CMake messages for mock usage
