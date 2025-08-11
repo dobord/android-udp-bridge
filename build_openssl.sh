@@ -67,14 +67,58 @@ echo "Создаём рабочие директории..."
 mkdir -p "$WORK_DIR"
 mkdir -p "$INSTALL_BASE_DIR"
 
+# Функция для скачивания с зеркалами
+download_with_mirrors() {
+    local filename=$1
+    local target_dir=$2
+    local primary_url=$3
+    shift 3
+    local mirror_urls=("$@")
+    
+    cd "$target_dir"
+    
+    if [ -f "$filename" ]; then
+        echo "✅ $filename уже существует"
+        return 0
+    fi
+    
+    echo "⬇️ Скачиваем $filename..."
+    
+    # Пробуем основной URL
+    if wget -O "$filename.tmp" "$primary_url" 2>/dev/null; then
+        mv "$filename.tmp" "$filename"
+        echo "✅ Скачано с основного источника: $primary_url"
+        return 0
+    fi
+    
+    # Пробуем зеркала
+    for mirror_url in "${mirror_urls[@]}"; do
+        echo "🔄 Пробуем зеркало: $mirror_url"
+        if wget -O "$filename.tmp" "$mirror_url" 2>/dev/null; then
+            mv "$filename.tmp" "$filename"
+            echo "✅ Скачано с зеркала: $mirror_url"
+            return 0
+        fi
+    done
+    
+    echo "❌ Не удалось скачать $filename"
+    rm -f "$filename.tmp"
+    return 1
+}
+
 # Скачиваем OpenSSL, если ещё не скачан (с блокировкой для CI)
 if [ ! -f "$OPENSSL_WORK_DIR/openssl-$OPENSSL_VERSION.tar.gz" ]; then
     echo "Скачиваем OpenSSL $OPENSSL_VERSION..."
     mkdir -p "$OPENSSL_WORK_DIR"
     cd "$OPENSSL_WORK_DIR"
     
-    # Проверяем предварительно скачанные файлы из CI
-    if [ -f "/tmp/source_cache/openssl-$OPENSSL_VERSION.tar.gz" ]; then
+    # Проверяем кешированные файлы из CI
+    if [ -n "$SOURCE_CACHE_DIR" ] && [ -f "$SOURCE_CACHE_DIR/openssl-$OPENSSL_VERSION.tar.gz" ]; then
+        echo "📦 Используем кешированный OpenSSL из $SOURCE_CACHE_DIR"
+        cp "$SOURCE_CACHE_DIR/openssl-$OPENSSL_VERSION.tar.gz" .
+        tar -xf "openssl-$OPENSSL_VERSION.tar.gz"
+    # Проверяем предварительно скачанные файлы из старого CI
+    elif [ -f "/tmp/source_cache/openssl-$OPENSSL_VERSION.tar.gz" ]; then
         echo "📦 Используем предварительно скачанный OpenSSL из кеша"
         cp "/tmp/source_cache/openssl-$OPENSSL_VERSION.tar.gz" .
         tar -xf "openssl-$OPENSSL_VERSION.tar.gz"
@@ -86,15 +130,23 @@ if [ ! -f "$OPENSSL_WORK_DIR/openssl-$OPENSSL_VERSION.tar.gz" ]; then
             flock -x -w 300 200
             if [ ! -f "openssl-$OPENSSL_VERSION.tar.gz" ]; then
                 echo "🔒 Блокировка получена для $ANDROID_ABI, скачиваем OpenSSL..."
-                wget -O "openssl-$OPENSSL_VERSION.tar.gz" "https://github.com/openssl/openssl/releases/download/openssl-$OPENSSL_VERSION/openssl-$OPENSSL_VERSION.tar.gz"
+                download_with_mirrors "openssl-$OPENSSL_VERSION.tar.gz" "." \
+                    "https://github.com/openssl/openssl/releases/download/openssl-$OPENSSL_VERSION/openssl-$OPENSSL_VERSION.tar.gz" \
+                    "https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz" \
+                    "https://ftp.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz" \
+                    "https://mirror.yandex.ru/pub/OpenSSL/openssl-$OPENSSL_VERSION.tar.gz"
                 tar -xf "openssl-$OPENSSL_VERSION.tar.gz"
             else
                 echo "📁 OpenSSL уже скачан другим процессом"
             fi
         ) 200>"$LOCK_FILE"
     else
-        # Локальная сборка - простое скачивание
-        wget -O "openssl-$OPENSSL_VERSION.tar.gz" "https://github.com/openssl/openssl/releases/download/openssl-$OPENSSL_VERSION/openssl-$OPENSSL_VERSION.tar.gz"
+        # Локальная сборка или fallback - скачивание с зеркалами
+        download_with_mirrors "openssl-$OPENSSL_VERSION.tar.gz" "$OPENSSL_WORK_DIR" \
+            "https://github.com/openssl/openssl/releases/download/openssl-$OPENSSL_VERSION/openssl-$OPENSSL_VERSION.tar.gz" \
+            "https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz" \
+            "https://ftp.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz" \
+            "https://mirror.yandex.ru/pub/OpenSSL/openssl-$OPENSSL_VERSION.tar.gz"
         tar -xf "openssl-$OPENSSL_VERSION.tar.gz"
     fi
 fi
@@ -104,8 +156,13 @@ if [ ! -f "$WORK_DIR/libssh-$LIBSSH_VERSION.tar.xz" ]; then
     echo "Скачиваем libssh $LIBSSH_VERSION..."
     cd "$WORK_DIR"
     
-    # Проверяем предварительно скачанные файлы из CI
-    if [ -f "/tmp/source_cache/libssh-$LIBSSH_VERSION.tar.xz" ]; then
+    # Проверяем кешированные файлы из CI
+    if [ -n "$SOURCE_CACHE_DIR" ] && [ -f "$SOURCE_CACHE_DIR/libssh-$LIBSSH_VERSION.tar.xz" ]; then
+        echo "📦 Используем кешированный libssh из $SOURCE_CACHE_DIR"
+        cp "$SOURCE_CACHE_DIR/libssh-$LIBSSH_VERSION.tar.xz" .
+        tar -xf "libssh-$LIBSSH_VERSION.tar.xz"
+    # Проверяем предварительно скачанные файлы из старого CI
+    elif [ -f "/tmp/source_cache/libssh-$LIBSSH_VERSION.tar.xz" ]; then
         echo "📦 Используем предварительно скачанный libssh из кеша"
         cp "/tmp/source_cache/libssh-$LIBSSH_VERSION.tar.xz" .
         tar -xf "libssh-$LIBSSH_VERSION.tar.xz"
@@ -117,17 +174,21 @@ if [ ! -f "$WORK_DIR/libssh-$LIBSSH_VERSION.tar.xz" ]; then
             flock -x -w 300 200
             if [ ! -f "libssh-$LIBSSH_VERSION.tar.xz" ]; then
                 echo "🔒 Блокировка получена для $ANDROID_ABI, скачиваем libssh..."
-                # Начиная с 0.11 используется каталог 0.11
-                wget "https://www.libssh.org/files/0.11/libssh-$LIBSSH_VERSION.tar.xz"
+                download_with_mirrors "libssh-$LIBSSH_VERSION.tar.xz" "." \
+                    "https://www.libssh.org/files/0.11/libssh-$LIBSSH_VERSION.tar.xz" \
+                    "https://git.libssh.org/projects/libssh.git/snapshot/libssh-$LIBSSH_VERSION.tar.xz" \
+                    "https://mirror.yandex.ru/debian/pool/main/libs/libssh/libssh_$LIBSSH_VERSION.orig.tar.xz"
                 tar -xf "libssh-$LIBSSH_VERSION.tar.xz"
             else
                 echo "📁 libssh уже скачан другим процессом"
             fi
         ) 200>"$LOCK_FILE"
     else
-        # Локальная сборка - простое скачивание
-        # Начиная с 0.11 используется каталог 0.11
-        wget "https://www.libssh.org/files/0.11/libssh-$LIBSSH_VERSION.tar.xz"
+        # Локальная сборка или fallback - скачивание с зеркалами  
+        download_with_mirrors "libssh-$LIBSSH_VERSION.tar.xz" "$WORK_DIR" \
+            "https://www.libssh.org/files/0.11/libssh-$LIBSSH_VERSION.tar.xz" \
+            "https://git.libssh.org/projects/libssh.git/snapshot/libssh-$LIBSSH_VERSION.tar.xz" \
+            "https://mirror.yandex.ru/debian/pool/main/libs/libssh/libssh_$LIBSSH_VERSION.orig.tar.xz"
         tar -xf "libssh-$LIBSSH_VERSION.tar.xz"
     fi
 fi
