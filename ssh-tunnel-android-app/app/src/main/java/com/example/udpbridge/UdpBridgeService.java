@@ -39,7 +39,7 @@ public class UdpBridgeService extends Service {
     public native boolean initializeBridge(int localPort);
     public native boolean connectToBridgeServer(String host, int port);
     public native boolean startProtocolHandler();
-    public native void stopBridge();
+    public native void nativeStopBridge();
     public native int getClientCount();
     public native long getBytesTransferred();
     public native boolean isProtocolConnected();
@@ -163,7 +163,7 @@ public class UdpBridgeService extends Service {
         
         bridgeHandler.post(() -> {
             try {
-                stopBridge();
+                nativeStopBridge();
                 setState(BridgeState.DISCONNECTED);
                 connectionStartTime = 0;
                 totalBytesTransferred = 0;
