@@ -18,6 +18,7 @@ add_library(ssh_tunnel SHARED
     ../jni/tcp_connection_manager.c
     ../jni/client_manager.c
     ../jni/udp_bridge_protocol.c
+    ../jni/udp_bridge_service_jni.c
 )
 
 # Импортируем реальную или моковую libssh в зависимости от наличия пребиилдов

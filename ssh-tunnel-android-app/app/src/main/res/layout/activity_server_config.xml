@@ -243,15 +243,6 @@
                         style="@style/HeadingTextStyle"
                         android:layout_marginBottom="24dp" />
 
-                    <!-- Enable Bridge Switch -->
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/bridge_enabled_switch"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/enable_bridge"
-                        style="@style/SwitchStyle"
-                        android:layout_marginBottom="24dp" />
-
                     <!-- Bridge Server and Port -->
                     <LinearLayout
                         android:layout_width="match_parent"

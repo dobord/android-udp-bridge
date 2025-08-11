@@ -97,7 +97,7 @@ Java_com_example_udpbridge_UdpBridgeService_initializeBridge(JNIEnv *env, jobjec
     }
     
     // Initialize client manager
-    bridge_state.client_manager = client_manager_create();
+    bridge_state.client_manager = client_manager_create(300, 1000);  // 300 sec timeout, 1000 max clients
     if (!bridge_state.client_manager) {
         LOGE("Failed to create client manager");
         close(bridge_state.udp_socket);
@@ -138,6 +138,19 @@ Java_com_example_udpbridge_UdpBridgeService_connectToBridgeServer(JNIEnv *env, j
         return JNI_FALSE;
     }
     
+    // Set socket timeout
+    struct timeval timeout;
+    timeout.tv_sec = 10;  // 10 second timeout
+    timeout.tv_usec = 0;
+    if (setsockopt(bridge_state.tcp_socket, SOL_SOCKET, SO_RCVTIMEO, 
+                   &timeout, sizeof(timeout)) < 0) {
+        LOGD("Warning: Failed to set socket receive timeout");
+    }
+    if (setsockopt(bridge_state.tcp_socket, SOL_SOCKET, SO_SNDTIMEO, 
+                   &timeout, sizeof(timeout)) < 0) {
+        LOGD("Warning: Failed to set socket send timeout");
+    }
+    
     // Set up bridge server address
     memset(&bridge_state.bridge_addr, 0, sizeof(bridge_state.bridge_addr));
     bridge_state.bridge_addr.sin_family = AF_INET;
@@ -164,7 +177,7 @@ Java_com_example_udpbridge_UdpBridgeService_connectToBridgeServer(JNIEnv *env, j
     }
     
     // Initialize TCP connection manager
-    bridge_state.tcp_manager = tcp_connection_manager_create(bridge_state.tcp_socket);
+    bridge_state.tcp_manager = tcp_connection_manager_create();
     if (!bridge_state.tcp_manager) {
         LOGE("Failed to create TCP connection manager");
         close(bridge_state.tcp_socket);
@@ -214,7 +227,8 @@ Java_com_example_udpbridge_UdpBridgeService_startProtocolHandler(JNIEnv *env, jo
     if (pthread_create(&bridge_state.listener_thread, NULL, listener_thread_func, NULL) != 0) {
         LOGE("Failed to create listener thread");
         bridge_state.running = 0;
-        pthread_cancel(bridge_state.bridge_thread);
+        // Signal bridge thread to stop and wait for it to finish
+        pthread_join(bridge_state.bridge_thread, NULL);
         pthread_mutex_unlock(&bridge_state.state_mutex);
         return JNI_FALSE;
     }
@@ -233,15 +247,13 @@ Java_com_example_udpbridge_UdpBridgeService_stopBridge(JNIEnv *env, jobject thiz
     bridge_state.running = 0;
     bridge_state.protocol_connected = 0;
     
-    // Cancel threads
+    // Wait for threads to finish naturally
     if (bridge_state.bridge_thread) {
-        pthread_cancel(bridge_state.bridge_thread);
         pthread_join(bridge_state.bridge_thread, NULL);
         bridge_state.bridge_thread = 0;
     }
     
     if (bridge_state.listener_thread) {
-        pthread_cancel(bridge_state.listener_thread);
         pthread_join(bridge_state.listener_thread, NULL);
         bridge_state.listener_thread = 0;
     }
@@ -279,7 +291,7 @@ JNIEXPORT jint JNICALL
 Java_com_example_udpbridge_UdpBridgeService_getClientCount(JNIEnv *env, jobject thiz) {
     pthread_mutex_lock(&bridge_state.state_mutex);
     int count = bridge_state.client_manager ? 
-                client_manager_get_client_count(bridge_state.client_manager) : 0;
+                client_manager_get_count(bridge_state.client_manager) : 0;
     pthread_mutex_unlock(&bridge_state.state_mutex);
     return count;
 }
@@ -298,6 +310,56 @@ Java_com_example_udpbridge_UdpBridgeService_isProtocolConnected(JNIEnv *env, job
     int connected = bridge_state.protocol_connected && bridge_state.running;
     pthread_mutex_unlock(&bridge_state.state_mutex);
     return connected ? JNI_TRUE : JNI_FALSE;
+}
+
+// Native stop bridge function (called from Java)
+JNIEXPORT void JNICALL
+Java_com_example_udpbridge_UdpBridgeService_nativeStopBridge(JNIEnv *env, jobject thiz) {
+    LOGI("Native stop bridge called");
+    
+    pthread_mutex_lock(&bridge_state.state_mutex);
+    
+    bridge_state.running = 0;
+    bridge_state.protocol_connected = 0;
+    
+    // Wait for threads to finish naturally
+    if (bridge_state.bridge_thread) {
+        pthread_join(bridge_state.bridge_thread, NULL);
+        bridge_state.bridge_thread = 0;
+    }
+    
+    if (bridge_state.listener_thread) {
+        pthread_join(bridge_state.listener_thread, NULL);
+        bridge_state.listener_thread = 0;
+    }
+    
+    // Cleanup TCP manager
+    if (bridge_state.tcp_manager) {
+        tcp_connection_manager_destroy(bridge_state.tcp_manager);
+        bridge_state.tcp_manager = NULL;
+    }
+    
+    // Close sockets
+    if (bridge_state.tcp_socket >= 0) {
+        close(bridge_state.tcp_socket);
+        bridge_state.tcp_socket = -1;
+    }
+    
+    if (bridge_state.udp_socket >= 0) {
+        close(bridge_state.udp_socket);
+        bridge_state.udp_socket = -1;
+    }
+    
+    // Cleanup client manager
+    if (bridge_state.client_manager) {
+        client_manager_destroy(bridge_state.client_manager);
+        bridge_state.client_manager = NULL;
+    }
+    
+    bridge_state.bytes_transferred = 0;
+    
+    LOGI("Native UDP Bridge stopped");
+    pthread_mutex_unlock(&bridge_state.state_mutex);
 }
 
 // Thread function for handling TCP communication with bridge server
@@ -324,13 +386,13 @@ void* bridge_thread_func(void* arg) {
         
         // Parse protocol message
         udp_bridge_header_t header;
-        if (parse_header(buffer, &header) == 0) {
+        if (protocol_parse_header(buffer, bytes_received, &header) == 0) {
             // Handle different message types
             switch (header.message_type) {
                 case MSG_DATA: {
                     // Forward data to appropriate UDP client
                     if (bridge_state.client_manager) {
-                        client_info_t* client = client_manager_find_by_id(
+                        client_entry_t* client = client_manager_find_by_id(
                             bridge_state.client_manager, header.client_id);
                         
                         if (client) {
@@ -339,8 +401,8 @@ void* bridge_thread_func(void* arg) {
                                                 buffer + sizeof(udp_bridge_header_t),
                                                 header.payload_size,
                                                 0,
-                                                (struct sockaddr*)&client->addr,
-                                                sizeof(client->addr));
+                                                (struct sockaddr*)&client->client_addr,
+                                                sizeof(client->client_addr));
                             
                             if (sent > 0) {
                                 bridge_state.bytes_transferred += sent;
@@ -403,10 +465,12 @@ void* listener_thread_func(void* arg) {
         // Find or create client
         uint32_t client_id = 0;
         if (bridge_state.client_manager) {
-            client_info_t* client = client_manager_find_or_create(
+            client_entry_t* client = client_manager_find_by_addr(
                 bridge_state.client_manager, &client_addr);
             
-            if (client) {
+            if (!client) {
+                client_id = client_manager_add_client(bridge_state.client_manager, &client_addr);
+            } else {
                 client_id = client->client_id;
                 client_manager_update_activity(bridge_state.client_manager, client_id);
             }
@@ -416,12 +480,12 @@ void* listener_thread_func(void* arg) {
         if (bridge_state.tcp_manager && client_id > 0) {
             char protocol_buffer[4096 + sizeof(udp_bridge_header_t)];
             
-            int message_size = create_message(protocol_buffer, MSG_DATA, client_id, 
-                                            buffer, bytes_received);
+            int message_size = protocol_create_message(protocol_buffer, sizeof(protocol_buffer), 
+                                            MSG_DATA, client_id, 0, buffer, bytes_received);
             
             if (message_size > 0) {
-                if (tcp_connection_manager_send(bridge_state.tcp_manager, 
-                                              protocol_buffer, message_size) > 0) {
+                if (tcp_connection_manager_send_data(bridge_state.tcp_manager, 
+                                              client_id, protocol_buffer, message_size) > 0) {
                     bridge_state.bytes_transferred += bytes_received;
                     LOGD("Forwarded %zd bytes to bridge server for client %u", 
                          bytes_received, client_id);

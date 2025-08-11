@@ -35,7 +35,6 @@
     
     <!-- Bridge Settings -->
     <string name="bridge_settings">Bridge Settings</string>
-    <string name="enable_bridge">Enable UDP Bridge</string>
     <string name="bridge_server">Bridge Server</string>
     <string name="bridge_port">Bridge Port</string>
     <string name="local_port">Local Port</string>
