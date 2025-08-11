@@ -91,38 +91,89 @@ jobs:
         make --version | head -1
         echo "flock version: $(flock --version 2>&1 | head -1)"
         
-    - name: Pre-download sources to avoid conflicts
+    - name: Cache source packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/source_cache
+        key: source-packages-v1-${{ hashFiles('build_openssl.sh') }}
+        restore-keys: |
+          source-packages-v1-
+          
+    - name: Pre-download sources with mirrors
       run: |
-        echo "📥 Предварительно скачиваем исходники для избежания конфликтов..."
+        echo "📥 Скачиваем исходники с использованием зеркал..."
         
-        # Создаём общую директорию для кеша исходников
-        mkdir -p /tmp/source_cache
+        # Создаём директорию для кеша исходников
+        mkdir -p ~/source_cache
+        cd ~/source_cache
         
-        # Скачиваем OpenSSL, если ещё не скачан
-        if [ ! -f "/tmp/source_cache/openssl-3.5.0.tar.gz" ]; then
-          echo "⬇️ Скачиваем OpenSSL..."
-          cd /tmp/source_cache
-          wget -O "openssl-3.5.0.tar.gz" "https://github.com/openssl/openssl/releases/download/openssl-3.5.0/openssl-3.5.0.tar.gz"
-        fi
+        # Функция для скачивания с зеркалами
+        download_with_mirrors() {
+          local filename=$1
+          local primary_url=$2
+          local mirror_urls=("${@:3}")
+          
+          if [ -f "$filename" ]; then
+            echo "✅ $filename уже скачан"
+            return 0
+          fi
+          
+          echo "⬇️ Скачиваем $filename..."
+          
+          # Пробуем основной URL
+          if wget -O "$filename.tmp" "$primary_url" 2>/dev/null; then
+            mv "$filename.tmp" "$filename"
+            echo "✅ Скачано с основного источника: $primary_url"
+            return 0
+          fi
+          
+          # Пробуем зеркала
+          for mirror_url in "${mirror_urls[@]}"; do
+            echo "🔄 Пробуем зеркало: $mirror_url"
+            if wget -O "$filename.tmp" "$mirror_url" 2>/dev/null; then
+              mv "$filename.tmp" "$filename"
+              echo "✅ Скачано с зеркала: $mirror_url"
+              return 0
+            fi
+          done
+          
+          echo "❌ Не удалось скачать $filename"
+          rm -f "$filename.tmp"
+          return 1
+        }
         
-        # Скачиваем libssh, если ещё не скачан  
-        if [ ! -f "/tmp/source_cache/libssh-0.11.2.tar.xz" ]; then
-          echo "⬇️ Скачиваем libssh..."
-          cd /tmp/source_cache
-          wget "https://www.libssh.org/files/0.11/libssh-0.11.2.tar.xz"
-        fi
+        # Скачиваем OpenSSL с зеркалами
+        download_with_mirrors "openssl-3.5.0.tar.gz" \
+          "https://github.com/openssl/openssl/releases/download/openssl-3.5.0/openssl-3.5.0.tar.gz" \
+          "https://www.openssl.org/source/openssl-3.5.0.tar.gz" \
+          "https://ftp.openssl.org/source/openssl-3.5.0.tar.gz" \
+          "https://mirror.yandex.ru/pub/OpenSSL/openssl-3.5.0.tar.gz"
         
-        echo "✅ Исходники предварительно скачаны"
+        # Скачиваем libssh с зеркалами
+        download_with_mirrors "libssh-0.11.2.tar.xz" \
+          "https://www.libssh.org/files/0.11/libssh-0.11.2.tar.xz" \
+          "https://git.libssh.org/projects/libssh.git/snapshot/libssh-0.11.2.tar.xz" \
+          "https://github.com/search?q=libssh-0.11.2.tar.xz&type=code" \
+          "https://mirror.yandex.ru/debian/pool/main/libs/libssh/libssh_0.11.2.orig.tar.xz"
+        
+        echo "✅ Исходники загружены в кеш"
+        ls -la ~/source_cache/
         
     - name: Build OpenSSL and libssh for ${{ matrix.arch }}
       run: |
         chmod +x ./build_openssl.sh
         export ANDROID_ABI=${{ matrix.arch }}
+        
+        # Устанавливаем путь к кешированным исходникам
+        export SOURCE_CACHE_DIR="$HOME/source_cache"
+        
         # Создаём изолированную рабочую директорию для каждой архитектуры
         export ARCH_WORK_DIR="$(pwd)/build_${{ matrix.arch }}"
         mkdir -p "$ARCH_WORK_DIR"
         echo "🚀 Запускаем сборку для архитектуры: ${{ matrix.arch }}"
         echo "📁 Рабочая директория: $ARCH_WORK_DIR"
+        echo "📦 Кеш исходников: $SOURCE_CACHE_DIR"
         
         # Используем блокировку файлов для безопасности
         export USE_FILE_LOCKS=1
