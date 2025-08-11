@@ -15,7 +15,6 @@ public class ServerConfig implements Parcelable {
     private String passphrase;
     
     // Bridge settings
-    private boolean bridgeEnabled;
     private String bridgeHost;
     private int bridgePort;
     private int localPort;
@@ -59,7 +58,6 @@ public class ServerConfig implements Parcelable {
         usePrivateKey = in.readByte() != 0;
         privateKeyPath = in.readString();
         passphrase = in.readString();
-        bridgeEnabled = in.readByte() != 0;
         bridgeHost = in.readString();
         bridgePort = in.readInt();
         localPort = in.readInt();
@@ -98,7 +96,6 @@ public class ServerConfig implements Parcelable {
         dest.writeByte((byte) (usePrivateKey ? 1 : 0));
         dest.writeString(privateKeyPath);
         dest.writeString(passphrase);
-        dest.writeByte((byte) (bridgeEnabled ? 1 : 0));
         dest.writeString(bridgeHost);
         dest.writeInt(bridgePort);
         dest.writeInt(localPort);
@@ -136,9 +133,6 @@ public class ServerConfig implements Parcelable {
 
     public String getPassphrase() { return passphrase; }
     public void setPassphrase(String passphrase) { this.passphrase = passphrase; }
-
-    public boolean isBridgeEnabled() { return bridgeEnabled; }
-    public void setBridgeEnabled(boolean bridgeEnabled) { this.bridgeEnabled = bridgeEnabled; }
 
     public String getBridgeHost() { return bridgeHost; }
     public void setBridgeHost(String bridgeHost) { this.bridgeHost = bridgeHost; }
@@ -181,7 +175,7 @@ public class ServerConfig implements Parcelable {
     }
 
     public boolean isValidBridgeConfig() {
-        if (!bridgeEnabled) return true;
+        // Bridge is always enabled, so always validate
         return bridgeHost != null && !bridgeHost.trim().isEmpty() &&
                bridgePort > 0 && bridgePort <= 65535 &&
                localPort > 0 && localPort <= 65535;

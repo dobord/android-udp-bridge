@@ -18,6 +18,7 @@
 #include <stdint.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <sys/select.h>
 
 // UDP Bridge Protocol integration
 #include "udp_bridge_protocol.h"
@@ -308,6 +309,147 @@ JNIEXPORT void JNICALL JNI_OnUnload(JavaVM* vm, void* reserved) {
 }
 #endif
 
+// Global variable to track port forwarding thread
+static pthread_t port_forward_thread = 0;
+static int port_forward_running = 0;
+
+// TCP Port forwarding thread function
+void* tcp_port_forward_thread(void* arg) {
+    (void)arg; // Suppress unused parameter warning
+    
+    LOGI("TCP port forwarding thread started");
+    
+    // Create a local socket to listen on port 8080
+    int listen_sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (listen_sock < 0) {
+        LOGE("Failed to create listening socket for port forwarding");
+        return NULL;
+    }
+    
+    // Enable socket reuse
+    int opt = 1;
+    setsockopt(listen_sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    
+    struct sockaddr_in listen_addr;
+    memset(&listen_addr, 0, sizeof(listen_addr));
+    listen_addr.sin_family = AF_INET;
+    listen_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    listen_addr.sin_port = htons(8080);
+    
+    if (bind(listen_sock, (struct sockaddr*)&listen_addr, sizeof(listen_addr)) < 0) {
+        LOGE("Failed to bind to port 8080 for forwarding: %s", strerror(errno));
+        close(listen_sock);
+        return NULL;
+    }
+    
+    if (listen(listen_sock, 5) < 0) {
+        LOGE("Failed to listen on port 8080: %s", strerror(errno));
+        close(listen_sock);
+        return NULL;
+    }
+    
+    LOGI("TCP port forwarding listening on 127.0.0.1:8080");
+    
+    port_forward_running = 1;
+    
+    while (port_forward_running) {
+        struct sockaddr_in client_addr;
+        socklen_t client_len = sizeof(client_addr);
+        
+        int client_sock = accept(listen_sock, (struct sockaddr*)&client_addr, &client_len);
+        if (client_sock < 0) {
+            if (port_forward_running) {
+                LOGE("Failed to accept connection: %s", strerror(errno));
+            }
+            continue;
+        }
+        
+        LOGI("Accepted TCP connection for forwarding to remote 8080");
+        
+        // Create SSH channel for forwarding
+        pthread_mutex_lock(&session_mutex);
+        if (session != NULL) {
+            ssh_channel channel = ssh_channel_new(session);
+            if (channel != NULL) {
+                int rc = ssh_channel_open_forward(channel, "127.0.0.1", 8080, "127.0.0.1", 8080);
+                if (rc == SSH_OK) {
+                    LOGI("SSH channel opened for TCP forwarding");
+                    
+                    // Simple forwarding loop (simplified version)
+                    char buffer[4096];
+                    fd_set read_fds;
+                    int max_fd = (client_sock > ssh_get_fd(session)) ? client_sock : ssh_get_fd(session);
+                    
+                    while (port_forward_running) {
+                        FD_ZERO(&read_fds);
+                        FD_SET(client_sock, &read_fds);
+                        
+                        struct timeval tv = {1, 0}; // 1 second timeout
+                        int ready = select(max_fd + 1, &read_fds, NULL, NULL, &tv);
+                        
+                        if (ready <= 0) continue;
+                        
+                        if (FD_ISSET(client_sock, &read_fds)) {
+                            int bytes = recv(client_sock, buffer, sizeof(buffer), 0);
+                            if (bytes <= 0) break;
+                            
+                            ssh_channel_write(channel, buffer, bytes);
+                        }
+                        
+                        // Check for data from SSH channel
+                        if (ssh_channel_is_eof(channel)) break;
+                        
+                        int ssh_bytes = ssh_channel_read_nonblocking(channel, buffer, sizeof(buffer), 0);
+                        if (ssh_bytes > 0) {
+                            send(client_sock, buffer, ssh_bytes, 0);
+                        }
+                    }
+                    
+                    ssh_channel_close(channel);
+                } else {
+                    LOGE("Failed to open SSH forward channel: %s", ssh_get_error(session));
+                }
+                ssh_channel_free(channel);
+            }
+        }
+        pthread_mutex_unlock(&session_mutex);
+        
+        close(client_sock);
+    }
+    
+    close(listen_sock);
+    LOGI("TCP port forwarding thread exiting");
+    return NULL;
+}
+
+// Setup TCP port forwarding
+int setup_tcp_port_forwarding() {
+    if (port_forward_thread != 0) {
+        LOGI("TCP port forwarding already running");
+        return 0;
+    }
+    
+    port_forward_running = 0;
+    
+    if (pthread_create(&port_forward_thread, NULL, tcp_port_forward_thread, NULL) != 0) {
+        LOGE("Failed to create TCP port forwarding thread");
+        return -1;
+    }
+    
+    LOGI("TCP port forwarding thread started");
+    return 0;
+}
+
+// Stop TCP port forwarding
+void stop_tcp_port_forwarding() {
+    if (port_forward_thread != 0) {
+        port_forward_running = 0;
+        pthread_join(port_forward_thread, NULL);
+        port_forward_thread = 0;
+        LOGI("TCP port forwarding stopped");
+    }
+}
+
 // Simplified mock-friendly connect function
 JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_connectToServer(
     JNIEnv *env, jobject obj, jstring host, jint port, jstring username, jstring password) {
@@ -411,6 +553,12 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_connectTo
     }
     
     LOGI("SSH authentication successful");
+    
+    // Set up TCP port forwarding for UDP Bridge (8080)
+    if (setup_tcp_port_forwarding() != 0) {
+        LOGW("Failed to setup TCP port forwarding, but SSH connection established");
+    }
+    
     pthread_mutex_unlock(&session_mutex);
     
     (*env)->ReleaseStringUTFChars(env, host, host_str);
@@ -510,6 +658,12 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_connectWi
     }
     
     LOGI("SSH key authentication successful");
+    
+    // Set up TCP port forwarding for UDP Bridge (8080)
+    if (setup_tcp_port_forwarding() != 0) {
+        LOGW("Failed to setup TCP port forwarding, but SSH connection established");
+    }
+    
     pthread_mutex_unlock(&session_mutex);
     
     (*env)->ReleaseStringUTFChars(env, host, host_str);
@@ -542,6 +696,9 @@ JNIEXPORT void JNICALL Java_com_example_sshtunnel_SshTunnelService_disconnect(JN
     (void)env; (void)obj; // Suppress unused parameter warnings
     
     LOGI("Disconnecting SSH session");
+    
+    // Stop TCP port forwarding first
+    stop_tcp_port_forwarding();
     
     pthread_mutex_lock(&session_mutex);
     tunnel_active = 0;

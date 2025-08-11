@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -40,6 +41,10 @@ public class MainActivity extends AppCompatActivity {
     private UdpBridgeService udpBridgeService;
     private boolean serviceBound = false;
     private boolean bridgeServiceBound = false;
+    
+    // UI update handler
+    private Handler uiUpdateHandler = new Handler();
+    private Runnable uiUpdateRunnable;
     
     // Server management
     private ServerConfigManager serverConfigManager;
@@ -137,6 +142,9 @@ public class MainActivity extends AppCompatActivity {
         // Bind to UDP Bridge service
         Intent bridgeIntent = new Intent(this, UdpBridgeService.class);
         bindService(bridgeIntent, bridgeServiceConnection, Context.BIND_AUTO_CREATE);
+        
+        // Start periodic UI updates
+        startPeriodicUIUpdates();
     }
     
     private void initializeViews() {
@@ -313,6 +321,9 @@ public class MainActivity extends AppCompatActivity {
                     }
                     Toast.makeText(MainActivity.this, "Connected to SSH server using " + authMethod, Toast.LENGTH_SHORT).show();
                     bridgeStatsTextView.setText(status);
+                    
+                    // Auto-start UDP Bridge after successful SSH connection
+                    startUdpBridge();
                 } else {
                     Toast.makeText(MainActivity.this, "Failed to connect", Toast.LENGTH_SHORT).show();
                     bridgeStatsTextView.setText("Connection failed");
@@ -324,6 +335,9 @@ public class MainActivity extends AppCompatActivity {
     
     private void disconnectFromSshServer() {
         if (serviceBound) {
+            // Stop UDP Bridge first
+            stopUdpBridge();
+            
             sshTunnelService.disconnectFromServer();
             bridgeStatsTextView.setText("Disconnected");
             updateUI();
@@ -373,14 +387,13 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         
-        if (currentServerConfig == null || !currentServerConfig.isBridgeEnabled()) {
+        if (currentServerConfig == null) {
             Toast.makeText(this, "Bridge not configured for selected server", Toast.LENGTH_SHORT).show();
             return;
         }
         
         // Create UDP bridge config from current server config
         UdpBridgeConfig udpBridgeConfig = new UdpBridgeConfig(this);
-        udpBridgeConfig.setBridgeEnabled(true);
         udpBridgeConfig.setBridgeHost(currentServerConfig.getBridgeHost());
         udpBridgeConfig.setBridgePort(currentServerConfig.getBridgePort());
         udpBridgeConfig.setLocalPort(currentServerConfig.getLocalPort());
@@ -471,6 +484,11 @@ public class MainActivity extends AppCompatActivity {
     
     @Override
     protected void onDestroy() {
+        // Stop periodic updates
+        if (uiUpdateRunnable != null) {
+            uiUpdateHandler.removeCallbacks(uiUpdateRunnable);
+        }
+        
         if (serviceBound) {
             unbindService(serviceConnection);
         }
@@ -531,5 +549,20 @@ public class MainActivity extends AppCompatActivity {
         
         // Update UDP Bridge UI
         updateBridgeUI();
+    }
+    
+    private void startPeriodicUIUpdates() {
+        uiUpdateRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (bridgeServiceBound) {
+                    updateBridgeStats();
+                }
+                // Schedule next update in 2 seconds
+                uiUpdateHandler.postDelayed(this, 2000);
+            }
+        };
+        // Start first update after 1 second
+        uiUpdateHandler.postDelayed(uiUpdateRunnable, 1000);
     }
 }

@@ -8,7 +8,6 @@ import android.content.SharedPreferences;
  */
 public class UdpBridgeConfig {
     private static final String PREFS_NAME = "udp_bridge_prefs";
-    private static final String KEY_ENABLED = "bridge_enabled";
     private static final String KEY_BRIDGE_NAME = "bridge_name";
     private static final String KEY_LOCAL_PORT = "local_port";
     private static final String KEY_BRIDGE_HOST = "bridge_host";
@@ -18,7 +17,7 @@ public class UdpBridgeConfig {
     
     // Default values
     public static final String DEFAULT_BRIDGE_NAME = "Default Bridge";
-    public static final int DEFAULT_LOCAL_PORT = 5060;
+    public static final int DEFAULT_LOCAL_PORT = 55000;
     public static final String DEFAULT_BRIDGE_HOST = "127.0.0.1";
     public static final int DEFAULT_BRIDGE_PORT = 8080;
     public static final boolean DEFAULT_AUTO_RECONNECT = true;
@@ -28,15 +27,6 @@ public class UdpBridgeConfig {
     
     public UdpBridgeConfig(Context context) {
         prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-    }
-    
-    // Bridge enabled/disabled
-    public boolean isBridgeEnabled() {
-        return prefs.getBoolean(KEY_ENABLED, false);
-    }
-    
-    public void setBridgeEnabled(boolean enabled) {
-        prefs.edit().putBoolean(KEY_ENABLED, enabled).apply();
     }
     
     // Bridge name
@@ -112,7 +102,6 @@ public class UdpBridgeConfig {
      */
     public String getConfigSummary() {
         StringBuilder summary = new StringBuilder();
-        summary.append("Bridge: ").append(isBridgeEnabled() ? "Enabled" : "Disabled").append("\n");
         summary.append("Local Port: ").append(getLocalPort()).append("\n");
         summary.append("Bridge Server: ").append(getBridgeHost()).append(":").append(getBridgePort()).append("\n");
         summary.append("Auto Reconnect: ").append(isAutoReconnectEnabled() ? "Yes" : "No").append("\n");
