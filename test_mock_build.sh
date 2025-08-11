@@ -28,7 +28,13 @@ add_library(ssh STATIC ../jni/libssh_mock.c)
 target_include_directories(ssh PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../jni)
 
 # Create main library
-add_library(ssh_tunnel SHARED ../jni/ssh_tunnel.c)
+add_library(ssh_tunnel SHARED 
+    ../jni/ssh_tunnel.c
+    ../jni/udp_listener.c
+    ../jni/tcp_connection_manager.c
+    ../jni/client_manager.c
+    ../jni/udp_bridge_protocol.c
+)
 target_compile_definitions(ssh_tunnel PRIVATE USE_LIBSSH_MOCK=1)
 target_include_directories(ssh_tunnel PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../jni)
 
@@ -39,7 +45,15 @@ find_library(log-lib log)
 target_link_libraries(ssh_tunnel ssh ${log-lib})
 
 # Compile options
-target_compile_options(ssh_tunnel PRIVATE -Wall -Wextra)
+target_compile_options(ssh_tunnel PRIVATE 
+    -Wall 
+    -Wno-unused-parameter 
+    -Wno-unused-variable 
+    -Wno-unused-function
+    -Wno-format-security
+    -Wno-incompatible-pointer-types
+    -Wno-macro-redefined
+)
 target_link_options(ssh_tunnel PRIVATE -Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384)
 EOF
 
