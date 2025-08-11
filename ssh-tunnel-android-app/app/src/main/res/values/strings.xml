@@ -1,23 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">SSH UDP Bridge</string>
-    <string name="connect_button">Connect</string>
-    <string name="disconnect_button">Disconnect</string>
-    <string name="start_forwarding_button">Restart forwarding</string>
-    <string name="stop_forwarding_button">Stop UDP Forwarding</string>
+    <string name="app_name">UDP Bridge</string>
+    
+    <!-- Main Actions -->
+    <string name="connect">Connect</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="connecting">Connecting…</string>
+    <string name="disconnecting">Disconnecting…</string>
+    
+    <!-- Connection Status -->
     <string name="status_connected">Connected</string>
     <string name="status_disconnected">Disconnected</string>
-    <string name="status_forwarding">Forwarding</string>
-    <string name="server_address_hint">Enter SSH server address</string>
-    <string name="server_port_hint">Enter SSH server port (22)</string>
-    <string name="username_hint">Enter username</string>
-    <string name="password_hint">Enter password</string>
-    <string name="local_port_hint">Enter local UDP port</string>
-    <string name="remote_host_hint">Enter remote host</string>
-    <string name="remote_port_hint">Enter remote UDP port</string>
-    <string name="error_connection_failed">SSH connection failed</string>
-    <string name="error_invalid_address">Invalid server address</string>
+    <string name="status_connecting">Connecting</string>
+    <string name="status_error">Connection Error</string>
+    
+    <!-- Server Configuration -->
+    <string name="server_configuration">Server Configuration</string>
+    <string name="ssh_server_host">SSH Server</string>
+    <string name="ssh_server_port">Port</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="private_key">Private Key</string>
+    <string name="key_passphrase">Key Passphrase</string>
+    
+    <!-- Bridge Settings -->
+    <string name="bridge_settings">Bridge Settings</string>
+    <string name="enable_bridge">Enable UDP Bridge</string>
+    <string name="bridge_server">Bridge Server</string>
+    <string name="bridge_port">Bridge Port</string>
+    <string name="local_port">Local Port</string>
+    <string name="auto_reconnect">Auto Reconnect</string>
+    <string name="connection_timeout">Connection Timeout</string>
+    
+    <!-- Authentication -->
+    <string name="authentication_method">Authentication Method</string>
+    <string name="use_password">Password</string>
+    <string name="use_private_key">Private Key</string>
+    
+    <!-- Advanced Settings -->
+    <string name="advanced_settings">Advanced Settings</string>
+    <string name="show_advanced">Show Advanced</string>
+    <string name="hide_advanced">Hide Advanced</string>
+    
+    <!-- Status Messages -->
+    <string name="bridge_active">Bridge Active</string>
+    <string name="bridge_inactive">Bridge Inactive</string>
+    <string name="tunnel_established">Tunnel Established</string>
+    <string name="connection_failed">Connection Failed</string>
+    
+    <!-- Hints -->
+    <string name="server_hint">example.com</string>
+    <string name="port_hint">22</string>
+    <string name="username_hint">your_username</string>
+    <string name="password_hint">your_password</string>
+    <string name="bridge_server_hint">bridge.example.com</string>
+    <string name="bridge_port_hint">8080</string>
+    <string name="local_port_hint">5060</string>
+    <string name="timeout_hint">30</string>
+    
+    <!-- Error Messages -->
+    <string name="error_empty_host">Server address required</string>
+    <string name="error_empty_username">Username required</string>
+    <string name="error_empty_password">Password required</string>
     <string name="error_invalid_port">Invalid port number</string>
-    <string name="error_empty_fields">Please fill all required fields</string>
-    <string name="tunnel_status">Tunnel Status: %s</string>
+    <string name="error_connection_timeout">Connection timeout</string>
+    <string name="error_authentication_failed">Authentication failed</string>
+    <string name="error_network_error">Network error</string>
+    
+    <!-- Settings -->
+    <string name="settings">Settings</string>
+    <string name="about">About</string>
+    <string name="help">Help</string>
+    
+    <!-- Actions -->
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
+    <string name="retry">Retry</string>
+    <string name="continue_text">Continue</string>
+    <string name="save_config">Save Configuration</string>
+    
+    <!-- UDP Bridge Configuration -->
+    <string name="udp_bridge_config_title">Bridge Configuration</string>
+    <string name="bridge_configuration">Bridge Configuration</string>
+    <string name="bridge_configuration_subtitle">Configure UDP bridge connection parameters</string>
+    <string name="bridge_name_hint">Bridge Name</string>
+    <string name="remote_host_hint">Remote Host</string>
+    <string name="remote_port_hint">Remote Port</string>
+    <string name="protocol_label">Protocol</string>
+    <string name="auto_reconnect_label">Auto Reconnect</string>
 </resources>

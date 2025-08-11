@@ -4,10 +4,14 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
+import android.widget.RadioGroup;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.SwitchCompat;
+import androidx.appcompat.widget.Toolbar;
+
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.materialswitch.MaterialSwitch;
+import com.google.android.material.button.MaterialButton;
 
 import com.example.sshtunnel.R;
 
@@ -18,14 +22,15 @@ public class UdpBridgeConfigActivity extends AppCompatActivity {
     
     private UdpBridgeConfig config;
     
-    private SwitchCompat bridgeEnabledSwitch;
-    private EditText bridgeHostEditText;
-    private EditText bridgePortEditText;
-    private EditText localPortEditText;
-    private SwitchCompat autoReconnectSwitch;
-    private EditText connectionTimeoutEditText;
-    private Button saveButton;
-    private Button resetButton;
+    private TextInputEditText bridgeNameEditText;
+    private TextInputEditText localPortEditText;
+    private TextInputEditText remoteHostEditText;
+    private TextInputEditText remotePortEditText;
+    private TextInputEditText timeoutEditText;
+    private RadioGroup protocolGroup;
+    private MaterialSwitch autoReconnectSwitch;
+    private MaterialButton saveButton;
+    private MaterialButton cancelButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,49 +39,69 @@ public class UdpBridgeConfigActivity extends AppCompatActivity {
         
         config = new UdpBridgeConfig(this);
         
+        setupToolbar();
         initializeViews();
         loadSettings();
         setupClickListeners();
     }
     
+    private void setupToolbar() {
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
+        }
+    }
+    
     private void initializeViews() {
-        bridgeEnabledSwitch = findViewById(R.id.config_bridge_enabled_switch);
-        bridgeHostEditText = findViewById(R.id.config_bridge_host_edit_text);
-        bridgePortEditText = findViewById(R.id.config_bridge_port_edit_text);
-        localPortEditText = findViewById(R.id.config_local_port_edit_text);
-        autoReconnectSwitch = findViewById(R.id.config_auto_reconnect_switch);
-        connectionTimeoutEditText = findViewById(R.id.config_connection_timeout_edit_text);
-        saveButton = findViewById(R.id.config_save_button);
-        resetButton = findViewById(R.id.config_reset_button);
+        bridgeNameEditText = findViewById(R.id.bridge_name);
+        localPortEditText = findViewById(R.id.local_port);
+        remoteHostEditText = findViewById(R.id.remote_host);
+        remotePortEditText = findViewById(R.id.remote_port);
+        timeoutEditText = findViewById(R.id.timeout);
+        protocolGroup = findViewById(R.id.protocol_group);
+        autoReconnectSwitch = findViewById(R.id.auto_reconnect);
+        saveButton = findViewById(R.id.btn_save);
+        cancelButton = findViewById(R.id.btn_cancel);
     }
     
     private void loadSettings() {
-        bridgeEnabledSwitch.setChecked(config.isBridgeEnabled());
-        bridgeHostEditText.setText(config.getBridgeHost());
-        bridgePortEditText.setText(String.valueOf(config.getBridgePort()));
+        bridgeNameEditText.setText(config.getBridgeName());
         localPortEditText.setText(String.valueOf(config.getLocalPort()));
+        remoteHostEditText.setText(config.getBridgeHost());
+        remotePortEditText.setText(String.valueOf(config.getBridgePort()));
+        timeoutEditText.setText(String.valueOf(config.getConnectionTimeout()));
         autoReconnectSwitch.setChecked(config.isAutoReconnectEnabled());
-        connectionTimeoutEditText.setText(String.valueOf(config.getConnectionTimeout()));
+        
+        // Set protocol (UDP is default)
+        protocolGroup.check(R.id.protocol_udp);
     }
     
     private void setupClickListeners() {
         saveButton.setOnClickListener(v -> saveSettings());
-        resetButton.setOnClickListener(v -> resetSettings());
+        cancelButton.setOnClickListener(v -> finish());
     }
     
     private void saveSettings() {
         try {
             // Validate and save settings
-            String hostText = bridgeHostEditText.getText().toString().trim();
-            if (hostText.isEmpty()) {
-                Toast.makeText(this, "Bridge host cannot be empty", Toast.LENGTH_SHORT).show();
+            String nameText = bridgeNameEditText.getText().toString().trim();
+            if (nameText.isEmpty()) {
+                Toast.makeText(this, "Bridge name cannot be empty", Toast.LENGTH_SHORT).show();
                 return;
             }
             
-            String portText = bridgePortEditText.getText().toString().trim();
-            int bridgePort = Integer.parseInt(portText);
-            if (bridgePort <= 0 || bridgePort > 65535) {
-                Toast.makeText(this, "Invalid bridge port", Toast.LENGTH_SHORT).show();
+            String hostText = remoteHostEditText.getText().toString().trim();
+            if (hostText.isEmpty()) {
+                Toast.makeText(this, "Remote host cannot be empty", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            
+            String remotePortText = remotePortEditText.getText().toString().trim();
+            int remotePort = Integer.parseInt(remotePortText);
+            if (remotePort <= 0 || remotePort > 65535) {
+                Toast.makeText(this, "Invalid remote port", Toast.LENGTH_SHORT).show();
                 return;
             }
             
@@ -87,7 +112,7 @@ public class UdpBridgeConfigActivity extends AppCompatActivity {
                 return;
             }
             
-            String timeoutText = connectionTimeoutEditText.getText().toString().trim();
+            String timeoutText = timeoutEditText.getText().toString().trim();
             int timeout = Integer.parseInt(timeoutText);
             if (timeout <= 0) {
                 Toast.makeText(this, "Invalid connection timeout", Toast.LENGTH_SHORT).show();
@@ -95,9 +120,9 @@ public class UdpBridgeConfigActivity extends AppCompatActivity {
             }
             
             // Save settings
-            config.setBridgeEnabled(bridgeEnabledSwitch.isChecked());
+            config.setBridgeName(nameText);
             config.setBridgeHost(hostText);
-            config.setBridgePort(bridgePort);
+            config.setBridgePort(remotePort);
             config.setLocalPort(localPort);
             config.setAutoReconnectEnabled(autoReconnectSwitch.isChecked());
             config.setConnectionTimeout(timeout);
@@ -113,9 +138,9 @@ public class UdpBridgeConfigActivity extends AppCompatActivity {
         }
     }
     
-    private void resetSettings() {
-        config.resetToDefaults();
-        loadSettings();
-        Toast.makeText(this, "Settings reset to defaults", Toast.LENGTH_SHORT).show();
+    @Override
+    public boolean onSupportNavigateUp() {
+        finish();
+        return true;
     }
 }

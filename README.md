@@ -124,7 +124,7 @@ adb logcat | Select-String -Pattern "(SSHTunnel|LibSSH_Advanced)"
 ### Установка на устройство
 ```bash
 # Установка APK
-adb install -r app/build/outputs/apk/debug/app-debug.apk
+adb install -r adb install -r ssh-tunnel-android-app/app/build/outputs/apk/debug/app-debug.apk
 
 # Мониторинг логов
 adb logcat | grep -E "(SSHTunnel|LibSSH_Advanced)"

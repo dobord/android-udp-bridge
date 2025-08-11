@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Amnezia VPN Color Scheme -->
+    <!-- Main background colors -->
+    <color name="midnight_black">#0E0E11</color>
+    <color name="onyx_black">#1C1D21</color>
+    <color name="slate_gray">#2C2D30</color>
+    <color name="charcoal_gray">#494B50</color>
+    
+    <!-- Text colors -->
+    <color name="pale_gray">#D7D8DB</color>
+    <color name="light_gray">#C1C2C5</color>
+    <color name="muted_gray">#878B91</color>
+    
+    <!-- Accent colors -->
+    <color name="golden_apricot">#FBB26A</color>
+    <color name="burnt_orange">#A85809</color>
+    <color name="rich_brown">#633303</color>
+    <color name="deep_brown">#402102</color>
+    
+    <!-- Status colors -->
+    <color name="vibrant_red">#EB5757</color>
+    <color name="success_green">#27AE60</color>
+    
+    <!-- Translucent colors -->
+    <color name="translucent_white">#14FFFFFF</color>
+    <color name="sheer_white">#1FFFFFFF</color>
+    <color name="translucent_midnight">#CC0E0E11</color>
+    
+    <!-- Legacy -->
+    <color name="transparent">#00000000</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    
+    <!-- Material Design Theme Colors -->
+    <color name="primary">@color/golden_apricot</color>
+    <color name="onPrimary">@color/midnight_black</color>
+    <color name="surface">@color/midnight_black</color>
+    <color name="onSurface">@color/pale_gray</color>
+</resources>
