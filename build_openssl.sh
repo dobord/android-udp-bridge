@@ -147,7 +147,7 @@ get_arch_flags() {
         "armeabi-v7a")
             # Флаги для ARMv7 - совместимость с thumb и NEON (исправленные для Android)
             CFLAGS="-march=armv7-a -mfloat-abi=softfp -mfpu=neon -mthumb -fPIC"
-            LDFLAGS="-Wl,--fix-cortex-a8 -Wl,-m,armelf_linux_eabi"
+            LDFLAGS="-Wl,--fix-cortex-a8"
             ;;
         "x86")
             # Флаги для x86 - поддержка SSE и совместимость (упрощённые флаги)
@@ -252,7 +252,7 @@ build_for_abi() {
     
     # Дополнительные переменные для OpenSSL
     export ANDROID_NDK_ROOT="$NDK_PATH"
-    export CROSS_COMPILE="${TOOLCHAIN_PREFIX}${MIN_API_LEVEL}-"
+    export CROSS_COMPILE=""
     
     echo "Настроены переменные окружения для $ABI:"
     echo "  CC: $CC"
@@ -296,6 +296,7 @@ build_for_abi() {
             no-ui-console \
             no-docs \
             no-apps \
+            no-asm \
             -static
     else
         ./Configure $OPENSSL_ARCH \
