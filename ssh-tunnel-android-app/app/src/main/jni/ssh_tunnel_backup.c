@@ -41,12 +41,14 @@
 #endif
 #endif
 
-#ifndef LOG_TAG
 #define LOG_TAG "SSHTunnelApp"
-#endif
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 #define LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
+
+// Forward declarations
+static int connect_internal(JNIEnv *env, const char *host_str, int port, const char *username_str, 
+                           const char *password_str, const char *key_path_str, const char *passphrase_str);
 
 static ssh_session session = NULL;
 static int tunnel_active = 0;
@@ -308,7 +310,7 @@ JNIEXPORT void JNICALL JNI_OnUnload(JavaVM* vm, void* reserved) {
 }
 #endif
 
-// Simplified mock-friendly connect function
+// Primary connect function expected by Java
 JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_connectToServer(
     JNIEnv *env, jobject obj, jstring host, jint port, jstring username, jstring password) {
     
@@ -318,6 +320,99 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_connectTo
     const char *username_str = (*env)->GetStringUTFChars(env, username, 0);
     const char *password_str = (*env)->GetStringUTFChars(env, password, 0);
     
+    LOGI("connectToServer: Starting SSH connection to %s:%d as %s", host_str, port, username_str);
+    
+    jboolean result = JNI_FALSE;
+    int connect_result = connect_internal(env, host_str, port, username_str, password_str, NULL, NULL);
+    
+    if (connect_result == 0) {
+        result = JNI_TRUE;
+        LOGI("connectToServer: Success");
+    } else {
+        LOGE("connectToServer: Failed");
+    }
+    
+    (*env)->ReleaseStringUTFChars(env, host, host_str);
+    (*env)->ReleaseStringUTFChars(env, username, username_str);
+    (*env)->ReleaseStringUTFChars(env, password, password_str);
+    
+    return result;
+}
+
+// connectWithKey implementation
+JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_connectWithKey(
+    JNIEnv *env, jobject obj, jstring host, jint port, jstring username, jstring private_key_path, jstring passphrase) {
+    
+    (void)obj; // Suppress unused parameter warning
+    
+    const char *host_str = (*env)->GetStringUTFChars(env, host, 0);
+    const char *username_str = (*env)->GetStringUTFChars(env, username, 0);
+    const char *key_path_str = (*env)->GetStringUTFChars(env, private_key_path, 0);
+    const char *passphrase_str = passphrase ? (*env)->GetStringUTFChars(env, passphrase, 0) : NULL;
+    
+    LOGI("connectWithKey: Starting SSH connection to %s:%d as %s", host_str, port, username_str);
+    
+    jboolean result = JNI_FALSE;
+    int connect_result = connect_internal(env, host_str, port, username_str, NULL, key_path_str, passphrase_str);
+    
+    if (connect_result == 0) {
+        result = JNI_TRUE;
+        LOGI("connectWithKey: Success");
+    } else {
+        LOGE("connectWithKey: Failed");
+    }
+    
+    (*env)->ReleaseStringUTFChars(env, host, host_str);
+    (*env)->ReleaseStringUTFChars(env, username, username_str);
+    (*env)->ReleaseStringUTFChars(env, private_key_path, key_path_str);
+    if (passphrase_str) (*env)->ReleaseStringUTFChars(env, passphrase, passphrase_str);
+    
+    return result;
+}
+
+// forwardPort implementation
+JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_forwardPort(
+    JNIEnv *env, jobject obj, jint local_port, jstring remote_host, jint remote_port) {
+    
+    (void)obj; // Suppress unused parameter warning
+    
+    const char *remote_host_str = (*env)->GetStringUTFChars(env, remote_host, 0);
+    
+    LOGI("forwardPort: Starting tunnel %d -> %s:%d", local_port, remote_host_str, remote_port);
+    
+    jboolean result = JNI_FALSE;
+    int tunnel_result = Java_com_example_sshtunnel_SSHTunnelService_startTunnel(env, obj, remote_host, remote_port, local_port);
+    
+    if (tunnel_result == 0) {
+        result = JNI_TRUE;
+        LOGI("forwardPort: Success");
+    } else {
+        LOGE("forwardPort: Failed");
+    }
+    
+    (*env)->ReleaseStringUTFChars(env, remote_host, remote_host_str);
+    
+    return result;
+}
+
+// disconnect implementation 
+JNIEXPORT void JNICALL Java_com_example_sshtunnel_SshTunnelService_disconnect(JNIEnv *env, jobject obj) {
+    (void)env; (void)obj; // Suppress unused parameter warnings
+    
+    LOGI("disconnect: Stopping all connections");
+    
+    // Stop tunnel first
+    Java_com_example_sshtunnel_SSHTunnelService_stopTunnel(env, obj);
+    
+    // Then disconnect SSH
+    Java_com_example_sshtunnel_SSHTunnelService_disconnect(env, obj);
+}
+
+// Internal connection function that handles both password and key auth
+static int connect_internal(JNIEnv *env, const char *host_str, int port, const char *username_str, 
+                           const char *password_str, const char *key_path_str, const char *passphrase_str) {
+    
+    (void)obj; // Suppress unused parameter warning
     LOGI("Starting SSH connection to %s:%d as %s", host_str, port, username_str);
     
     pthread_mutex_lock(&session_mutex);
@@ -333,10 +428,7 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_connectTo
     if (session == NULL) {
         LOGE("Failed to create SSH session");
         pthread_mutex_unlock(&session_mutex);
-        (*env)->ReleaseStringUTFChars(env, host, host_str);
-        (*env)->ReleaseStringUTFChars(env, username, username_str);
-        (*env)->ReleaseStringUTFChars(env, password, password_str);
-        return JNI_FALSE;
+        return -1;
     }
     
     // Set connection options
@@ -388,41 +480,60 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_connectTo
         ssh_free(session);
         session = NULL;
         pthread_mutex_unlock(&session_mutex);
-        (*env)->ReleaseStringUTFChars(env, host, host_str);
-        (*env)->ReleaseStringUTFChars(env, username, username_str);
-        (*env)->ReleaseStringUTFChars(env, password, password_str);
-        return JNI_FALSE;
+        return -1;
     }
     
     LOGI("SSH connection established successfully");
     
-    // Authenticate with password
-    int auth = ssh_userauth_password(session, username_str, password_str);
+    // Authenticate based on provided credentials
+    int auth = SSH_AUTH_ERROR;
+    
+    if (password_str) {
+        // Password authentication
+        auth = ssh_userauth_password(session, username_str, password_str);
+        if (auth != SSH_AUTH_SUCCESS) {
+            LOGE("SSH password authentication failed: %s", ssh_get_error(session));
+        } else {
+            LOGI("SSH password authentication successful");
+        }
+    } else if (key_path_str) {
+        // Key authentication
+#ifndef USE_LIBSSH_MOCK
+        ssh_key privkey;
+        int key_result = ssh_pki_import_privkey_file(key_path_str, passphrase_str, NULL, NULL, &privkey);
+        if (key_result != SSH_OK) {
+            LOGE("Failed to load private key from %s: %s", key_path_str, ssh_get_error(session));
+        } else {
+            auth = ssh_userauth_publickey(session, username_str, privkey);
+            ssh_key_free(privkey);
+            if (auth != SSH_AUTH_SUCCESS) {
+                LOGE("SSH key authentication failed: %s", ssh_get_error(session));
+            } else {
+                LOGI("SSH key authentication successful");
+            }
+        }
+#else
+        LOGI("Mock mode: Simulating key authentication success");
+        auth = SSH_AUTH_SUCCESS;
+#endif
+    }
+    
     if (auth != SSH_AUTH_SUCCESS) {
-        LOGE("SSH authentication failed: %s", ssh_get_error(session));
         ssh_disconnect(session);
         ssh_free(session);
         session = NULL;
         pthread_mutex_unlock(&session_mutex);
-        (*env)->ReleaseStringUTFChars(env, host, host_str);
-        (*env)->ReleaseStringUTFChars(env, username, username_str);
-        (*env)->ReleaseStringUTFChars(env, password, password_str);
-        return JNI_FALSE;
+        return -1;
     }
     
-    LOGI("SSH authentication successful");
     pthread_mutex_unlock(&session_mutex);
-    
-    (*env)->ReleaseStringUTFChars(env, host, host_str);
-    (*env)->ReleaseStringUTFChars(env, username, username_str);
-    (*env)->ReleaseStringUTFChars(env, password, password_str);
-    
-    return JNI_TRUE;
+    return 0;
+}
 }
 
 #ifndef USE_LIBSSH_MOCK
 // Connecting with SSH key authentication
-JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_connectWithKey(
+JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SSHTunnelService_connectWithKey(
     JNIEnv *env, jobject obj, jstring host, jint port, jstring username, jstring private_key_path, jstring passphrase) {
         
     (void)obj; // Suppress unused parameter warning
@@ -521,7 +632,7 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_connectWi
 }
 #else
 // Mock version of connectWithKey
-JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_connectWithKey(
+JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SSHTunnelService_connectWithKey(
     JNIEnv *env, jobject obj, jstring host, jint port, jstring username, jstring private_key_path, jstring passphrase) {
     
     (void)obj; (void)private_key_path; (void)passphrase; // Suppress unused parameter warnings
@@ -538,7 +649,7 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_connectWi
 }
 #endif
 
-JNIEXPORT void JNICALL Java_com_example_sshtunnel_SshTunnelService_disconnect(JNIEnv *env, jobject obj) {
+JNIEXPORT void JNICALL Java_com_example_sshtunnel_SSHTunnelService_disconnect(JNIEnv *env, jobject obj) {
     (void)env; (void)obj; // Suppress unused parameter warnings
     
     LOGI("Disconnecting SSH session");
@@ -559,8 +670,8 @@ JNIEXPORT void JNICALL Java_com_example_sshtunnel_SshTunnelService_disconnect(JN
 }
 
 // Enhanced tunnel function with UDP bridge integration
-JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_forwardPort(
-    JNIEnv *env, jobject obj, jint local_port, jstring remote_host, jint remote_port) {
+JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SSHTunnelService_startTunnel(
+    JNIEnv *env, jobject obj, jstring remote_host, jint remote_port, jint local_port) {
     
     (void)obj; // Suppress unused parameter warning
     
