@@ -32,7 +32,7 @@ public class UdpBridgeService extends Service {
     
     // Native library
     static {
-        System.loadLibrary("udp_bridge");
+        System.loadLibrary("ssh_tunnel");
     }
     
     // Native methods for new protocol
