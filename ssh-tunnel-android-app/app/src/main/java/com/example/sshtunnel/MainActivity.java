@@ -7,6 +7,8 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioGroup;
@@ -21,63 +23,34 @@ import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import com.example.udpbridge.UdpBridgeConfig;
 import com.example.udpbridge.UdpBridgeService;
-import com.example.udpbridge.UdpBridgeConfigActivity;
+import com.example.sshtunnel.models.ServerConfig;
+import com.example.sshtunnel.models.ServerConfigManager;
+
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final int REQUEST_CODE_BRIDGE_CONFIG = 1001;
+    private static final int REQUEST_CODE_SERVER_CONFIG = 1001;
 
     private SshTunnelService sshTunnelService;
     private UdpBridgeService udpBridgeService;
-    private UdpBridgeConfig udpBridgeConfig;
     private boolean serviceBound = false;
     private boolean bridgeServiceBound = false;
     
-    // UI Elements - Modern Material Design
-    private TextInputEditText hostEditText;
-    private TextInputEditText portEditText;
-    private TextInputEditText usernameEditText;
-    private TextInputEditText passwordEditText;
-    private TextInputEditText privateKeyEditText;
-    private TextInputEditText passphraseEditText;
-    private TextInputEditText localPortEditText;
-    private TextInputEditText remoteHostEditText;
-    private TextInputEditText remotePortEditText;
+    // Server management
+    private ServerConfigManager serverConfigManager;
+    private ServerConfig currentServerConfig;
     
-    // Layouts for toggling visibility
-    private TextInputLayout passwordLayout;
-    private TextInputLayout privateKeyLayout;
-    private TextInputLayout passphraseLayout;
-    
-    // UDP Bridge UI elements
-    private SwitchMaterial bridgeEnabledSwitch;
-    private TextInputEditText bridgeHostEditText;
-    private TextInputEditText bridgePortEditText;
-    private TextInputEditText bridgeLocalPortEditText;
-    private SwitchMaterial autoReconnectSwitch;
-    private TextInputEditText connectionTimeoutEditText;
-    private MaterialButton bridgeStartButton;
-    private MaterialButton bridgeStopButton;
-    private MaterialButton bridgeConfigButton;
-    private TextView bridgeStatusTextView;
-    private TextView bridgeStatsTextView;
-    
-    // Advanced settings
-    private MaterialCardView advancedSettingsCard;
-    private MaterialButton advancedToggleButton;
-    private boolean isAdvancedVisible = false;
-    
-    private RadioGroup authMethodRadioGroup;
-    private RadioButton passwordAuthRadio;
-    private RadioButton keyAuthRadio;
-    
+    // UI Elements - New simplified UI
     private MaterialButton connectButton;
-    private Button disconnectButton;
-    private Button startForwardingButton;
-    private TextView statusTextView;
+    private TextView bridgeStatsTextView;
+    private AutoCompleteTextView serverDropdown;
+    private FloatingActionButton addServerButton;
+    private MaterialButton settingsButton;
 
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
@@ -150,12 +123,12 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Initialize UDP Bridge config
-        udpBridgeConfig = new UdpBridgeConfig(this);
+        // Initialize server config manager
+        serverConfigManager = new ServerConfigManager(this);
 
         initializeViews();
         setupClickListeners();
-        loadBridgeSettings();
+        loadLastSelectedServer();
         
         // Bind to SSH service
         Intent intent = new Intent(this, SshTunnelService.class);
@@ -167,126 +140,81 @@ public class MainActivity extends AppCompatActivity {
     }
     
     private void initializeViews() {
-        hostEditText = findViewById(R.id.host_edit_text);
-        portEditText = findViewById(R.id.port_edit_text);
-        usernameEditText = findViewById(R.id.username_edit_text);
-        passwordEditText = findViewById(R.id.password_edit_text);
-        privateKeyEditText = findViewById(R.id.private_key_edit_text);
-        passphraseEditText = findViewById(R.id.passphrase_edit_text);
-        localPortEditText = findViewById(R.id.local_port_edit_text);
-        remoteHostEditText = findViewById(R.id.remote_host_edit_text);
-        remotePortEditText = findViewById(R.id.remote_port_edit_text);
-        
-        // Text input layouts for show/hide functionality
-        passwordLayout = findViewById(R.id.password_layout);
-        privateKeyLayout = findViewById(R.id.private_key_layout);
-        passphraseLayout = findViewById(R.id.passphrase_layout);
-        
-        authMethodRadioGroup = findViewById(R.id.auth_method_radio_group);
-        passwordAuthRadio = findViewById(R.id.password_auth_radio);
-        keyAuthRadio = findViewById(R.id.key_auth_radio);
-        
+        // New simplified UI
         connectButton = findViewById(R.id.connect_button);
-        disconnectButton = findViewById(R.id.disconnect_button);
-        startForwardingButton = findViewById(R.id.start_forwarding_button);
-        statusTextView = findViewById(R.id.status_text_view);
-        
-        // UDP Bridge elements
-        bridgeEnabledSwitch = findViewById(R.id.bridge_enabled_switch);
-        bridgeHostEditText = findViewById(R.id.bridge_host_edit_text);
-        bridgePortEditText = findViewById(R.id.bridge_port_edit_text);
-        bridgeLocalPortEditText = findViewById(R.id.bridge_local_port_edit_text);
-        autoReconnectSwitch = findViewById(R.id.auto_reconnect_switch);
-        connectionTimeoutEditText = findViewById(R.id.connection_timeout_edit_text);
-        bridgeStartButton = findViewById(R.id.bridge_start_button);
-        bridgeStopButton = findViewById(R.id.bridge_stop_button);
-        bridgeConfigButton = findViewById(R.id.bridge_config_button);
-        bridgeStatusTextView = findViewById(R.id.bridge_status_text_view);
         bridgeStatsTextView = findViewById(R.id.bridge_stats_text_view);
+        serverDropdown = findViewById(R.id.server_dropdown);
+        addServerButton = findViewById(R.id.add_server_button);
+        settingsButton = findViewById(R.id.settings_button);
         
-        // Advanced settings
-        advancedSettingsCard = findViewById(R.id.advanced_settings_card);
-        advancedToggleButton = findViewById(R.id.advanced_toggle_button);
+        // Setup server dropdown
+        updateServerDropdown();
+    }
+    
+    private void updateServerDropdown() {
+        List<ServerConfig> configs = serverConfigManager.getAllConfigs();
+        String[] serverNames = new String[configs.size()];
         
-        // Set default values
-        portEditText.setText("22");
-        bridgePortEditText.setText("8080");
-        bridgeLocalPortEditText.setText("5060");
-        connectionTimeoutEditText.setText("30");
-        remoteHostEditText.setText("127.0.0.1");
+        for (int i = 0; i < configs.size(); i++) {
+            serverNames[i] = configs.get(i).getDisplayName();
+        }
+        
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, 
+            android.R.layout.simple_dropdown_item_1line, serverNames);
+        serverDropdown.setAdapter(adapter);
+        
+        // Set last selected server
+        ServerConfig lastSelected = serverConfigManager.getLastSelectedConfig();
+        if (lastSelected != null) {
+            serverDropdown.setText(lastSelected.getDisplayName(), false);
+            currentServerConfig = lastSelected;
+        }
+    }
+    
+    private void loadLastSelectedServer() {
+        ServerConfig lastSelected = serverConfigManager.getLastSelectedConfig();
+        if (lastSelected != null) {
+            serverDropdown.setText(lastSelected.getDisplayName(), false);
+            currentServerConfig = lastSelected;
+        }
     }
     
     private void setupClickListeners() {
-        authMethodRadioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
-                if (checkedId == R.id.password_auth_radio) {
-                    // Show password fields, hide key fields
-                    passwordLayout.setVisibility(View.VISIBLE);
-                    privateKeyLayout.setVisibility(View.GONE);
-                    passphraseLayout.setVisibility(View.GONE);
-                } else if (checkedId == R.id.key_auth_radio) {
-                    // Hide password fields, show key fields
-                    passwordLayout.setVisibility(View.GONE);
-                    privateKeyLayout.setVisibility(View.VISIBLE);
-                    passphraseLayout.setVisibility(View.VISIBLE);
-                }
-            }
-        });
-        
-        connectButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (serviceBound && sshTunnelService.isConnected()) {
-                    disconnectFromSshServer();
-                } else {
-                    connectToSshServer();
-                }
+        connectButton.setOnClickListener(v -> {
+            if (serviceBound && sshTunnelService.isConnected()) {
+                disconnectFromSshServer();
+            } else {
+                connectToSshServer();
             }
         });
 
-        disconnectButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                disconnectFromSshServer();
+        serverDropdown.setOnItemClickListener((parent, view, position, id) -> {
+            List<ServerConfig> configs = serverConfigManager.getAllConfigs();
+            if (position < configs.size()) {
+                currentServerConfig = configs.get(position);
+                serverConfigManager.setLastSelectedConfigId(currentServerConfig.getId());
+                updateUI();
             }
         });
-        
-        startForwardingButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startUdpForwarding();
+
+        addServerButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ServerConfigActivity.class);
+            intent.putExtra(ServerConfigActivity.EXTRA_IS_EDIT_MODE, false);
+            startActivityForResult(intent, REQUEST_CODE_SERVER_CONFIG);
+        });
+
+        settingsButton.setOnClickListener(v -> {
+            if (currentServerConfig != null) {
+                Intent intent = new Intent(this, ServerConfigActivity.class);
+                intent.putExtra(ServerConfigActivity.EXTRA_SERVER_CONFIG, currentServerConfig);
+                intent.putExtra(ServerConfigActivity.EXTRA_IS_EDIT_MODE, true);
+                startActivityForResult(intent, REQUEST_CODE_SERVER_CONFIG);
+            } else {
+                Toast.makeText(this, "Please select a server first", Toast.LENGTH_SHORT).show();
             }
         });
-        
-        // Advanced settings toggle
-        advancedToggleButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                toggleAdvancedSettings();
-            }
-        });
-        
-        // UDP Bridge listeners
-        bridgeEnabledSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            udpBridgeConfig.setBridgeEnabled(isChecked);
-            updateBridgeUIState();
-        });
-        
-        autoReconnectSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            udpBridgeConfig.setAutoReconnectEnabled(isChecked);
-        });
-        
-        bridgeStartButton.setOnClickListener(v -> startUdpBridge());
-        bridgeStopButton.setOnClickListener(v -> stopUdpBridge());
-        bridgeConfigButton.setOnClickListener(v -> openBridgeConfig());
-    }
-    
-    private void toggleAdvancedSettings() {
-        isAdvancedVisible = !isAdvancedVisible;
-        advancedSettingsCard.setVisibility(isAdvancedVisible ? View.VISIBLE : View.GONE);
-        advancedToggleButton.setText(isAdvancedVisible ? 
-            getString(R.string.hide_advanced) : getString(R.string.show_advanced));
+
+        // Hidden compatibility listeners
     }
 
     private void connectToSshServer() {
@@ -295,102 +223,75 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         
-        String host = hostEditText.getText().toString().trim();
-        String portStr = portEditText.getText().toString().trim();
-        String username = usernameEditText.getText().toString().trim();
-        
-        if (host.isEmpty() || portStr.isEmpty() || username.isEmpty()) {
-            Toast.makeText(this, "Please fill all required fields", Toast.LENGTH_SHORT).show();
+        if (currentServerConfig == null) {
+            Toast.makeText(this, "Please select a server first", Toast.LENGTH_SHORT).show();
             return;
         }
         
-        boolean useKeyAuth = keyAuthRadio.isChecked();
+        if (!currentServerConfig.isValidSshConfig()) {
+            Toast.makeText(this, "Invalid server configuration", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        String host = currentServerConfig.getSshHost();
+        int port = currentServerConfig.getSshPort();
+        String username = currentServerConfig.getUsername();
+        boolean useKeyAuth = currentServerConfig.isUsePrivateKey();
 
         // Collect forwarding config to auto-start after connect
-        String localPortStr = localPortEditText.getText().toString().trim();
-        String remoteHost = remoteHostEditText.getText().toString().trim();
-        String remotePortStr = remotePortEditText.getText().toString().trim();
         Integer localPort = null;
         Integer remotePort = null;
-        if (!localPortStr.isEmpty() && !remoteHost.isEmpty() && !remotePortStr.isEmpty()) {
-            try {
-                localPort = Integer.parseInt(localPortStr);
-                remotePort = Integer.parseInt(remotePortStr);
-            } catch (NumberFormatException ignore) { /* validated later */ }
+        String remoteHost = currentServerConfig.getRemoteHost();
+        
+        if (currentServerConfig.getLocalUdpPort() > 0 && currentServerConfig.getRemoteUdpPort() > 0) {
+            localPort = currentServerConfig.getLocalUdpPort();
+            remotePort = currentServerConfig.getRemoteUdpPort();
         }
         
-        if (useKeyAuth) {
-            String privateKeyPath = privateKeyEditText.getText().toString().trim();
-            if (privateKeyPath.isEmpty()) {
-                Toast.makeText(this, "Please specify private key path", Toast.LENGTH_SHORT).show();
-                return;
-            }
-        } else {
-            String password = passwordEditText.getText().toString().trim();
-            if (password.isEmpty()) {
-                Toast.makeText(this, "Please enter password", Toast.LENGTH_SHORT).show();
-                return;
-            }
-        }
-        
-        try {
-            int port = Integer.parseInt(portStr);
+        // Provide pending forwarding to service (best-effort)
+        sshTunnelService.setPendingForwarding(localPort, remoteHost, remotePort);
+
+        // Final copies for inner classes
+        final Integer fLocalPort = localPort;
+        final Integer fRemotePort = remotePort;
+        final String fRemoteHost = remoteHost;
+
+        new Thread(() -> {
+            boolean connected;
             
-            // Provide pending forwarding to service (best-effort)
-            sshTunnelService.setPendingForwarding(localPort, remoteHost, remotePort);
-
-            // Final copies for inner classes
-            final Integer fLocalPort = localPort;
-            final Integer fRemotePort = remotePort;
-            final String fRemoteHost = remoteHost;
-            final boolean useKeyAuthLocal = useKeyAuth;
-
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    boolean connected;
-                    
-                    if (useKeyAuthLocal) {
-                        String privateKeyPath = privateKeyEditText.getText().toString().trim();
-                        String passphrase = passphraseEditText.getText().toString().trim();
-                        connected = sshTunnelService.connectWithPrivateKey(host, port, username, privateKeyPath, 
-                                                                         passphrase.isEmpty() ? null : passphrase);
-                    } else {
-                        String password = passwordEditText.getText().toString().trim();
-                        connected = sshTunnelService.connect(host, port, username, password);
+            if (useKeyAuth) {
+                String privateKeyPath = currentServerConfig.getPrivateKeyPath();
+                String passphrase = currentServerConfig.getPassphrase();
+                connected = sshTunnelService.connectWithPrivateKey(host, port, username, privateKeyPath, 
+                                                                 passphrase);
+            } else {
+                String password = currentServerConfig.getPassword();
+                connected = sshTunnelService.connect(host, port, username, password);
+            }
+            
+            runOnUiThread(() -> {
+                if (connected) {
+                    String authMethod = useKeyAuth ? "private key" : "password";
+                    String status = "Connected (" + authMethod + ")";
+                    // If forwarding config present, update status meaningfully
+                    if (fLocalPort != null && fRemotePort != null && fRemoteHost != null && !fRemoteHost.isEmpty()) {
+                        status = "Forwarding " + fLocalPort + " -> " + fRemoteHost + ":" + fRemotePort + " (" + authMethod + ")";
                     }
-                    
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (connected) {
-                                String authMethod = useKeyAuthLocal ? "private key" : "password";
-                                String status = "Status: Connected (" + authMethod + ")";
-                                // If forwarding config present, update status meaningfully
-                                if (fLocalPort != null && fRemotePort != null && fRemoteHost != null && !fRemoteHost.isEmpty()) {
-                                    status = "Status: Forwarding " + fLocalPort + " -> " + fRemoteHost + ":" + fRemotePort + " (" + authMethod + ")";
-                                }
-                                Toast.makeText(MainActivity.this, "Connected to SSH server using " + authMethod, Toast.LENGTH_SHORT).show();
-                                statusTextView.setText(status);
-                            } else {
-                                Toast.makeText(MainActivity.this, "Failed to connect", Toast.LENGTH_SHORT).show();
-                                statusTextView.setText("Status: Connection failed");
-                            }
-                            updateUI();
-                        }
-                    });
+                    Toast.makeText(MainActivity.this, "Connected to SSH server using " + authMethod, Toast.LENGTH_SHORT).show();
+                    bridgeStatsTextView.setText(status);
+                } else {
+                    Toast.makeText(MainActivity.this, "Failed to connect", Toast.LENGTH_SHORT).show();
+                    bridgeStatsTextView.setText("Connection failed");
                 }
-            }).start();
-            
-        } catch (NumberFormatException e) {
-            Toast.makeText(this, "Invalid port number", Toast.LENGTH_SHORT).show();
-        }
+                updateUI();
+            });
+        }).start();
     }
     
     private void disconnectFromSshServer() {
         if (serviceBound) {
             sshTunnelService.disconnectFromServer();
-            statusTextView.setText("Status: Disconnected");
+            bridgeStatsTextView.setText("Disconnected");
             updateUI();
             Toast.makeText(this, "Disconnected from SSH server", Toast.LENGTH_SHORT).show();
         }
@@ -402,120 +303,35 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         
-        String localPortStr = localPortEditText.getText().toString().trim();
-        String remoteHost = remoteHostEditText.getText().toString().trim();
-        String remotePortStr = remotePortEditText.getText().toString().trim();
-        
-        if (localPortStr.isEmpty() || remoteHost.isEmpty() || remotePortStr.isEmpty()) {
-            Toast.makeText(this, "Please fill all forwarding fields", Toast.LENGTH_SHORT).show();
+        if (currentServerConfig == null) {
+            Toast.makeText(this, "No server configuration selected", Toast.LENGTH_SHORT).show();
             return;
         }
         
-        try {
-            int localPort = Integer.parseInt(localPortStr);
-            int remotePort = Integer.parseInt(remotePortStr);
-            
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    boolean success = sshTunnelService.startUdpForwarding(localPort, remoteHost, remotePort);
-                    
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (success) {
-                                Toast.makeText(MainActivity.this, "UDP forwarding started", Toast.LENGTH_SHORT).show();
-                                statusTextView.setText("Status: Forwarding " + localPort + " -> " + remoteHost + ":" + remotePort);
-                            } else {
-                                Toast.makeText(MainActivity.this, "Failed to start UDP forwarding", Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    });
-                }
-            }).start();
-            
-        } catch (NumberFormatException e) {
-            Toast.makeText(this, "Invalid port number", Toast.LENGTH_SHORT).show();
+        if (currentServerConfig.getLocalUdpPort() <= 0 || currentServerConfig.getRemoteUdpPort() <= 0) {
+            Toast.makeText(this, "UDP forwarding not configured for this server", Toast.LENGTH_SHORT).show();
+            return;
         }
+        
+        int localPort = currentServerConfig.getLocalUdpPort();
+        String remoteHost = currentServerConfig.getRemoteHost();
+        int remotePort = currentServerConfig.getRemoteUdpPort();
+        
+        new Thread(() -> {
+            boolean success = sshTunnelService.startUdpForwarding(localPort, remoteHost, remotePort);
+            
+            runOnUiThread(() -> {
+                if (success) {
+                    Toast.makeText(MainActivity.this, "UDP forwarding started", Toast.LENGTH_SHORT).show();
+                    bridgeStatsTextView.setText("Forwarding " + localPort + " -> " + remoteHost + ":" + remotePort);
+                } else {
+                    Toast.makeText(MainActivity.this, "Failed to start UDP forwarding", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }).start();
     }
     
     // UDP Bridge methods
-    
-    private void loadBridgeSettings() {
-        bridgeEnabledSwitch.setChecked(udpBridgeConfig.isBridgeEnabled());
-        bridgeHostEditText.setText(udpBridgeConfig.getBridgeHost());
-        bridgePortEditText.setText(String.valueOf(udpBridgeConfig.getBridgePort()));
-        bridgeLocalPortEditText.setText(String.valueOf(udpBridgeConfig.getLocalPort()));
-        autoReconnectSwitch.setChecked(udpBridgeConfig.isAutoReconnectEnabled());
-        connectionTimeoutEditText.setText(String.valueOf(udpBridgeConfig.getConnectionTimeout()));
-        
-        updateBridgeUIState();
-    }
-    
-    private void saveBridgeSettings() {
-        try {
-            udpBridgeConfig.setBridgeHost(bridgeHostEditText.getText().toString().trim());
-            
-            String portStr = bridgePortEditText.getText().toString().trim();
-            if (!portStr.isEmpty()) {
-                udpBridgeConfig.setBridgePort(Integer.parseInt(portStr));
-            }
-            
-            String localPortStr = bridgeLocalPortEditText.getText().toString().trim();
-            if (!localPortStr.isEmpty()) {
-                udpBridgeConfig.setLocalPort(Integer.parseInt(localPortStr));
-            }
-            
-            String timeoutStr = connectionTimeoutEditText.getText().toString().trim();
-            if (!timeoutStr.isEmpty()) {
-                udpBridgeConfig.setConnectionTimeout(Integer.parseInt(timeoutStr));
-            }
-        } catch (NumberFormatException e) {
-            Toast.makeText(this, "Invalid number format in bridge settings", Toast.LENGTH_SHORT).show();
-        }
-    }
-    
-    private void updateBridgeUIState() {
-        boolean enabled = bridgeEnabledSwitch.isChecked();
-        
-        bridgeHostEditText.setEnabled(enabled);
-        bridgePortEditText.setEnabled(enabled);
-        bridgeLocalPortEditText.setEnabled(enabled);
-        autoReconnectSwitch.setEnabled(enabled);
-        connectionTimeoutEditText.setEnabled(enabled);
-        
-        if (bridgeServiceBound && enabled) {
-            UdpBridgeService.BridgeState state = udpBridgeService.getCurrentState();
-            bridgeStartButton.setEnabled(state == UdpBridgeService.BridgeState.DISCONNECTED);
-            bridgeStopButton.setEnabled(state != UdpBridgeService.BridgeState.DISCONNECTED);
-        } else {
-            bridgeStartButton.setEnabled(false);
-            bridgeStopButton.setEnabled(false);
-        }
-    }
-    
-    private void updateBridgeUI() {
-        if (!bridgeServiceBound) {
-            bridgeStatusTextView.setText("Bridge Status: Service not connected");
-            bridgeStatsTextView.setText("Statistics: N/A");
-            return;
-        }
-        
-        UdpBridgeService.BridgeState state = udpBridgeService.getCurrentState();
-        bridgeStatusTextView.setText("Bridge Status: " + state.name());
-        
-        updateBridgeStats();
-        updateBridgeUIState();
-    }
-    
-    private void updateBridgeStats() {
-        if (!bridgeServiceBound) {
-            return;
-        }
-        
-        String stats = udpBridgeService.getStatisticsString();
-        bridgeStatsTextView.setText("Statistics:\n" + stats);
-    }
     
     private void startUdpBridge() {
         if (!bridgeServiceBound) {
@@ -523,12 +339,23 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         
-        // Save current settings
-        saveBridgeSettings();
+        if (currentServerConfig == null || !currentServerConfig.isBridgeEnabled()) {
+            Toast.makeText(this, "Bridge not configured for selected server", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Create UDP bridge config from current server config
+        UdpBridgeConfig udpBridgeConfig = new UdpBridgeConfig(this);
+        udpBridgeConfig.setBridgeEnabled(true);
+        udpBridgeConfig.setBridgeHost(currentServerConfig.getBridgeHost());
+        udpBridgeConfig.setBridgePort(currentServerConfig.getBridgePort());
+        udpBridgeConfig.setLocalPort(currentServerConfig.getLocalPort());
+        udpBridgeConfig.setAutoReconnectEnabled(currentServerConfig.isAutoReconnect());
+        udpBridgeConfig.setConnectionTimeout(currentServerConfig.getConnectionTimeout());
         
         // Validate configuration
         if (!udpBridgeConfig.isValid()) {
-            Toast.makeText(this, "Invalid bridge configuration. Please check all fields.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Invalid bridge configuration", Toast.LENGTH_LONG).show();
             return;
         }
         
@@ -554,20 +381,32 @@ public class MainActivity extends AppCompatActivity {
         udpBridgeService.stopBridge();
         Toast.makeText(this, "Stopping UDP Bridge...", Toast.LENGTH_SHORT).show();
     }
-
-    private void openBridgeConfig() {
-        Intent intent = new Intent(this, UdpBridgeConfigActivity.class);
-        startActivityForResult(intent, REQUEST_CODE_BRIDGE_CONFIG);
-    }
     
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         
-        if (requestCode == REQUEST_CODE_BRIDGE_CONFIG && resultCode == RESULT_OK) {
-            // Reload bridge settings after configuration change
-            loadBridgeSettings();
-            Toast.makeText(this, "Bridge settings updated", Toast.LENGTH_SHORT).show();
+        if (requestCode == REQUEST_CODE_SERVER_CONFIG && resultCode == RESULT_OK) {
+            ServerConfig serverConfig = data.getParcelableExtra(ServerConfigActivity.EXTRA_SERVER_CONFIG);
+            if (serverConfig != null) {
+                boolean isEditMode = data.getBooleanExtra(ServerConfigActivity.EXTRA_IS_EDIT_MODE, false);
+                
+                if (isEditMode) {
+                    serverConfigManager.updateConfig(serverConfig);
+                    Toast.makeText(this, "Server updated", Toast.LENGTH_SHORT).show();
+                } else {
+                    serverConfigManager.addConfig(serverConfig);
+                    Toast.makeText(this, "Server added", Toast.LENGTH_SHORT).show();
+                }
+                
+                // Set as current and last selected
+                currentServerConfig = serverConfig;
+                serverConfigManager.setLastSelectedConfigId(serverConfig.getId());
+                
+                // Update UI
+                updateServerDropdown();
+                updateUI();
+            }
         }
     }
     
@@ -582,32 +421,54 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
     }
     
+    private void updateBridgeUI() {
+        if (!bridgeServiceBound) {
+            return;
+        }
+        
+        updateBridgeStats();
+    }
+    
+    private void updateBridgeStats() {
+        if (!bridgeServiceBound) {
+            return;
+        }
+        
+        String stats = udpBridgeService.getStatisticsString();
+        if (stats != null && !stats.isEmpty()) {
+            bridgeStatsTextView.setText(stats);
+        }
+    }
+    
     /**
      * Update all UI elements based on current service states
      */
     private void updateUI() {
-        // Update SSH tunnel UI with modern styling
+        // Update connection button text and status based on connection state
         if (serviceBound && sshTunnelService != null) {
             if (sshTunnelService.isConnected()) {
-                statusTextView.setText(getString(R.string.status_connected));
-                statusTextView.setTextAppearance(R.style.StatusConnected);
-                connectButton.setText(getString(R.string.disconnect));
+                connectButton.setText("Connected");
                 connectButton.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.vibrant_red));
-                bridgeStatsTextView.setText(getString(R.string.tunnel_established));
+                if (bridgeStatsTextView.getText().toString().equals("Ready to connect")) {
+                    bridgeStatsTextView.setText("Tunnel Established");
+                }
             } else {
-                statusTextView.setText(getString(R.string.status_disconnected));
-                statusTextView.setTextAppearance(R.style.StatusDisconnected);
-                connectButton.setText(getString(R.string.connect));
+                connectButton.setText("Connect");
                 connectButton.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.golden_apricot));
                 bridgeStatsTextView.setText("Ready to connect");
             }
+            connectButton.setEnabled(true);
         } else {
-            statusTextView.setText("Service not available");
-            statusTextView.setTextAppearance(R.style.StatusError);
-            connectButton.setText(getString(R.string.connect));
+            connectButton.setText("Connect");
             connectButton.setEnabled(false);
             bridgeStatsTextView.setText("Service unavailable");
         }
+        
+        // Update server dropdown enabled state
+        serverDropdown.setEnabled(currentServerConfig != null || serverConfigManager.hasConfigs());
+        
+        // Update settings button
+        settingsButton.setEnabled(currentServerConfig != null);
         
         // Update UDP Bridge UI
         updateBridgeUI();
