@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # Wrapper для сборки с OpenSSL 3.5
-# Этот скрипт заменяет build_libssh.sh для совместимости
+# Этот скрипт заменяет build_mbedtls.sh для совместимости
 
 echo "🔄 Переключение на сборку с OpenSSL 3.5..."
 
 # Показываем переданную архитектуру
-if [ -n "$ANDROID_ABI" ]; then
+if [ -n "$ANDROID_ABI" ] && [ "$ANDROID_ABI" != "" ]; then
     echo "🎯 Целевая архитектура: $ANDROID_ABI"
 else
     echo "🔄 Архитектура не задана, будут собраны все поддерживаемые"

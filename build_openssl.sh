@@ -34,7 +34,7 @@ OPENSSL_VERSION="3.5.0"
 MIN_API_LEVEL=24
 
 # Определяем архитектуры для сборки
-if [ -n "$ANDROID_ABI" ]; then
+if [ -n "$ANDROID_ABI" ] && [ "$ANDROID_ABI" != "" ]; then
     # Если задана переменная ANDROID_ABI (например, в CI), используем только её
     ABIS=("$ANDROID_ABI")
     echo "🎯 Сборка для архитектуры из ANDROID_ABI: $ANDROID_ABI"
