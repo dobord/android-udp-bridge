@@ -7,6 +7,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.RadioGroup;
 import android.widget.Toast;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
@@ -130,11 +131,15 @@ public class ServerConfigActivity extends AppCompatActivity {
         Intent intent = getIntent();
         isEditMode = intent.getBooleanExtra(EXTRA_IS_EDIT_MODE, false);
         
+        android.util.Log.d("ServerConfigActivity", "Loading server config, isEditMode: " + isEditMode);
+        
         if (isEditMode) {
             serverConfig = intent.getParcelableExtra(EXTRA_SERVER_CONFIG);
+            android.util.Log.d("ServerConfigActivity", "Loaded server config with ID: " + (serverConfig != null ? serverConfig.getId() : "null"));
             setTitle("Edit Server");
         } else {
             serverConfig = new ServerConfig();
+            android.util.Log.d("ServerConfigActivity", "Created new server config with ID: " + serverConfig.getId());
             setTitle("Add Server");
         }
         
@@ -181,6 +186,13 @@ public class ServerConfigActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.server_config_menu, menu);
+        
+        // Hide delete option for new servers
+        MenuItem deleteItem = menu.findItem(R.id.action_delete);
+        if (deleteItem != null) {
+            deleteItem.setVisible(isEditMode);
+        }
+        
         return true;
     }
 
@@ -193,6 +205,9 @@ public class ServerConfigActivity extends AppCompatActivity {
         } else if (itemId == R.id.action_save) {
             saveServerConfig();
             return true;
+        } else if (itemId == R.id.action_delete) {
+            deleteServerConfig();
+            return true;
         } else {
             return super.onOptionsItemSelected(item);
         }
@@ -202,6 +217,9 @@ public class ServerConfigActivity extends AppCompatActivity {
         if (!validateFields()) {
             return;
         }
+        
+        // Debug: Log the current ID
+        android.util.Log.d("ServerConfig", "Saving server with ID: " + serverConfig.getId() + ", isEditMode: " + isEditMode);
         
         // Save SSH settings
         serverConfig.setName(nameEditText.getText().toString().trim());
@@ -248,6 +266,7 @@ public class ServerConfigActivity extends AppCompatActivity {
         // Return result
         Intent resultIntent = new Intent();
         resultIntent.putExtra(EXTRA_SERVER_CONFIG, serverConfig);
+        resultIntent.putExtra(EXTRA_IS_EDIT_MODE, isEditMode);
         setResult(RESULT_OK, resultIntent);
         finish();
     }
@@ -358,5 +377,23 @@ public class ServerConfigActivity extends AppCompatActivity {
         }
         
         return true;
+    }
+    
+    private void deleteServerConfig() {
+        if (!isEditMode || serverConfig == null) {
+            return;
+        }
+        
+        new AlertDialog.Builder(this)
+            .setTitle("Delete Server")
+            .setMessage("Are you sure you want to delete this server configuration?")
+            .setPositiveButton("Delete", (dialog, which) -> {
+                Intent resultIntent = new Intent();
+                resultIntent.putExtra("DELETE_SERVER_ID", serverConfig.getId());
+                setResult(RESULT_OK, resultIntent);
+                finish();
+            })
+            .setNegativeButton("Cancel", null)
+            .show();
     }
 }

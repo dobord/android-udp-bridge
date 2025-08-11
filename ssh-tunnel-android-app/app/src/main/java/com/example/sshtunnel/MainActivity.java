@@ -160,14 +160,40 @@ public class MainActivity extends AppCompatActivity {
         }
         
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, 
-            android.R.layout.simple_dropdown_item_1line, serverNames);
+            R.layout.dropdown_item_white_text, serverNames);
         serverDropdown.setAdapter(adapter);
         
-        // Set last selected server
-        ServerConfig lastSelected = serverConfigManager.getLastSelectedConfig();
-        if (lastSelected != null) {
-            serverDropdown.setText(lastSelected.getDisplayName(), false);
-            currentServerConfig = lastSelected;
+        // Determine which server to select
+        ServerConfig serverToSelect = null;
+        
+        // First priority: current server if it still exists
+        if (currentServerConfig != null) {
+            ServerConfig currentFromManager = serverConfigManager.getConfigById(currentServerConfig.getId());
+            if (currentFromManager != null) {
+                serverToSelect = currentFromManager;
+                currentServerConfig = currentFromManager; // Update reference
+            }
+        }
+        
+        // Second priority: last selected server
+        if (serverToSelect == null) {
+            serverToSelect = serverConfigManager.getLastSelectedConfig();
+        }
+        
+        // Third priority: first available server
+        if (serverToSelect == null && configs.size() > 0) {
+            serverToSelect = configs.get(0);
+            serverConfigManager.setLastSelectedConfigId(serverToSelect.getId());
+        }
+        
+        // Update UI
+        if (serverToSelect != null) {
+            serverDropdown.setText(serverToSelect.getDisplayName(), false);
+            currentServerConfig = serverToSelect;
+        } else {
+            // No servers configured
+            serverDropdown.setText("", false);
+            currentServerConfig = null;
         }
     }
     
@@ -196,6 +222,13 @@ public class MainActivity extends AppCompatActivity {
                 updateUI();
             }
         });
+        
+        // Enable dropdown click when no input focus
+        serverDropdown.setOnClickListener(v -> {
+            if (!serverDropdown.isPopupShowing()) {
+                serverDropdown.showDropDown();
+            }
+        });
 
         addServerButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, ServerConfigActivity.class);
@@ -205,6 +238,7 @@ public class MainActivity extends AppCompatActivity {
 
         settingsButton.setOnClickListener(v -> {
             if (currentServerConfig != null) {
+                android.util.Log.d("MainActivity", "Opening settings for server ID: " + currentServerConfig.getId());
                 Intent intent = new Intent(this, ServerConfigActivity.class);
                 intent.putExtra(ServerConfigActivity.EXTRA_SERVER_CONFIG, currentServerConfig);
                 intent.putExtra(ServerConfigActivity.EXTRA_IS_EDIT_MODE, true);
@@ -387,21 +421,46 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         
         if (requestCode == REQUEST_CODE_SERVER_CONFIG && resultCode == RESULT_OK) {
+            // Check if this is a delete operation
+            long deleteServerId = data.getLongExtra("DELETE_SERVER_ID", -1);
+            if (deleteServerId != -1) {
+                serverConfigManager.deleteConfig(deleteServerId);
+                Toast.makeText(this, "Server deleted", Toast.LENGTH_SHORT).show();
+                
+                // Clear current config if it was deleted
+                if (currentServerConfig != null && currentServerConfig.getId() == deleteServerId) {
+                    currentServerConfig = null;
+                }
+                
+                // Update UI
+                updateServerDropdown();
+                updateUI();
+                return;
+            }
+            
             ServerConfig serverConfig = data.getParcelableExtra(ServerConfigActivity.EXTRA_SERVER_CONFIG);
             if (serverConfig != null) {
                 boolean isEditMode = data.getBooleanExtra(ServerConfigActivity.EXTRA_IS_EDIT_MODE, false);
                 
+                // Debug: Log the received config
+                android.util.Log.d("MainActivity", "Received server config with ID: " + serverConfig.getId() + ", isEditMode: " + isEditMode);
+                
                 if (isEditMode) {
                     serverConfigManager.updateConfig(serverConfig);
                     Toast.makeText(this, "Server updated", Toast.LENGTH_SHORT).show();
+                    
+                    // Update current config reference if it's the same server
+                    if (currentServerConfig != null && currentServerConfig.getId() == serverConfig.getId()) {
+                        currentServerConfig = serverConfig;
+                    }
                 } else {
                     serverConfigManager.addConfig(serverConfig);
                     Toast.makeText(this, "Server added", Toast.LENGTH_SHORT).show();
+                    
+                    // Set as current and last selected only for new servers
+                    currentServerConfig = serverConfig;
+                    serverConfigManager.setLastSelectedConfigId(serverConfig.getId());
                 }
-                
-                // Set as current and last selected
-                currentServerConfig = serverConfig;
-                serverConfigManager.setLastSelectedConfigId(serverConfig.getId());
                 
                 // Update UI
                 updateServerDropdown();

@@ -47,8 +47,8 @@
     <string name="use_password">Password</string>
     <string name="use_private_key">Private Key</string>
     
-    <!-- Advanced Settings -->
-    <string name="advanced_settings">Advanced Settings</string>
+    <!-- Forwarding Settings -->
+    <string name="advanced_settings">Forwarding Settings</string>
     <string name="show_advanced">Show Advanced</string>
     <string name="hide_advanced">Hide Advanced</string>
     
