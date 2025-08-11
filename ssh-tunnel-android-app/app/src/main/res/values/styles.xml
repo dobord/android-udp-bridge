@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/golden_apricot</item>
+        <item name="colorPrimaryVariant">@color/burnt_orange</item>
+        <item name="colorOnPrimary">@color/midnight_black</item>
+        <item name="colorSecondary">@color/pale_gray</item>
+        <item name="colorSecondaryVariant">@color/light_gray</item>
+        <item name="colorOnSecondary">@color/midnight_black</item>
+        <item name="android:colorBackground">@color/midnight_black</item>
+        <item name="colorOnBackground">@color/pale_gray</item>
+        <item name="colorSurface">@color/onyx_black</item>
+        <item name="colorOnSurface">@color/pale_gray</item>
+        <item name="android:statusBarColor">@color/midnight_black</item>
+        <item name="android:navigationBarColor">@color/midnight_black</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="materialAlertDialogTheme">@style/AlertDialogTheme</item>
+    </style>
+
+    <!-- Card Styles -->
+    <style name="CardStyle">
+        <item name="cardBackgroundColor">@color/onyx_black</item>
+        <item name="cardCornerRadius">16dp</item>
+        <item name="cardElevation">0dp</item>
+        <item name="strokeColor">@color/slate_gray</item>
+        <item name="strokeWidth">1dp</item>
+    </style>
+
+    <!-- Button Styles -->
+    <style name="PrimaryButton" parent="Widget.Material3.Button">
+        <item name="backgroundTint">@color/golden_apricot</item>
+        <item name="android:textColor">@color/midnight_black</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="android:minHeight">56dp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="rippleColor">@color/burnt_orange</item>
+    </style>
+
+    <style name="SecondaryButton" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="backgroundTint">@color/transparent</item>
+        <item name="android:textColor">@color/pale_gray</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="android:minHeight">56dp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="strokeColor">@color/slate_gray</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="rippleColor">@color/translucent_white</item>
+    </style>
+
+    <style name="DestructiveButton" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="backgroundTint">@color/transparent</item>
+        <item name="android:textColor">@color/vibrant_red</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="android:minHeight">56dp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="strokeColor">@color/vibrant_red</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="rippleColor">@color/vibrant_red</item>
+    </style>
+
+    <!-- Text Input Styles -->
+    <style name="TextInputLayout" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxBackgroundColor">@color/onyx_black</item>
+        <item name="boxStrokeColor">@color/slate_gray</item>
+        <item name="boxCornerRadiusTopStart">16dp</item>
+        <item name="boxCornerRadiusTopEnd">16dp</item>
+        <item name="boxCornerRadiusBottomStart">16dp</item>
+        <item name="boxCornerRadiusBottomEnd">16dp</item>
+        <item name="hintTextColor">@color/muted_gray</item>
+        <item name="android:textColorHint">@color/muted_gray</item>
+        <item name="errorTextColor">@color/vibrant_red</item>
+    </style>
+
+    <style name="TextInputEditText" parent="Widget.Material3.TextInputEditText.OutlinedBox">
+        <item name="android:textColor">@color/pale_gray</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:paddingTop">16dp</item>
+        <item name="android:paddingBottom">16dp</item>
+    </style>
+
+    <!-- Switch Styles -->
+    <style name="SwitchStyle" parent="Widget.Material3.CompoundButton.Switch">
+        <item name="thumbTint">@color/switch_thumb_colors</item>
+        <item name="trackTint">@color/switch_track_colors</item>
+        <item name="android:textColor">@color/pale_gray</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+
+    <!-- Text Styles -->
+    <style name="TitleTextStyle">
+        <item name="android:textColor">@color/pale_gray</item>
+        <item name="android:textSize">32sp</item>
+        <item name="android:fontFamily">sans-serif-black</item>
+        <item name="android:lineHeight">40sp</item>
+    </style>
+
+    <style name="HeadingTextStyle">
+        <item name="android:textColor">@color/pale_gray</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:lineHeight">28sp</item>
+    </style>
+
+    <style name="BodyTextStyle">
+        <item name="android:textColor">@color/pale_gray</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:lineHeight">24sp</item>
+    </style>
+
+    <style name="CaptionTextStyle">
+        <item name="android:textColor">@color/muted_gray</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:lineHeight">20sp</item>
+    </style>
+
+    <style name="StatusTextStyle">
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:lineHeight">24sp</item>
+        <item name="android:padding">16dp</item>
+        <item name="android:background">@drawable/status_background</item>
+    </style>
+
+    <!-- Connection Status Colors -->
+    <style name="StatusConnected" parent="StatusTextStyle">
+        <item name="android:textColor">@color/success_green</item>
+    </style>
+
+    <style name="StatusDisconnected" parent="StatusTextStyle">
+        <item name="android:textColor">@color/muted_gray</item>
+    </style>
+
+    <style name="StatusError" parent="StatusTextStyle">
+        <item name="android:textColor">@color/vibrant_red</item>
+    </style>
+
+    <!-- Dialog Theme -->
+    <style name="AlertDialogTheme" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="materialAlertDialogBodyTextStyle">@style/BodyTextStyle</item>
+        <item name="materialAlertDialogTitleTextStyle">@style/HeadingTextStyle</item>
+        <item name="buttonBarPositiveButtonStyle">@style/PrimaryButton</item>
+        <item name="buttonBarNegativeButtonStyle">@style/SecondaryButton</item>
+        <item name="android:background">@color/onyx_black</item>
+    </style>
+
+    <!-- RadioButton Style -->
+    <style name="RadioButtonStyle" parent="Widget.Material3.CompoundButton.RadioButton">
+        <item name="buttonTint">@color/radio_button_colors</item>
+        <item name="android:textColor">@color/pale_gray</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+
+    <!-- Divider Style -->
+    <style name="DividerStyle">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:background">@color/slate_gray</item>
+        <item name="android:layout_marginStart">16dp</item>
+        <item name="android:layout_marginEnd">16dp</item>
+    </style>
+
+    <!-- AppBar Styles -->
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.Material3.ActionBar">
+        <item name="colorPrimary">@color/golden_apricot</item>
+        <item name="colorOnPrimary">@color/midnight_black</item>
+    </style>
+
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.Material3">
+        <item name="android:colorBackground">@color/onyx_black</item>
+        <item name="colorOnSurface">@color/pale_gray</item>
+    </style>
+
+</resources>

@@ -11,11 +11,16 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.RadioButton;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.SwitchCompat;
+import androidx.core.content.ContextCompat;
+
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.switchmaterial.SwitchMaterial;
+import com.google.android.material.textfield.TextInputLayout;
+import com.google.android.material.textfield.TextInputEditText;
 
 import com.example.udpbridge.UdpBridgeConfig;
 import com.example.udpbridge.UdpBridgeService;
@@ -31,34 +36,45 @@ public class MainActivity extends AppCompatActivity {
     private boolean serviceBound = false;
     private boolean bridgeServiceBound = false;
     
-    private EditText hostEditText;
-    private EditText portEditText;
-    private EditText usernameEditText;
-    private EditText passwordEditText;
-    private EditText privateKeyEditText;
-    private EditText passphraseEditText;
-    private EditText localPortEditText;
-    private EditText remoteHostEditText;
-    private EditText remotePortEditText;
+    // UI Elements - Modern Material Design
+    private TextInputEditText hostEditText;
+    private TextInputEditText portEditText;
+    private TextInputEditText usernameEditText;
+    private TextInputEditText passwordEditText;
+    private TextInputEditText privateKeyEditText;
+    private TextInputEditText passphraseEditText;
+    private TextInputEditText localPortEditText;
+    private TextInputEditText remoteHostEditText;
+    private TextInputEditText remotePortEditText;
+    
+    // Layouts for toggling visibility
+    private TextInputLayout passwordLayout;
+    private TextInputLayout privateKeyLayout;
+    private TextInputLayout passphraseLayout;
     
     // UDP Bridge UI elements
-    private SwitchCompat bridgeEnabledSwitch;
-    private EditText bridgeHostEditText;
-    private EditText bridgePortEditText;
-    private EditText bridgeLocalPortEditText;
-    private SwitchCompat autoReconnectSwitch;
-    private EditText connectionTimeoutEditText;
-    private Button bridgeStartButton;
-    private Button bridgeStopButton;
-    private Button bridgeConfigButton;
+    private SwitchMaterial bridgeEnabledSwitch;
+    private TextInputEditText bridgeHostEditText;
+    private TextInputEditText bridgePortEditText;
+    private TextInputEditText bridgeLocalPortEditText;
+    private SwitchMaterial autoReconnectSwitch;
+    private TextInputEditText connectionTimeoutEditText;
+    private MaterialButton bridgeStartButton;
+    private MaterialButton bridgeStopButton;
+    private MaterialButton bridgeConfigButton;
     private TextView bridgeStatusTextView;
     private TextView bridgeStatsTextView;
+    
+    // Advanced settings
+    private MaterialCardView advancedSettingsCard;
+    private MaterialButton advancedToggleButton;
+    private boolean isAdvancedVisible = false;
     
     private RadioGroup authMethodRadioGroup;
     private RadioButton passwordAuthRadio;
     private RadioButton keyAuthRadio;
     
-    private Button connectButton;
+    private MaterialButton connectButton;
     private Button disconnectButton;
     private Button startForwardingButton;
     private TextView statusTextView;
@@ -161,6 +177,11 @@ public class MainActivity extends AppCompatActivity {
         remoteHostEditText = findViewById(R.id.remote_host_edit_text);
         remotePortEditText = findViewById(R.id.remote_port_edit_text);
         
+        // Text input layouts for show/hide functionality
+        passwordLayout = findViewById(R.id.password_layout);
+        privateKeyLayout = findViewById(R.id.private_key_layout);
+        passphraseLayout = findViewById(R.id.passphrase_layout);
+        
         authMethodRadioGroup = findViewById(R.id.auth_method_radio_group);
         passwordAuthRadio = findViewById(R.id.password_auth_radio);
         keyAuthRadio = findViewById(R.id.key_auth_radio);
@@ -183,13 +204,16 @@ public class MainActivity extends AppCompatActivity {
         bridgeStatusTextView = findViewById(R.id.bridge_status_text_view);
         bridgeStatsTextView = findViewById(R.id.bridge_stats_text_view);
         
+        // Advanced settings
+        advancedSettingsCard = findViewById(R.id.advanced_settings_card);
+        advancedToggleButton = findViewById(R.id.advanced_toggle_button);
+        
         // Set default values
-        hostEditText.setText("192.168.1.100");
         portEditText.setText("22");
-        usernameEditText.setText("user");
-        localPortEditText.setText("8080");
+        bridgePortEditText.setText("8080");
+        bridgeLocalPortEditText.setText("5060");
+        connectionTimeoutEditText.setText("30");
         remoteHostEditText.setText("127.0.0.1");
-        remotePortEditText.setText("80");
     }
     
     private void setupClickListeners() {
@@ -198,14 +222,14 @@ public class MainActivity extends AppCompatActivity {
             public void onCheckedChanged(RadioGroup group, int checkedId) {
                 if (checkedId == R.id.password_auth_radio) {
                     // Show password fields, hide key fields
-                    passwordEditText.setVisibility(View.VISIBLE);
-                    privateKeyEditText.setVisibility(View.GONE);
-                    passphraseEditText.setVisibility(View.GONE);
+                    passwordLayout.setVisibility(View.VISIBLE);
+                    privateKeyLayout.setVisibility(View.GONE);
+                    passphraseLayout.setVisibility(View.GONE);
                 } else if (checkedId == R.id.key_auth_radio) {
                     // Hide password fields, show key fields
-                    passwordEditText.setVisibility(View.GONE);
-                    privateKeyEditText.setVisibility(View.VISIBLE);
-                    passphraseEditText.setVisibility(View.VISIBLE);
+                    passwordLayout.setVisibility(View.GONE);
+                    privateKeyLayout.setVisibility(View.VISIBLE);
+                    passphraseLayout.setVisibility(View.VISIBLE);
                 }
             }
         });
@@ -213,7 +237,11 @@ public class MainActivity extends AppCompatActivity {
         connectButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                connectToSshServer();
+                if (serviceBound && sshTunnelService.isConnected()) {
+                    disconnectFromSshServer();
+                } else {
+                    connectToSshServer();
+                }
             }
         });
 
@@ -231,6 +259,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         
+        // Advanced settings toggle
+        advancedToggleButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                toggleAdvancedSettings();
+            }
+        });
+        
         // UDP Bridge listeners
         bridgeEnabledSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             udpBridgeConfig.setBridgeEnabled(isChecked);
@@ -244,6 +280,13 @@ public class MainActivity extends AppCompatActivity {
         bridgeStartButton.setOnClickListener(v -> startUdpBridge());
         bridgeStopButton.setOnClickListener(v -> stopUdpBridge());
         bridgeConfigButton.setOnClickListener(v -> openBridgeConfig());
+    }
+    
+    private void toggleAdvancedSettings() {
+        isAdvancedVisible = !isAdvancedVisible;
+        advancedSettingsCard.setVisibility(isAdvancedVisible ? View.VISIBLE : View.GONE);
+        advancedToggleButton.setText(isAdvancedVisible ? 
+            getString(R.string.hide_advanced) : getString(R.string.show_advanced));
     }
 
     private void connectToSshServer() {
@@ -543,15 +586,27 @@ public class MainActivity extends AppCompatActivity {
      * Update all UI elements based on current service states
      */
     private void updateUI() {
-        // Update SSH tunnel UI
+        // Update SSH tunnel UI with modern styling
         if (serviceBound && sshTunnelService != null) {
             if (sshTunnelService.isConnected()) {
-                statusTextView.setText("Status: Connected");
+                statusTextView.setText(getString(R.string.status_connected));
+                statusTextView.setTextAppearance(R.style.StatusConnected);
+                connectButton.setText(getString(R.string.disconnect));
+                connectButton.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.vibrant_red));
+                bridgeStatsTextView.setText(getString(R.string.tunnel_established));
             } else {
-                statusTextView.setText("Status: Disconnected");
+                statusTextView.setText(getString(R.string.status_disconnected));
+                statusTextView.setTextAppearance(R.style.StatusDisconnected);
+                connectButton.setText(getString(R.string.connect));
+                connectButton.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.golden_apricot));
+                bridgeStatsTextView.setText("Ready to connect");
             }
         } else {
-            statusTextView.setText("Status: Service not available");
+            statusTextView.setText("Service not available");
+            statusTextView.setTextAppearance(R.style.StatusError);
+            connectButton.setText(getString(R.string.connect));
+            connectButton.setEnabled(false);
+            bridgeStatsTextView.setText("Service unavailable");
         }
         
         // Update UDP Bridge UI

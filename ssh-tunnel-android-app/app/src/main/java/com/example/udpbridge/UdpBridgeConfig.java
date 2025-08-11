@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 public class UdpBridgeConfig {
     private static final String PREFS_NAME = "udp_bridge_prefs";
     private static final String KEY_ENABLED = "bridge_enabled";
+    private static final String KEY_BRIDGE_NAME = "bridge_name";
     private static final String KEY_LOCAL_PORT = "local_port";
     private static final String KEY_BRIDGE_HOST = "bridge_host";
     private static final String KEY_BRIDGE_PORT = "bridge_port";
@@ -16,6 +17,7 @@ public class UdpBridgeConfig {
     private static final String KEY_CONNECTION_TIMEOUT = "connection_timeout";
     
     // Default values
+    public static final String DEFAULT_BRIDGE_NAME = "Default Bridge";
     public static final int DEFAULT_LOCAL_PORT = 5060;
     public static final String DEFAULT_BRIDGE_HOST = "127.0.0.1";
     public static final int DEFAULT_BRIDGE_PORT = 8080;
@@ -35,6 +37,15 @@ public class UdpBridgeConfig {
     
     public void setBridgeEnabled(boolean enabled) {
         prefs.edit().putBoolean(KEY_ENABLED, enabled).apply();
+    }
+    
+    // Bridge name
+    public String getBridgeName() {
+        return prefs.getString(KEY_BRIDGE_NAME, DEFAULT_BRIDGE_NAME);
+    }
+    
+    public void setBridgeName(String name) {
+        prefs.edit().putString(KEY_BRIDGE_NAME, name).apply();
     }
     
     // Local UDP port
