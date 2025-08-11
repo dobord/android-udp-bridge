@@ -14,7 +14,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="24dp">
+            android:padding="24dp"
+            android:gravity="center_horizontal">
 
             <!-- Header -->
             <TextView
@@ -23,9 +24,51 @@
                 android:text="@string/app_name"
                 style="@style/TitleTextStyle"
                 android:gravity="center"
-                android:layout_marginBottom="8dp" />
+                android:layout_marginBottom="32dp" />
 
-            <!-- Status Card -->
+            <!-- Main Connection Section -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/CardStyle"
+                android:layout_marginBottom="32dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="32dp"
+                    android:gravity="center_horizontal">
+
+                    <!-- Big Connection Button -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/connect_button"
+                        android:layout_width="200dp"
+                        android:layout_height="200dp"
+                        android:layout_gravity="center"
+                        android:text="@string/connect"
+                        android:textSize="20sp"
+                        android:background="@drawable/connection_button_selector"
+                        android:textColor="@color/midnight_black"
+                        android:fontFamily="sans-serif-medium"
+                        android:layout_marginBottom="24dp"
+                        app:cornerRadius="100dp"
+                        app:strokeWidth="0dp" />
+
+                    <!-- Connection Status Info -->
+                    <TextView
+                        android:id="@+id/bridge_stats_text_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Ready to connect"
+                        style="@style/CaptionTextStyle"
+                        android:gravity="center" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Server Selection Section -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -39,493 +82,70 @@
                     android:padding="24dp">
 
                     <TextView
-                        android:id="@+id/status_text_view"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/status_disconnected"
-                        style="@style/StatusDisconnected"
-                        android:gravity="center"
-                        android:layout_marginBottom="24dp" />
-
-                    <!-- Connection Button -->
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/connect_button"
-                        android:layout_width="160dp"
-                        android:layout_height="160dp"
-                        android:layout_gravity="center"
-                        android:text="@string/connect"
-                        android:textSize="18sp"
-                        android:background="@drawable/connection_button_selector"
-                        android:textColor="@color/midnight_black"
-                        android:fontFamily="sans-serif-medium"
-                        android:layout_marginBottom="16dp"
-                        app:cornerRadius="80dp"
-                        app:strokeWidth="0dp" />
-
-                    <!-- Statistics -->
-                    <TextView
-                        android:id="@+id/bridge_stats_text_view"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Ready to connect"
-                        style="@style/CaptionTextStyle"
-                        android:gravity="center" />
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Server Configuration Card -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                style="@style/CardStyle"
-                android:layout_marginBottom="16dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="24dp">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/server_configuration"
+                        android:text="@string/server_selection"
                         style="@style/HeadingTextStyle"
-                        android:layout_marginBottom="24dp" />
-
-                    <!-- SSH Server Host -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="@string/ssh_server_host"
-                        style="@style/TextInputLayout"
-                        android:layout_marginBottom="16dp">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/host_edit_text"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="text"
-                            style="@style/TextInputEditText" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <!-- Port and Username Row -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="16dp">
-
-                        <com.google.android.material.textfield.TextInputLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:hint="@string/ssh_server_port"
-                            style="@style/TextInputLayout"
-                            android:layout_marginEnd="8dp">
-
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/port_edit_text"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:inputType="number"
-                                android:text="22"
-                                style="@style/TextInputEditText" />
-
-                        </com.google.android.material.textfield.TextInputLayout>
-
-                        <com.google.android.material.textfield.TextInputLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="2"
-                            android:hint="@string/username"
-                            style="@style/TextInputLayout"
-                            android:layout_marginStart="8dp">
-
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/username_edit_text"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:inputType="text"
-                                style="@style/TextInputEditText" />
-
-                        </com.google.android.material.textfield.TextInputLayout>
-
-                    </LinearLayout>
-
-                    <!-- Authentication Method -->
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/authentication_method"
-                        style="@style/BodyTextStyle"
                         android:layout_marginBottom="16dp" />
 
-                    <RadioGroup
-                        android:id="@+id/auth_method_radio_group"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="16dp">
-
-                        <RadioButton
-                            android:id="@+id/password_auth_radio"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/use_password"
-                            android:checked="true"
-                            style="@style/RadioButtonStyle"
-                            android:layout_marginEnd="24dp" />
-
-                        <RadioButton
-                            android:id="@+id/key_auth_radio"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/use_private_key"
-                            style="@style/RadioButtonStyle" />
-
-                    </RadioGroup>
-
-                    <!-- Password Field -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/password_layout"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="@string/password"
-                        style="@style/TextInputLayout"
-                        app:endIconMode="password_toggle"
-                        android:layout_marginBottom="16dp">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/password_edit_text"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="textPassword"
-                            style="@style/TextInputEditText" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <!-- Private Key Field -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/private_key_layout"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="@string/private_key"
-                        style="@style/TextInputLayout"
-                        android:visibility="gone"
-                        android:layout_marginBottom="16dp">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/private_key_edit_text"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="text"
-                            style="@style/TextInputEditText" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <!-- Key Passphrase Field -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/passphrase_layout"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="@string/key_passphrase"
-                        style="@style/TextInputLayout"
-                        app:endIconMode="password_toggle"
-                        android:visibility="gone">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/passphrase_edit_text"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="textPassword"
-                            style="@style/TextInputEditText" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Bridge Settings Card -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                style="@style/CardStyle"
-                android:layout_marginBottom="16dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="24dp">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/bridge_settings"
-                        style="@style/HeadingTextStyle"
-                        android:layout_marginBottom="24dp" />
-
-                    <!-- Enable Bridge Switch -->
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/bridge_enabled_switch"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/enable_bridge"
-                        style="@style/SwitchStyle"
-                        android:layout_marginBottom="24dp" />
-
-                    <!-- Bridge Server and Port -->
+                    <!-- Server Selection Row -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:layout_marginBottom="16dp">
+                        android:gravity="center_vertical">
 
+                        <!-- Server Dropdown -->
                         <com.google.android.material.textfield.TextInputLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="2"
-                            android:hint="@string/bridge_server"
-                            style="@style/TextInputLayout"
-                            android:layout_marginEnd="8dp">
-
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/bridge_host_edit_text"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:inputType="text"
-                                style="@style/TextInputEditText" />
-
-                        </com.google.android.material.textfield.TextInputLayout>
-
-                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/server_dropdown_layout"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:hint="@string/bridge_port"
+                            android:hint="@string/select_server"
                             style="@style/TextInputLayout"
-                            android:layout_marginStart="8dp">
+                            android:layout_marginEnd="16dp">
 
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/bridge_port_edit_text"
+                            <AutoCompleteTextView
+                                android:id="@+id/server_dropdown"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:inputType="number"
-                                android:text="8080"
+                                android:inputType="none"
                                 style="@style/TextInputEditText" />
 
                         </com.google.android.material.textfield.TextInputLayout>
 
+                        <!-- Add Server Button -->
+                        <com.google.android.material.floatingactionbutton.FloatingActionButton
+                            android:id="@+id/add_server_button"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_vertical"
+                            android:src="@android:drawable/ic_input_add"
+                            android:contentDescription="@string/add_server"
+                            app:fabSize="mini"
+                            app:backgroundTint="@color/golden_apricot" />
+
                     </LinearLayout>
-
-                    <!-- Local Port -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="@string/local_port"
-                        style="@style/TextInputLayout"
-                        android:layout_marginBottom="24dp">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/bridge_local_port_edit_text"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="number"
-                            android:text="5060"
-                            style="@style/TextInputEditText" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <!-- Auto Reconnect Switch -->
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/auto_reconnect_switch"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/auto_reconnect"
-                        style="@style/SwitchStyle"
-                        android:checked="true"
-                        android:layout_marginBottom="16dp" />
-
-                    <!-- Connection Timeout -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="@string/connection_timeout"
-                        style="@style/TextInputLayout">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/connection_timeout_edit_text"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="number"
-                            android:text="30"
-                            style="@style/TextInputEditText" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
 
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Advanced Settings Card -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/advanced_settings_card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                style="@style/CardStyle"
-                android:visibility="gone">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="24dp">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/advanced_settings"
-                        style="@style/HeadingTextStyle"
-                        android:layout_marginBottom="24dp" />
-
-                    <!-- UDP Port Forwarding Settings -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="16dp">
-
-                        <com.google.android.material.textfield.TextInputLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:hint="Local UDP Port"
-                            style="@style/TextInputLayout"
-                            android:layout_marginEnd="8dp">
-
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/local_port_edit_text"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:inputType="number"
-                                style="@style/TextInputEditText" />
-
-                        </com.google.android.material.textfield.TextInputLayout>
-
-                        <com.google.android.material.textfield.TextInputLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:hint="Remote UDP Port"
-                            style="@style/TextInputLayout"
-                            android:layout_marginStart="8dp">
-
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/remote_port_edit_text"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:inputType="number"
-                                style="@style/TextInputEditText" />
-
-                        </com.google.android.material.textfield.TextInputLayout>
-
-                    </LinearLayout>
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="Remote Host"
-                        style="@style/TextInputLayout">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/remote_host_edit_text"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="text"
-                            android:text="127.0.0.1"
-                            style="@style/TextInputEditText" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Action Buttons -->
+            <!-- Quick Actions -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginTop="24dp">
+                android:gravity="center">
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/advanced_toggle_button"
-                    android:layout_width="0dp"
+                    android:id="@+id/settings_button"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/show_advanced"
-                    style="@style/SecondaryButton"
-                    android:layout_marginEnd="8dp" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/bridge_config_button"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:text="@string/settings"
-                    style="@style/SecondaryButton"
-                    android:layout_marginStart="8dp" />
+                    style="@style/SecondaryButton" />
 
             </LinearLayout>
-
-            <!-- Hidden buttons for compatibility -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:visibility="gone">
-
-                <Button
-                    android:id="@+id/disconnect_button"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/disconnect" />
-
-                <Button
-                    android:id="@+id/start_forwarding_button"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Start Forwarding" />
-
-                <Button
-                    android:id="@+id/bridge_start_button"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Start Bridge" />
-
-                <Button
-                    android:id="@+id/bridge_stop_button"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Stop Bridge" />
-
-            </LinearLayout>
-
-            <!-- Hidden status view for compatibility -->
-            <TextView
-                android:id="@+id/bridge_status_text_view"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:visibility="gone" />
 
         </LinearLayout>
 

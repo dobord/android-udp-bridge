@@ -22,6 +22,11 @@
         </activity>
         
         <activity
+            android:name=".ServerConfigActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity" />
+        
+        <activity
             android:name="com.example.udpbridge.UdpBridgeConfigActivity"
             android:exported="false"
             android:parentActivityName=".MainActivity" />

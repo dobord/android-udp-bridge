@@ -6,6 +6,7 @@
     <color name="onyx_black">#1C1D21</color>
     <color name="slate_gray">#2C2D30</color>
     <color name="charcoal_gray">#494B50</color>
+    <color name="dark_gray">#333333</color>
     
     <!-- Text colors -->
     <color name="pale_gray">#D7D8DB</color>

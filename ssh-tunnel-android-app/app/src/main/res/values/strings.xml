@@ -8,6 +8,16 @@
     <string name="connecting">Connecting…</string>
     <string name="disconnecting">Disconnecting…</string>
     
+    <!-- Server Selection -->
+    <string name="server_selection">Server Selection</string>
+    <string name="select_server">Select Server</string>
+    <string name="add_server">Add Server</string>
+    <string name="no_servers_configured">No servers configured</string>
+    <string name="edit_server">Edit Server</string>
+    <string name="delete_server">Delete Server</string>
+    <string name="server_name">Server Name</string>
+    <string name="server_name_hint">My Server</string>
+    
     <!-- Connection Status -->
     <string name="status_connected">Connected</string>
     <string name="status_disconnected">Disconnected</string>
