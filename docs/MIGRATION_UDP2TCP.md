@@ -3,6 +3,7 @@
 ## Статус
 - Текущая ветка: `feature/udp2tcp`
 - Цель: Заменить кастомный UDP Bridge протокол и listener на использование проекта `udp2tcp` (git@github.com:dobord/udp2tcp.git) при сохранении SSH port forwarding.
+ - Текущий прогресс: внедрён минимальный "embed" режим udp2tcp на Android без coroutine scheduler / networking / TLS (флаг `UDP2TCP_EMBED_NO_SCHEDULER`). C API собирается, старт клиента/сервера возвращает exit_code = -100 (Not Implemented) как временная заглушка.
 
 ## Обоснование
 | Аспект | Legacy UDP Bridge | udp2tcp |
@@ -41,19 +42,20 @@ C. Запуск отдельного процесса (менее предпоч
 Выбранный подход: A (исходники в субдиректорию `third_party/udp2tcp/` + Android.mk / CMakeLists). Если лицензия/структура позволит. Иначе fallback B.
 
 Задачи:
-- [ ] Импортировать код udp2tcp в `third_party/` (авто-клон не выполнен: требуется ручной SSH доступ, см. `third_party/udp2tcp/README_IMPORT.md`)
+- [x] Импортировать код udp2tcp в `third_party/` (выполнено вручную)
 - [x] Создать обёртку `udp2tcp_client_adapter.c/h` (init, start, stop, stats) — реализована заглушка + одно-клиентский ответ
 - [x] JNI методы заменить вызовами адаптера (добавлены start/stop/stats/isRunning)
 - [x] Обновить Gradle / Android.mk для сборки (Android.mk обновлен; Gradle часть — позже при необходимости)
 
 ### Этап 3 — Замена JNI логики
-- [ ] В `ssh_tunnel.c` условно исключить legacy блоки (флаг) и оставить SSH + udp2tcp
-- [x] Реализован простой локальный UDP socket listener внутри адаптера
-- [ ] Добавить потокобезопасные atomic counters (сейчас простые инкременты)
+- [x] В `ssh_tunnel.c` условно исключить legacy блоки (флаг `USE_UDP2TCP`) и оставить SSH + udp2tcp (добавлен в `CMakeLists.txt`)
+- [x] Реализован простой локальный UDP socket listener внутри адаптера (stub C версия будет удалена после полной миграции)
+- [x] Добавить потокобезопасные atomic counters (используются std::atomic в C++ адаптере)
 
 ### Этап 4 — Очистка и Legacy маркировка
-- [ ] Переместить legacy файлы в `legacy/` или удалить после успешных тестов
-- [ ] Обновить CI: убрать проверки на `udp_listener.c` и протокол
+- [ ] Переместить legacy файлы в `legacy/` или удалить после успешных тестов (часть документов уже помечена/готовится к удалению)
+- [ ] Удалить `udp2tcp_client_adapter.c` (legacy stub) после подтверждения работы C++ адаптера на целевых ABI
+- [ ] Обновить CI: убрать проверки на `udp_listener.c` и протокол при активном `USE_UDP2TCP`
 - [ ] Обновить `IMPLEMENTATION_PLAN.md` (добавить секцию миграции)
 
 ### Этап 5 — Тестирование
@@ -79,12 +81,34 @@ void udp2tcp_get_stats(uint64_t* rx_packets, uint64_t* tx_packets, uint64_t* rx_
 | Риск | Митигация |
 |------|-----------|
 | Несовместимость API udp2tcp с Android NDK | При необходимости создать минимальный patch/fork |
+| Отсутствие scheduler на Android embed этапе | Используется заглушка -100; план: по мере готовности включить реальные client/server пути |
 | Производительность при высоком RTT | Включить опции TCP_NODELAY, tune буферы |
 | Потеря функциональности ping/pong | Использовать статистику активности сокета / опционально реализовать keepalive |
 
 ## Решения, требующие подтверждения
 - Нужно ли полностью удалять legacy код сразу или оставить feature flag? (рекомендуется короткий флаговый период)
 - Формат статистики — оставить прежний JNI интерфейс или упростить.
+ - Подтвердить стратегию: сначала MVP без реального трафика (embed stub -100), затем поэтапно включить networking (libcoro FEATURE_NETWORKING) и при необходимости TLS.
+
+## Минимальный embed режим (Android)
+Промежуточный шаг для получения зелёной сборки и интеграции JNI:
+
+| Аспект | Значение |
+|--------|----------|
+| Макрос | `UDP2TCP_EMBED_NO_SCHEDULER` |
+| Отключено | `LIBCORO_FEATURE_NETWORKING=OFF`, `LIBCORO_FEATURE_TLS=OFF` |
+| Исключённые исходники | `server_impl.cpp`, `client_impl.cpp` |
+| Логирование | Синхронное (`src/common/log.cpp` переписан) |
+| C API функции start | Создают handle, выставляют `exit_code=-100` |
+| Цель | Поднять JNI, стабилизировать сборку, затем постепенно вернуть функциональность |
+
+Код `-100` трактуется как "not implemented in minimal embed" и не считается ошибкой инфраструктуры.
+
+### План выхода из embed режима
+1. Включить `LIBCORO_FEATURE_NETWORKING=ON` только после появления готовых OpenSSL headers/binaries для всех ABI.
+2. Вернуть coroutine logger при наличии `<stop_token>` (NDK будущих версий) или заменить на std::jthread совместимый слой.
+3. Удалить макрос `UDP2TCP_EMBED_NO_SCHEDULER`; вернуть реальные `run_client` / `run_server` вызовы.
+4. Добавить e2e тесты UDP инкапсуляции (генерация и приём UDP пакетов) под feature-флагом.
 
 ## Критерии завершения
 - Приложение успешно форвардит UDP через udp2tcp + SSH

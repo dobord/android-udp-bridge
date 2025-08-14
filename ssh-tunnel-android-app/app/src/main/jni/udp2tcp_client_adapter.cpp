@@ -126,7 +126,11 @@ void udp2tcp_cleanup(void)
     if (g_client_handle) {
         int exit_code = 0;
         udp2tcp_client_join(g_client_handle, &exit_code);
-        LOGI("udp2tcp client joined exit_code=%d", exit_code);
+        if (exit_code == -100) {
+            LOGI("udp2tcp client joined: minimal embed mode (exit_code=-100, scheduler disabled)");
+        } else {
+            LOGI("udp2tcp client joined exit_code=%d", exit_code);
+        }
         g_client_handle = nullptr;
     }
     g_running.store(0);
