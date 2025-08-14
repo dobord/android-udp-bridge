@@ -20,6 +20,12 @@ public class SshTunnelService extends Service {
     public native boolean connectWithKey(String host, int port, String username, String privateKeyPath, String passphrase);
     public native void disconnect();
     public native boolean forwardPort(int localPort, String remoteHost, int remotePort);
+    // udp2tcp native (новые)
+    public native int startUdp2Tcp(String remoteHost, int remotePort, int localUdpPort);
+    public native int startUdp2TcpAdvanced(String remoteHost, int remotePort, int localUdpPort, String dstIp, int dstPort);
+    public native void stopUdp2Tcp();
+    public native String getUdp2TcpStats();
+    public native boolean isUdp2TcpRunning();
     
     public class LocalBinder extends Binder {
         SshTunnelService getService() {
@@ -94,11 +100,33 @@ public class SshTunnelService extends Service {
         }
         
         Log.d(TAG, "Starting UDP forwarding: " + localPort + " -> " + remoteHost + ":" + remotePort);
-        return forwardPort(localPort, remoteHost, remotePort);
+    // Legacy: forwardPort. Новый путь: startUdp2Tcp (обернут в тот же метод для плавной миграции)
+    int rc = startUdp2Tcp(remoteHost, remotePort, localPort);
+    if (rc == 0) return true;
+    // fallback на legacy если udp2tcp не стартовал
+    return forwardPort(localPort, remoteHost, remotePort);
+    }
+
+    // Advanced: позволяет задать удалённый UDP dst endpoint (dstIp:dstPort)
+    public boolean startUdpForwardingAdvanced(int localPort, String remoteHost, int remotePort, String dstIp, int dstPort) {
+        if (!isConnected) {
+            Log.e(TAG, "Cannot start advanced forwarding: not connected to SSH server");
+            return false;
+        }
+        Log.d(TAG, "Starting advanced UDP forwarding: local=" + localPort + " remoteTcp=" + remoteHost + ":" + remotePort +
+                " dstUdp=" + dstIp + ":" + dstPort);
+        int rc = startUdp2TcpAdvanced(remoteHost, remotePort, localPort, dstIp, dstPort);
+        if (rc == 0) return true;
+        Log.e(TAG, "Failed to start advanced udp2tcp (rc=" + rc + ")");
+        return false;
     }
 
     public void disconnectFromServer() {
         Log.d(TAG, "Disconnecting from server");
+        if (isUdp2TcpRunning()) {
+            Log.d(TAG, "Stopping udp2tcp before SSH disconnect");
+            stopUdp2Tcp();
+        }
         disconnect();
         isConnected = false;
     }

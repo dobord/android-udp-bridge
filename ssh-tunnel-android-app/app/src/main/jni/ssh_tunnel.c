@@ -20,10 +20,13 @@
 #include <sys/stat.h>
 #include <sys/select.h>
 
-// UDP Bridge Protocol integration
+// UDP Bridge / udp2tcp integration
+#include "udp2tcp_client_adapter.h" // New udp2tcp adapter
+#ifndef USE_UDP2TCP
 #include "udp_bridge_protocol.h"
 #include "udp_listener.h"
-#include "tcp_connection_manager.h" // Add TCP Connection Manager
+#include "tcp_connection_manager.h" // Legacy TCP Connection Manager
+#endif
 
 // Crypto library includes for manual crypto initialization
 #ifndef USE_LIBSSH_MOCK
@@ -54,12 +57,18 @@ static int tunnel_active = 0;
 static pthread_mutex_t session_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // UDP Bridge listener integration
+// Legacy only
+#ifndef USE_UDP2TCP
 static udp_listener_ctx_t* udp_listener = NULL;
 static pthread_mutex_t udp_listener_mutex = PTHREAD_MUTEX_INITIALIZER;
+#endif
 
 // TCP Connection Manager for bridge communication
+// Legacy only
+#ifndef USE_UDP2TCP
 static tcp_connection_manager_t* tcp_connection_manager = NULL;
 static pthread_mutex_t tcp_manager_mutex = PTHREAD_MUTEX_INITIALIZER;
+#endif
 
 #ifndef USE_LIBSSH_MOCK
 static volatile int g_libssh_initialized = 0;
@@ -554,7 +563,7 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_connectTo
     
     LOGI("SSH authentication successful");
     
-    // Set up TCP port forwarding for UDP Bridge (8080)
+    // Set up TCP port forwarding (used for both legacy bridge or udp2tcp transport)
     if (setup_tcp_port_forwarding() != 0) {
         LOGW("Failed to setup TCP port forwarding, but SSH connection established");
     }
@@ -715,7 +724,8 @@ JNIEXPORT void JNICALL Java_com_example_sshtunnel_SshTunnelService_disconnect(JN
     pthread_mutex_unlock(&session_mutex);
 }
 
-// Enhanced tunnel function with UDP bridge integration
+// Enhanced tunnel function (legacy path only). In udp2tcp mode forwardPort JNI will call startUdp2Tcp directly.
+#ifndef USE_UDP2TCP
 JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_forwardPort(
     JNIEnv *env, jobject obj, jint local_port, jstring remote_host, jint remote_port) {
     
@@ -826,8 +836,10 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_forwardPo
     LOGI("UDP bridge tunnel started successfully");
     return 0;
 }
+#endif // !USE_UDP2TCP
 
-JNIEXPORT void JNICALL Java_com_example_sshtunnel_SSHTunnelService_stopTunnel(JNIEnv *env, jobject obj) {
+#ifndef USE_UDP2TCP
+JNIEXPORT void JNICALL Java_com_example_sshtunnel_SshTunnelService_stopTunnel(JNIEnv *env, jobject obj) {
     (void)env; (void)obj; // Suppress unused parameter warnings
     
     LOGI("Stopping UDP bridge tunnel");
@@ -856,8 +868,9 @@ JNIEXPORT void JNICALL Java_com_example_sshtunnel_SSHTunnelService_stopTunnel(JN
     
     LOGI("UDP bridge tunnel stopped");
 }
+#endif // !USE_UDP2TCP
 
-JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SSHTunnelService_isConnected(JNIEnv *env, jobject obj) {
+JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_isConnected(JNIEnv *env, jobject obj) {
     (void)env; (void)obj; // Suppress unused parameter warnings
     
     pthread_mutex_lock(&session_mutex);
@@ -869,8 +882,9 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SSHTunnelService_isConnect
 
 // UDP Bridge specific JNI functions
 
-// Get UDP bridge statistics
-JNIEXPORT jstring JNICALL Java_com_example_sshtunnel_SSHTunnelService_getUdpBridgeStats(JNIEnv *env, jobject obj) {
+// Get UDP bridge statistics (legacy)
+#ifndef USE_UDP2TCP
+JNIEXPORT jstring JNICALL Java_com_example_sshtunnel_SshTunnelService_getUdpBridgeStats(JNIEnv *env, jobject obj) {
     (void)obj; // Suppress unused parameter warning
     
     pthread_mutex_lock(&udp_listener_mutex);
@@ -897,9 +911,11 @@ JNIEXPORT jstring JNICALL Java_com_example_sshtunnel_SSHTunnelService_getUdpBrid
     
     return (*env)->NewStringUTF(env, stats_buffer);
 }
+#endif // !USE_UDP2TCP
 
-// Check if UDP bridge is running
-JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SSHTunnelService_isUdpBridgeRunning(JNIEnv *env, jobject obj) {
+// Check if UDP bridge is running (legacy)
+#ifndef USE_UDP2TCP
+JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_isUdpBridgeRunning(JNIEnv *env, jobject obj) {
     (void)env; (void)obj; // Suppress unused parameter warnings
     
     pthread_mutex_lock(&udp_listener_mutex);
@@ -908,9 +924,11 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SSHTunnelService_isUdpBrid
     
     return running;
 }
+#endif // !USE_UDP2TCP
 
-// Reset UDP bridge statistics
-JNIEXPORT void JNICALL Java_com_example_sshtunnel_SSHTunnelService_resetUdpBridgeStats(JNIEnv *env, jobject obj) {
+// Reset UDP bridge statistics (legacy)
+#ifndef USE_UDP2TCP
+JNIEXPORT void JNICALL Java_com_example_sshtunnel_SshTunnelService_resetUdpBridgeStats(JNIEnv *env, jobject obj) {
     (void)env; (void)obj; // Suppress unused parameter warnings
     
     pthread_mutex_lock(&udp_listener_mutex);
@@ -922,9 +940,11 @@ JNIEXPORT void JNICALL Java_com_example_sshtunnel_SSHTunnelService_resetUdpBridg
     
     pthread_mutex_unlock(&udp_listener_mutex);
 }
+#endif // !USE_UDP2TCP
 
-// Get client count from UDP bridge
-JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SSHTunnelService_getUdpBridgeClientCount(JNIEnv *env, jobject obj) {
+// Get client count from UDP bridge (legacy)
+#ifndef USE_UDP2TCP
+JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SshTunnelService_getUdpBridgeClientCount(JNIEnv *env, jobject obj) {
     (void)env; (void)obj; // Suppress unused parameter warnings
     
     pthread_mutex_lock(&udp_listener_mutex);
@@ -938,11 +958,13 @@ JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SSHTunnelService_getUdpBridgeC
     
     return client_count;
 }
+#endif // !USE_UDP2TCP
 
-// TCP Connection Manager JNI functions
+// TCP Connection Manager JNI functions (legacy)
+#ifndef USE_UDP2TCP
 
 // Initialize TCP Connection Manager
-JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SSHTunnelService_initTcpManager(JNIEnv *env, jobject obj) {
+JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SshTunnelService_initTcpManager(JNIEnv *env, jobject obj) {
     (void)env; (void)obj; // Suppress unused parameter warnings
     
     pthread_mutex_lock(&tcp_manager_mutex);
@@ -964,9 +986,10 @@ JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SSHTunnelService_initTcpManage
     pthread_mutex_unlock(&tcp_manager_mutex);
     return 0;
 }
+#endif // !USE_UDP2TCP
 
 // Connect TCP manager to bridge server
-JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SSHTunnelService_connectTcpBridge(
+JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SshTunnelService_connectTcpBridge(
     JNIEnv *env, jobject obj, jstring server_host, jint server_port) {
     
     (void)obj; // Suppress unused parameter warning
@@ -999,7 +1022,7 @@ JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SSHTunnelService_connectTcpBri
 }
 
 // Disconnect TCP bridge
-JNIEXPORT void JNICALL Java_com_example_sshtunnel_SSHTunnelService_disconnectTcpBridge(JNIEnv *env, jobject obj) {
+JNIEXPORT void JNICALL Java_com_example_sshtunnel_SshTunnelService_disconnectTcpBridge(JNIEnv *env, jobject obj) {
     (void)env; (void)obj; // Suppress unused parameter warnings
     
     pthread_mutex_lock(&tcp_manager_mutex);
@@ -1013,7 +1036,7 @@ JNIEXPORT void JNICALL Java_com_example_sshtunnel_SSHTunnelService_disconnectTcp
 }
 
 // Check TCP bridge connection status
-JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SSHTunnelService_isTcpBridgeConnected(JNIEnv *env, jobject obj) {
+JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_isTcpBridgeConnected(JNIEnv *env, jobject obj) {
     (void)env; (void)obj; // Suppress unused parameter warnings
     
     pthread_mutex_lock(&tcp_manager_mutex);
@@ -1029,7 +1052,7 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SSHTunnelService_isTcpBrid
 }
 
 // Get TCP bridge connection state
-JNIEXPORT jstring JNICALL Java_com_example_sshtunnel_SSHTunnelService_getTcpBridgeState(JNIEnv *env, jobject obj) {
+JNIEXPORT jstring JNICALL Java_com_example_sshtunnel_SshTunnelService_getTcpBridgeState(JNIEnv *env, jobject obj) {
     (void)obj; // Suppress unused parameter warning
     
     pthread_mutex_lock(&tcp_manager_mutex);
@@ -1046,7 +1069,7 @@ JNIEXPORT jstring JNICALL Java_com_example_sshtunnel_SSHTunnelService_getTcpBrid
 }
 
 // Get TCP bridge statistics
-JNIEXPORT jstring JNICALL Java_com_example_sshtunnel_SSHTunnelService_getTcpBridgeStats(JNIEnv *env, jobject obj) {
+JNIEXPORT jstring JNICALL Java_com_example_sshtunnel_SshTunnelService_getTcpBridgeStats(JNIEnv *env, jobject obj) {
     (void)obj; // Suppress unused parameter warning
     
     pthread_mutex_lock(&tcp_manager_mutex);
@@ -1083,7 +1106,7 @@ JNIEXPORT jstring JNICALL Java_com_example_sshtunnel_SSHTunnelService_getTcpBrid
 }
 
 // Configure TCP reconnection
-JNIEXPORT void JNICALL Java_com_example_sshtunnel_SSHTunnelService_configureTcpReconnect(
+JNIEXPORT void JNICALL Java_com_example_sshtunnel_SshTunnelService_configureTcpReconnect(
     JNIEnv *env, jobject obj, jboolean enabled, jint max_attempts, jint initial_delay_ms, jint max_delay_ms) {
     
     (void)env; (void)obj; // Suppress unused parameter warnings
@@ -1113,7 +1136,7 @@ JNIEXPORT void JNICALL Java_com_example_sshtunnel_SSHTunnelService_configureTcpR
 }
 
 // Send ping through TCP bridge
-JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SSHTunnelService_sendTcpBridgePing(JNIEnv *env, jobject obj) {
+JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SshTunnelService_sendTcpBridgePing(JNIEnv *env, jobject obj) {
     (void)env; (void)obj; // Suppress unused parameter warnings
     
     pthread_mutex_lock(&tcp_manager_mutex);
@@ -1132,7 +1155,7 @@ JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SSHTunnelService_sendTcpBridge
 }
 
 // Cleanup TCP Connection Manager
-JNIEXPORT void JNICALL Java_com_example_sshtunnel_SSHTunnelService_cleanupTcpManager(JNIEnv *env, jobject obj) {
+JNIEXPORT void JNICALL Java_com_example_sshtunnel_SshTunnelService_cleanupTcpManager(JNIEnv *env, jobject obj) {
     (void)env; (void)obj; // Suppress unused parameter warnings
     
     pthread_mutex_lock(&tcp_manager_mutex);
@@ -1145,3 +1168,76 @@ JNIEXPORT void JNICALL Java_com_example_sshtunnel_SSHTunnelService_cleanupTcpMan
     
     pthread_mutex_unlock(&tcp_manager_mutex);
 }
+
+// ================= udp2tcp adapter JNI (new) =================
+
+// Start udp2tcp (initialize + start thread)
+JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SshTunnelService_startUdp2Tcp(
+    JNIEnv *env, jobject obj, jstring remote_host, jint remote_port, jint local_udp_port) {
+    (void)obj;
+    const char* host = (*env)->GetStringUTFChars(env, remote_host, 0);
+    LOGI("Starting udp2tcp: remote %s:%d local_udp=%d", host, remote_port, local_udp_port);
+    if (udp2tcp_init(host, remote_port, local_udp_port) != 0) {
+        LOGE("udp2tcp_init failed");
+        (*env)->ReleaseStringUTFChars(env, remote_host, host);
+        return -1;
+    }
+    int rc = udp2tcp_start();
+    (*env)->ReleaseStringUTFChars(env, remote_host, host);
+    return rc;
+}
+
+// Start udp2tcp advanced (with dst ip/port)
+JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SshTunnelService_startUdp2TcpAdvanced(
+    JNIEnv *env, jobject obj, jstring remote_host, jint remote_port, jint local_udp_port,
+    jstring dst_ip, jint dst_port) {
+    (void)obj;
+    const char* host = (*env)->GetStringUTFChars(env, remote_host, 0);
+    const char* dip = dst_ip ? (*env)->GetStringUTFChars(env, dst_ip, 0) : NULL;
+    LOGI("Starting udp2tcp (advanced): remote %s:%d local_udp=%d dst=%s:%d", host, remote_port, local_udp_port, dip?dip:"(null)", dst_port);
+    if (udp2tcp_init_advanced(host, remote_port, local_udp_port, dip, dst_port) != 0) {
+        LOGE("udp2tcp_init_advanced failed");
+        if (dst_ip) (*env)->ReleaseStringUTFChars(env, dst_ip, dip);
+        (*env)->ReleaseStringUTFChars(env, remote_host, host);
+        return -1;
+    }
+    int rc = udp2tcp_start();
+    if (dst_ip) (*env)->ReleaseStringUTFChars(env, dst_ip, dip);
+    (*env)->ReleaseStringUTFChars(env, remote_host, host);
+    return rc;
+}
+
+// Stop udp2tcp (graceful)
+JNIEXPORT void JNICALL Java_com_example_sshtunnel_SshTunnelService_stopUdp2Tcp(JNIEnv *env, jobject obj) {
+    (void)env; (void)obj;
+    if (udp2tcp_is_running()) {
+        LOGI("Stopping udp2tcp adapter");
+        udp2tcp_stop();
+        udp2tcp_cleanup();
+    }
+}
+
+// Get udp2tcp stats
+JNIEXPORT jstring JNICALL Java_com_example_sshtunnel_SshTunnelService_getUdp2TcpStats(JNIEnv *env, jobject obj) {
+    (void)obj;
+    uint64_t rxp=0, txp=0, rxb=0, txb=0;
+    udp2tcp_get_stats(&rxp, &txp, &rxb, &txb);
+    uint64_t l_tx_frames=0, l_rx_frames=0, l_tx_bytes=0, l_rx_bytes=0;
+    udp2tcp_get_library_stats(&l_tx_frames, &l_rx_frames, &l_tx_bytes, &l_rx_bytes);
+    char buf[256];
+    snprintf(buf, sizeof(buf),
+             "udp2tcp: running=%s\nRX packets=%llu bytes=%llu (lib rx_frames=%llu rx_bytes=%llu)\nTX packets=%llu bytes=%llu (lib tx_frames=%llu tx_bytes=%llu)",
+             udp2tcp_is_running() ? "true" : "false",
+             (unsigned long long)rxp, (unsigned long long)rxb,
+             (unsigned long long)l_rx_frames, (unsigned long long)l_rx_bytes,
+             (unsigned long long)txp, (unsigned long long)txb,
+             (unsigned long long)l_tx_frames, (unsigned long long)l_tx_bytes);
+    return (*env)->NewStringUTF(env, buf);
+}
+
+// Check if running
+JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_isUdp2TcpRunning(JNIEnv *env, jobject obj) {
+    (void)env; (void)obj;
+    return udp2tcp_is_running() ? JNI_TRUE : JNI_FALSE;
+}
+
