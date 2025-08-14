@@ -339,3 +339,39 @@ int send_protocol_message(int tcp_socket, message_type_t type,
 - [ ] Graceful handling сетевых ошибок
 
 Этот план обеспечивает поэтапную реализацию с четкими критериями готовности и метриками успеха.
+
+---
+
+## Миграция на udp2tcp (Новый этап)
+
+### Цель
+Заменить кастомный UDP Bridge протокол / listener / client manager на использование внешнего проекта `udp2tcp` при сохранении SSH защищенного канала (port forwarding).
+
+### Этапы
+1. Подготовка
+  - [x] Добавлен документ `MIGRATION_UDP2TCP.md`
+  - [x] Обновлены `README.md`, `TECH_SPEC_NEW_ARCHITECTURE.md` (пометки Legacy)
+2. Интеграция исходников udp2tcp
+  - [ ] Импорт в `third_party/udp2tcp/`
+  - [ ] Создание `udp2tcp_client_adapter.[ch]`
+  - [ ] Сборка через NDK (Android.mk / CMakeLists)
+3. Обновление JNI
+  - [ ] Упростить `ssh_tunnel.c` (удалить/заглушить вызовы `udp_listener_*`, `tcp_connection_manager_*` в новом пути)
+  - [ ] Добавить JNI методы stats для udp2tcp
+4. Тестирование
+  - [ ] E2E скрипт `test_udp2tcp_basic.sh`
+  - [ ] Адаптация `run_full_e2e_test.sh` под udp2tcp
+5. Очистка Legacy
+  - [ ] Перемещение legacy файлов в `legacy/` или удаление
+  - [ ] Обновление GitHub Actions (исключить старые файлы)
+6. Документация
+  - [ ] Секция сравнения архитектур
+  - [ ] Обновление QUICKSTART
+
+### Критерий готовности миграции
+- Android приложение успешно передает UDP трафик через udp2tcp + SSH
+- Legacy код более не задействован в сборке по умолчанию
+- E2E тесты проходят
+- Документация не содержит устаревших инструкций
+
+См. подробности: `MIGRATION_UDP2TCP.md`.

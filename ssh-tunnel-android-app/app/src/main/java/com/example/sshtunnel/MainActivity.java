@@ -365,13 +365,23 @@ public class MainActivity extends AppCompatActivity {
         String remoteHost = currentServerConfig.getRemoteHost();
         int remotePort = currentServerConfig.getRemoteUdpPort();
         
+        // Попытаться взять расширенные dst настройки, если модель ServerConfig их хранит (поля могут отсутствовать, тогда используем basic)
+        final String dstIp = currentServerConfig.getRemoteHost(); // reuse remoteHost как dst по умолчанию
+        final int dstPort = currentServerConfig.getRemoteUdpPort();
+
         new Thread(() -> {
-            boolean success = sshTunnelService.startUdpForwarding(localPort, remoteHost, remotePort);
-            
+            boolean success;
+            // Используем advanced API (оно внутри fallback не делает, поэтому предварительно проверяем)
+            success = sshTunnelService.startUdpForwardingAdvanced(localPort, remoteHost, remotePort, dstIp, dstPort);
+            if(!success) {
+                // fallback на старый путь для совместимости
+                success = sshTunnelService.startUdpForwarding(localPort, remoteHost, remotePort);
+            }
+            final boolean finalSuccess = success;
             runOnUiThread(() -> {
-                if (success) {
+                if (finalSuccess) {
                     Toast.makeText(MainActivity.this, "UDP forwarding started", Toast.LENGTH_SHORT).show();
-                    bridgeStatsTextView.setText("Forwarding " + localPort + " -> " + remoteHost + ":" + remotePort);
+                    bridgeStatsTextView.setText("Forwarding " + localPort + " -> " + remoteHost + ":" + remotePort + " dst=" + dstIp + ":" + dstPort);
                 } else {
                     Toast.makeText(MainActivity.this, "Failed to start UDP forwarding", Toast.LENGTH_SHORT).show();
                 }

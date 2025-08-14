@@ -2,24 +2,43 @@
 
 ## 1. Обзор архитектуры
 
-### 1.1 Текущая архитектура
-В текущей реализации android-udp-bridge использует прямой SSH туннель, где:
-- Android приложение создает SSH соединение к серверу
-- UDP пакеты напрямую туннелируются через SSH каналы
-- Каждый UDP пакет создает новый SSH канал
+> NOTE: Этот документ обновлен для отражения перехода на `udp2tcp`. Разделы, описывающие кастомный "UDP Bridge" протокол, помечены как Legacy и будут удалены после завершения миграции (см. `MIGRATION_UDP2TCP.md`).
 
-### 1.2 Новая архитектура
-Предлагается изменить архитектуру на client-server модель с протоколом для UDP мультиплексирования:
+### 1.1 Актуальная архитектура (udp2tcp)
+Текущая реализация использует:
+- SSH (libssh) для установки защищенного TCP канала (port forwarding)
+- Протокол/клиент `udp2tcp` для инкапсуляции UDP в единый TCP поток без кастомного заголовка и логики мультиплексирования на стороне Android
 
+```
+[UDP Client] ⇄ (UDP localhost:<local_udp_port>) ⇄ [udp2tcp client (Android)] ⇄ (TCP через SSH forward) ⇄ [udp2tcp server] ⇄ (UDP) ⇄ [Target UDP Server]
+```
+
+Характеристики:
+- Нет внутреннего `udp_listener` / client_table в JNI — упрощение
+- Статистика собирается на адаптере udp2tcp (пакеты/байты)
+- Надежность и упрощение сопровождения за счет использования внешнего проверенного компонента
+
+### 1.2 Legacy архитектура (кастомный UDP Bridge протокол)
+Исторически использовалась client-server модель с собственным бинарным заголовком и мультиплексированием:
 ```
 [UDP Client] ←→ [Android UDP Bridge] ←→ [SSH TCP Tunnel] ←→ [Server UDP Bridge] ←→ [Target UDP Server]
 ```
+Этот путь включал `udp_bridge_protocol.[ch]`, `udp_listener.[ch]`, `client_manager.[ch]`, PING/PONG, CRC32 и пр. — теперь помечено как Legacy.
 
 ## 2. Компоненты системы
 
-### 2.1 Android UDP Bridge (Клиентская часть)
+### 2.1 Android UDP Bridge (Актуально)
 
-#### 2.1.1 UDP Listener
+Минимальный слой:
+- SSH соединение (аутентификация пароль/ключ)
+- Настройка локального UDP порта
+- Запуск udp2tcp клиента, направляющего UDP трафик в SSH‑проброшенный TCP порт сервера
+- Сбор простой статистики
+
+### 2.1L (Legacy) UDP Listener / Protocol Handler / TCP Connection Manager
+Следующие подсекции сохранены для исторической справки и будут удалены после миграции.
+
+#### 2.1.1L UDP Listener (Legacy)
 **Функции:**
 - Прослушивание UDP портов для входящих пакетов от клиентов
 - Идентификация клиентов по адресу и порту отправителя
@@ -43,7 +62,7 @@ typedef struct {
 5. Упаковать данные в протокольное сообщение
 6. Отправить через TCP туннель
 
-#### 2.1.2 Protocol Handler
+#### 2.1.2L Protocol Handler (Legacy)
 **Протокол сообщений:**
 ```c
 typedef struct {
@@ -64,14 +83,21 @@ typedef struct {
 - `MSG_PING` (0x04) - проверка соединения
 - `MSG_PONG` (0x05) - ответ на ping
 
-#### 2.1.3 TCP Connection Manager
+#### 2.1.3L TCP Connection Manager (Legacy)
 **Функции:**
 - Управление SSH TCP соединением
 - Отправка протокольных сообщений серверу
 - Получение ответов и маршрутизация обратно к UDP клиентам
 - Переподключение при обрыве связи
 
-### 2.2 Server UDP Bridge (Серверная часть)
+### 2.2 Server Side
+
+#### 2.2.1 Актуально (udp2tcp server)
+- Легковесный сервер udp2tcp принимает TCP (через SSH forward) и пересылает пакеты на целевой UDP endpoint.
+- Может быть развёрнут как отдельный сервис или в контейнере рядом с целевым приложением.
+
+#### 2.2.2L Legacy Server UDP Bridge
+(Описывает старый сервер с protocol.c, client_table.c, udp_forwarder.c)
 
 #### 2.2.1 Docker Environment
 **Структура контейнера:**
@@ -120,7 +146,12 @@ typedef struct {
 
 ## 3. Протокол взаимодействия
 
-### 3.1 Регистрация клиента
+### 3.1 Актуально (udp2tcp)
+Используется потоковая передача: каждый UDP датаграмм помещается в TCP поток с минимальной framing логикой из проекта udp2tcp (без кастомного магического заголовка вида "UDPB"). Поддержка ping/pong может обеспечиваться стандартными TCP keepalive или опциональным heartbeat (не реализовано на момент миграции).
+
+### 3.2L Legacy протокол
+
+### 3.2.1L Регистрация клиента
 ```
 Android → Server: MSG_CLIENT_REGISTER
   client_id: 0 (новый клиент)
@@ -131,7 +162,7 @@ Server → Android: MSG_CLIENT_REGISTER
   payload: success/error
 ```
 
-### 3.2 Передача данных
+### 3.2.2L Передача данных
 ```
 Android → Server: MSG_DATA
   client_id: [assigned_id]
@@ -148,7 +179,7 @@ Server → Android: MSG_DATA
 Android → Client: UDP response to original client
 ```
 
-### 3.3 Управление таймаутами
+### 3.2.3L Управление таймаутами
 ```
 Android → Server: MSG_CLIENT_TIMEOUT
   client_id: [expired_id]
@@ -158,6 +189,22 @@ Server: Cleanup client entry
 ```
 
 ## 4. Конфигурация
+
+### 4.1 Актуально (udp2tcp)
+```java
+public class Udp2TcpConfig {
+  private String sshHost;
+  private int sshPort = 22;
+  private String sshUsername;
+  private String sshPassword; // или ключ
+  private int localUdpPort = 5060;      // Локальный UDP listen
+  private int remoteUdpPort = 5060;     // Целевой конечный UDP порт
+  private String remoteUdpHost;         // Целевой хост
+  private int udp2tcpServerPort = 8080; // Порт udp2tcp сервера (TCP), к которому делается SSH forward
+}
+```
+
+### 4.2L Legacy конфигурация
 
 ### 4.1 Android приложение
 ```java
@@ -181,7 +228,7 @@ public class UdpBridgeConfig {
 }
 ```
 
-### 4.2 Server Bridge
+### 4.2L Server Bridge (Legacy)
 ```bash
 # Environment variables
 UDP_BRIDGE_TCP_PORT=8080
@@ -192,7 +239,10 @@ MAX_CLIENTS=1000
 LOG_LEVEL=INFO
 ```
 
-### 4.3 Пользовательский интерфейс Android приложения
+### 4.3 UI (Актуально)
+UI упрощается: поля client timeout/max clients скрыты (не применимы к udp2tcp), остаются SSH + локальный/удалённый UDP порты.
+
+### 4.3L Пользовательский интерфейс (Legacy)
 
 #### 4.3.1 Главный экран
 **Структура интерфейса:**
@@ -265,6 +315,14 @@ LOG_LEVEL=INFO
 
 ## 5. Реализация
 
+### 5.1 Актуальный фокус
+1. Интеграция udp2tcp (NDK модуль)
+2. Удаление/инкапсуляция legacy JNI слоёв
+3. Обновление CI/CD (исключить проверки legacy файлов)
+4. E2E тестирование с udp2tcp
+
+### 5.2L Legacy план (исторический)
+
 ### 5.1 План реализации
 
 #### Этап 1: Подготовка инфраструктуры (1-2 дня)
@@ -311,7 +369,16 @@ LOG_LEVEL=INFO
 
 **Общее время реализации: 14-21 день**
 
-### 5.2 Структура файлов
+### 5.2 Структура файлов (Target)
+```
+ssh-tunnel-android-app/
+  app/src/main/jni/
+    ssh_tunnel.c (упрощённая логика)
+    udp2tcp_client_adapter.[ch]
+third_party/udp2tcp/ (исходники)
+```
+
+### 5.2L Структура файлов (Legacy)
 
 ```
 server-udp-bridge/
@@ -345,7 +412,13 @@ ssh-tunnel-android-app/
         └── UdpBridgeService.java  # Модифицированный
 ```
 
-## 6. Преимущества новой архитектуры
+## 6. Преимущества udp2tcp
+- Меньше собственного кода => ниже риск ошибок
+- Нет необходимости поддерживать свой бинарный протокол и таблицы клиентов
+- Проще отладка (tcpdump, стандартные инструменты)
+- Поддержка повторного использования udp2tcp в других проектах
+
+## 6L Преимущества Legacy (для истории)
 
 ### 6.1 Производительность
 
@@ -356,10 +429,11 @@ ssh-tunnel-android-app/
 ### 6.4 Гибкость
 
 ## 7. Совместимость и миграция
+Актуальная миграция описана в `MIGRATION_UDP2TCP.md`.
 
 ### 7.1 Обратная совместимость
 
-### 7.2 План миграции
+### 7.2L План миграции (старый)
 1. Развертывание server bridge в тестовой среде
 2. Добавление переключателя в Android приложение
 3. Тестирование с реальными пользователями
