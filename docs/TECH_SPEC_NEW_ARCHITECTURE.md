@@ -47,10 +47,10 @@
 **Структура данных клиента:**
 ```c
 typedef struct {
-    uint32_t client_id;         // Уникальный ID клиента
-    struct sockaddr_in addr;    // IP адрес и порт клиента
-    time_t last_activity;       // Время последней активности
-    uint32_t packet_count;      // Счетчик пакетов
+		uint32_t client_id;         // Уникальный ID клиента
+		struct sockaddr_in addr;    // IP адрес и порт клиента
+		time_t last_activity;       // Время последней активности
+		uint32_t packet_count;      // Счетчик пакетов
 } udp_client_t;
 ```
 
@@ -66,13 +66,13 @@ typedef struct {
 **Протокол сообщений:**
 ```c
 typedef struct {
-    uint8_t  magic[4];          // "UDPB" - магические байты
-    uint8_t  version;           // Версия протокола (1)
-    uint8_t  message_type;      // Тип сообщения
-    uint16_t flags;             // Флаги
-    uint32_t client_id;         // ID клиента
-    uint32_t payload_size;      // Размер полезной нагрузки
-    uint32_t checksum;          // CRC32 заголовка
+		uint8_t  magic[4];          // "UDPB" - магические байты
+		uint8_t  version;           // Версия протокола (1)
+		uint8_t  message_type;      // Тип сообщения
+		uint16_t flags;             // Флаги
+		uint32_t client_id;         // ID клиента
+		uint32_t payload_size;      // Размер полезной нагрузки
+		uint32_t checksum;          // CRC32 заголовка
 } __attribute__((packed)) udp_bridge_header_t;
 ```
 
@@ -105,17 +105,17 @@ typedef struct {
 # docker-compose.yml
 version: '3.8'
 services:
-  udp-bridge-server:
-    build: .
-    ports:
-      - "22:22"           # SSH порт
-      - "9999:9999/udp"   # UDP форвардинг порт (проброшен наружу)
-    environment:
-      - TARGET_UDP_HOST=target-server.example.com
-      - TARGET_UDP_PORT=5060
-      - BRIDGE_TCP_PORT=8080
-    volumes:
-      - ./ssh_keys:/etc/ssh/keys:ro
+	udp-bridge-server:
+		build: .
+		ports:
+			- "22:22"           # SSH порт
+			- "9999:9999/udp"   # UDP форвардинг порт (проброшен наружу)
+		environment:
+			- TARGET_UDP_HOST=target-server.example.com
+			- TARGET_UDP_PORT=5060
+			- BRIDGE_TCP_PORT=8080
+		volumes:
+			- ./ssh_keys:/etc/ssh/keys:ro
 ```
 
 #### 2.2.2 TCP Protocol Handler
@@ -128,12 +128,12 @@ services:
 **Структура сервера:**
 ```c
 typedef struct {
-    int tcp_socket;             // TCP сокет для Android клиентов
-    int udp_socket;             // UDP сокет для целевого сервера
-    struct sockaddr_in target;  // Адрес целевого UDP сервера
-    pthread_t tcp_thread;       // Поток обработки TCP
-    pthread_t udp_thread;       // Поток обработки UDP ответов
-    client_table_t* clients;    // Таблица клиентов
+		int tcp_socket;             // TCP сокет для Android клиентов
+		int udp_socket;             // UDP сокет для целевого сервера
+		struct sockaddr_in target;  // Адрес целевого UDP сервера
+		pthread_t tcp_thread;       // Поток обработки TCP
+		pthread_t udp_thread;       // Поток обработки UDP ответов
+		client_table_t* clients;    // Таблица клиентов
 } udp_bridge_server_t;
 ```
 
@@ -154,27 +154,27 @@ typedef struct {
 ### 3.2.1L Регистрация клиента
 ```
 Android → Server: MSG_CLIENT_REGISTER
-  client_id: 0 (новый клиент)
-  payload: client_address_info
+	client_id: 0 (новый клиент)
+	payload: client_address_info
 
 Server → Android: MSG_CLIENT_REGISTER
-  client_id: [assigned_id]
-  payload: success/error
+	client_id: [assigned_id]
+	payload: success/error
 ```
 
 ### 3.2.2L Передача данных
 ```
 Android → Server: MSG_DATA
-  client_id: [assigned_id]
-  payload: [UDP packet data]
+	client_id: [assigned_id]
+	payload: [UDP packet data]
 
 Server → Target: UDP packet to target_host:target_port
 
 Target → Server: UDP response
 
 Server → Android: MSG_DATA
-  client_id: [assigned_id]
-  payload: [UDP response data]
+	client_id: [assigned_id]
+	payload: [UDP response data]
 
 Android → Client: UDP response to original client
 ```
@@ -182,8 +182,8 @@ Android → Client: UDP response to original client
 ### 3.2.3L Управление таймаутами
 ```
 Android → Server: MSG_CLIENT_TIMEOUT
-  client_id: [expired_id]
-  payload: empty
+	client_id: [expired_id]
+	payload: empty
 
 Server: Cleanup client entry
 ```
@@ -193,14 +193,14 @@ Server: Cleanup client entry
 ### 4.1 Актуально (udp2tcp)
 ```java
 public class Udp2TcpConfig {
-  private String sshHost;
-  private int sshPort = 22;
-  private String sshUsername;
-  private String sshPassword; // или ключ
-  private int localUdpPort = 5060;      // Локальный UDP listen
-  private int remoteUdpPort = 5060;     // Целевой конечный UDP порт
-  private String remoteUdpHost;         // Целевой хост
-  private int udp2tcpServerPort = 8080; // Порт udp2tcp сервера (TCP), к которому делается SSH forward
+	private String sshHost;
+	private int sshPort = 22;
+	private String sshUsername;
+	private String sshPassword; // или ключ
+	private int localUdpPort = 5060;      // Локальный UDP listen
+	private int remoteUdpPort = 5060;     // Целевой конечный UDP порт
+	private String remoteUdpHost;         // Целевой хост
+	private int udp2tcpServerPort = 8080; // Порт udp2tcp сервера (TCP), к которому делается SSH forward
 }
 ```
 
@@ -209,22 +209,22 @@ public class Udp2TcpConfig {
 ### 4.1 Android приложение
 ```java
 public class UdpBridgeConfig {
-    // SSH настройки
-    private String sshHost;
-    private int sshPort = 22;
-    private String sshUsername;
-    private String sshPassword;
-    private String sshPrivateKey;
+		// SSH настройки
+		private String sshHost;
+		private int sshPort = 22;
+		private String sshUsername;
+		private String sshPassword;
+		private String sshPrivateKey;
     
-    // Bridge настройки
-    private int localUdpPort = 5060;        // Локальный UDP порт
-    private int bridgeTcpPort = 8080;       // TCP порт на сервере
-    private int clientTimeout = 300;        // Таймаут клиента (сек)
-    private int maxClients = 1000;          // Максимум клиентов
+		// Bridge настройки
+		private int localUdpPort = 5060;        // Локальный UDP порт
+		private int bridgeTcpPort = 8080;       // TCP порт на сервере
+		private int clientTimeout = 300;        // Таймаут клиента (сек)
+		private int maxClients = 1000;          // Максимум клиентов
     
-    // Целевой сервер (настраивается на server side)
-    // private String targetHost;  // Не нужно в Android
-    // private int targetPort;     // Настраивается на сервере
+		// Целевой сервер (настраивается на server side)
+		// private String targetHost;  // Не нужно в Android
+		// private int targetPort;     // Настраивается на сервере
 }
 ```
 
@@ -372,9 +372,9 @@ UI упрощается: поля client timeout/max clients скрыты (не 
 ### 5.2 Структура файлов (Target)
 ```
 ssh-tunnel-android-app/
-  app/src/main/jni/
-    ssh_tunnel.c (упрощённая логика)
-    udp2tcp_client_adapter.[ch]
+	app/src/main/jni/
+		ssh_tunnel.c (упрощённая логика)
+		udp2tcp_client_adapter.[ch]
 third_party/udp2tcp/ (исходники)
 ```
 
@@ -396,8 +396,8 @@ server-udp-bridge/
 │   ├── sshd_config
 │   └── supervisord.conf
 └── scripts/
-    ├── entrypoint.sh
-    └── setup_ssh.sh
+		├── entrypoint.sh
+		└── setup_ssh.sh
 
 ssh-tunnel-android-app/
 ├── app/src/main/jni/
@@ -407,9 +407,9 @@ ssh-tunnel-android-app/
 │   ├── client_manager.c           # Новый
 │   └── ssh_tunnel_bridge.c        # Модифицированный
 └── app/src/main/java/
-    └── com/example/sshtunnel/
-        ├── UdpBridgeConfig.java   # Новый
-        └── UdpBridgeService.java  # Модифицированный
+		└── com/example/sshtunnel/
+				├── UdpBridgeConfig.java   # Новый
+				└── UdpBridgeService.java  # Модифицированный
 ```
 
 ## 6. Преимущества udp2tcp

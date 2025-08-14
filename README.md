@@ -1,6 +1,39 @@
 # android-udp-bridge
 
-Android приложение для создания UDP туннеля через SSH соединение. (Legacy) ранее использовало кастомный протокол "UDP Bridge" поверх одного TCP соединения. (Current) заменено на интеграцию с проектом `udp2tcp` (git@github.com:dobord/udp2tcp.git), обеспечивающим надежную инкапсуляцию UDP поверх TCP без поддержки собственного заголовочного формата. SSH по‑прежнему используется для защищенного переноса TCP потока (SSH local/remote port forwarding), через который прокачивается трафик `udp2tcp`.
+Android приложение для безопасного проброса UDP трафика через SSH при помощи инкапсуляции `udp2tcp`.
+
+> Документация реструктурирована: актуальные файлы в `docs/`, исторические и отчёты — в `docs_legacy/`.
+
+## Быстрый обзор
+
+| Компонент | Статус | Описание |
+|-----------|--------|----------|
+| SSH (libssh + расширенный stub) | Stable | Аутентификация пароль / ключ, port forwarding |
+| udp2tcp интеграция | In progress | Замена кастомного UDP Bridge протокола |
+| Legacy UDP Bridge | Deprecated | Вынесен в `docs_legacy/`, будет удалён после завершения миграции |
+
+## Структура документации
+
+Актуально (`docs/`):
+- Архитектура: [`docs/TECH_SPEC_NEW_ARCHITECTURE.md`](docs/TECH_SPEC_NEW_ARCHITECTURE.md)
+- Миграция: [`docs/MIGRATION_UDP2TCP.md`](docs/MIGRATION_UDP2TCP.md)
+- План реализации / миграции: [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md)
+- CI/CD: [`docs/CI_CD_SUMMARY.md`](docs/CI_CD_SUMMARY.md)
+- SSH реализация: [`docs/SSH_IMPLEMENTATION.md`](docs/SSH_IMPLEMENTATION.md)
+- Расширенная SSH библиотека: [`docs/ADVANCED_SSH_LIBRARY.md`](docs/ADVANCED_SSH_LIBRARY.md)
+- Аутентификация ключами: [`docs/SSH_KEY_AUTHENTICATION.md`](docs/SSH_KEY_AUTHENTICATION.md)
+
+Legacy / отчёты (`docs_legacy/` примеры):
+- Протокол / схема: `docs_legacy/UDP_BRIDGE_SCHEMA.md`
+- Этапы PHASE / TASK отчёты
+- Исправления / фиксы: `ARCH_FLAGS_FIX*.md`, `ARCHITECTURE_FIX_REPORT.md`
+
+## Текущее состояние миграции
+- Упрощение JNI: удаление внутренних listener / client manager в пользу вызова `udp2tcp` клиента
+- Port forwarding остаётся основой защищённого транспорта
+- После стабилизации: чистка legacy исходников и CI обновления
+
+Репозиторий `udp2tcp`: git@github.com:dobord/udp2tcp.git
 
 ## Описание
 
@@ -51,16 +84,8 @@ Android приложение для создания UDP туннеля чере
 ### Legacy режим (если включён в настройках разработчика)
 Старый протокол запускает внутренний UDP listener + TCP connection manager. Он будет удалён после стабилизации udp2tcp.
 
-## Документация
-
-- [SSH Key Authentication Guide](SSH_KEY_AUTHENTICATION.md) - подробное руководство по аутентификации с ключами
-- [Advanced SSH Library](ADVANCED_SSH_LIBRARY.md) - техническая документация расширенной SSH библиотеки
-- [SSH Implementation Details](SSH_IMPLEMENTATION.md) - технические детали реализации SSH
-### Миграция и архитектура udp2tcp
-- [MIGRATION_UDP2TCP.md](MIGRATION_UDP2TCP.md) — план и статус миграции
-- `udp2tcp` репозиторий: git@github.com:dobord/udp2tcp.git
-
-> Примечание: документы `UDP_BRIDGE_SCHEMA.md`, `PROTOCOL_IMPLEMENTATION_REPORT.md` и связанные *PHASE_2.x* отчёты отмечены как Legacy.
+## Документация (короткий индекс)
+См. раздел "Структура документации" выше. Все новые материалы помещаются только в `docs/`.
 
 ## CI/CD и Автоматизация
 
@@ -104,7 +129,7 @@ git push origin v1.0.0
 - Gradle 8.4+
 - Java 21
 
-### Prebuilt библиотеки
+### Prebuilt библиотеки (libssh + TLS backend)
 
 Проект использует предварительно скомпилированные статические библиотеки (prebuilt) для ускорения сборки:
 
@@ -168,5 +193,18 @@ adb logcat | Select-String -Pattern "(SSHTunnel|LibSSH_Advanced)"
 adb install -r $PWD/ssh-tunnel-android-app/app/build/outputs/apk/debug/app-debug.apk
 
 # Мониторинг логов
-adb logcat | grep -E "(SSHTunnel|LibSSH_Advanced)"
+adb logcat | grep -E "(SSHTunnel|LibSSH_Advanced|udp2tcp)"
+
+## FAQ (кратко)
+Q: Где теперь искать старые отчёты PHASE / TASK?  
+A: В каталоге `docs_legacy/`.
+
+Q: Когда удалится legacy код?  
+A: После успешных e2e тестов udp2tcp и обновления CI (см. MIGRATION документ).
+
+Q: Нужно ли что-то менять в сборке при переходе?  
+A: Нет, сборочные скрипты остаются прежними; добавится включение udp2tcp клиента.
+
+## Лицензия
+MIT (если не указано иначе в отдельных third_party папках).
 ```
