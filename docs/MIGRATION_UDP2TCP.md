@@ -1,4 +1,4 @@
-# Миграция на udp2tcp
+# Миграция на udp2tcp (полный документ)
 
 ## Статус
 - Текущая ветка: `feature/udp2tcp`
@@ -14,17 +14,17 @@
 
 ## Объем изменений
 1. Удаление / деприкация:
-   - `udp_listener.c/h`
-   - `udp_bridge_protocol.c/h`
-   - client manager (JNI часть)
-   - Документы: пометка Legacy (`UDP_BRIDGE_SCHEMA.md`, отчёты PHASE_2.x, PROTOCOL_IMPLEMENTATION_REPORT.md)
+	- `udp_listener.c/h`
+	- `udp_bridge_protocol.c/h`
+	- client manager (JNI часть)
+	- Документы: пометка Legacy (`UDP_BRIDGE_SCHEMA.md`, отчёты PHASE_2.x, PROTOCOL_IMPLEMENTATION_REPORT.md)
 2. Добавление:
-   - Встраивание клиента `udp2tcp` (либо как статическая библиотека, либо запуск бинаря через JNI/Java wrapper)
-   - Конфигурационный слой: mapping локальный UDP порт -> удалённый target (host:port)
-   - Минимальная статистика (пакеты/байты) собирается локально по сокету
+	- Встраивание клиента `udp2tcp` (либо как статическая библиотека, либо запуск бинаря через JNI/Java wrapper)
+	- Конфигурационный слой: mapping локальный UDP порт -> удалённый target (host:port)
+	- Минимальная статистика (пакеты/байты) собирается локально по сокету
 3. SSH:
-   - Сохранить существующий установочный SSH workflow (пароль / ключ)
-   - Использовать `ssh -L localhost:<bridge_port>:127.0.0.1:<udp2tcp_server_port>` аналог внутри libssh (уже есть портфорвардинг на 8080 — перенастроить на порт сервера udp2tcp)
+	- Сохранить существующий установочный SSH workflow (пароль / ключ)
+	- Использовать `ssh -L localhost:<bridge_port>:127.0.0.1:<udp2tcp_server_port>` аналог внутри libssh (уже есть портфорвардинг на 8080 — перенастроить на порт сервера udp2tcp)
 
 ## Пошаговый план
 ### Этап 1 — Подготовка (done/ongoing)
