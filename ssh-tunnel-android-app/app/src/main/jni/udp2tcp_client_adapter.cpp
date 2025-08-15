@@ -22,21 +22,21 @@
 #define LOGE(...) do { fprintf(stderr, "[E] " __VA_ARGS__); fprintf(stderr, "\n"); } while (0)
 #endif
 
-static int g_local_udp_port = 0;          // локальный UDP listen порт
-static std::string g_remote_host;         // адрес (через SSH forward) udp2tcp сервера
-static int g_remote_port = 0;             // TCP порт udp2tcp сервера
-static std::string g_dst_ip = "127.0.0.1"; // удалённый dst ip (по умолчанию loopback на сервере)
-static int g_dst_port = 0;                // удалённый dst порт (по умолчанию равен local_udp_port)
-static std::atomic<int> g_running{0};     // состояние
+static int g_local_udp_port = 0;          // local UDP listen port
+static std::string g_remote_host;         // udp2tcp server host (accessible via SSH forward)
+static int g_remote_port = 0;             // udp2tcp server TCP port
+static std::string g_dst_ip = "127.0.0.1"; // remote destination IP (default loopback on server)
+static int g_dst_port = 0;                // remote destination port (default same as local_udp_port)
+static std::atomic<int> g_running{0};     // running state flag
 static udp2tcp_client* g_client_handle = nullptr; // C API client handle
 
-// Простейшая статистика (пока не агрегируется из внутренних метрик библиотеки)
+// Simple statistics (not yet aggregated from internal library metrics)
 static std::atomic<uint64_t> g_rx_packets{0};
 static std::atomic<uint64_t> g_tx_packets{0};
 static std::atomic<uint64_t> g_rx_bytes{0};
 static std::atomic<uint64_t> g_tx_bytes{0};
 
-// Callback логирования из udp2tcp
+// Logging callback from udp2tcp
 static void udp2tcp_log_cb(int level, const char* message, void* /*user*/) {
     if(!message) return;
     switch(level) {
@@ -73,7 +73,7 @@ int udp2tcp_start(void)
     if (g_running.load()) return 0; // already running
     udp2tcp_set_log_callback(udp2tcp_log_cb, nullptr);
 
-    // Forward один локальный порт на удалённый (плейсхолдер: echo того же порта). Может быть расширено JNI.
+    // Forward one local port to remote (placeholder: echo the same port). Can be extended via JNI.
     static udp2tcp_udp_forward_item fwd{}; // static lifetime
     fwd.name = "default";
     fwd.listen_addr = "0.0.0.0";
@@ -118,7 +118,7 @@ int udp2tcp_stop(void)
     if (g_client_handle) {
         udp2tcp_client_stop(g_client_handle);
     }
-    return 0; // join в cleanup
+    return 0; // join is performed in cleanup
 }
 
 void udp2tcp_cleanup(void)

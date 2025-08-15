@@ -40,7 +40,7 @@ static uint64_t g_tx_packets = 0;
 static uint64_t g_rx_bytes = 0;
 static uint64_t g_tx_bytes = 0;
 
-// Simple framing (placeholder) — в реальной интеграции заменить на формат udp2tcp
+// Simple framing (placeholder) — replace with real udp2tcp framing in actual integration
 // Frame: [2 bytes length][payload]
 
 static void* adapter_thread(void* arg) {
@@ -63,7 +63,7 @@ static void* adapter_thread(void* arg) {
         return NULL;
     }
 
-    // TCP socket (SSH forward предполагается уже настроен: remote_host:remote_port локально доступен)
+    // TCP socket (assumes SSH forward already set up: remote_host:remote_port reachable locally)
     int tcp_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (tcp_sock < 0) {
         LOGE("Failed to create TCP socket: %s", strerror(errno));
@@ -139,7 +139,7 @@ static void* adapter_thread(void* arg) {
                 ssize_t s = sendto(udp_sock, payload, len, 0, (struct sockaddr*)&g_last_client_addr, sizeof(g_last_client_addr));
                 if (s < 0) LOGE("sendto back failed: %s", strerror(errno));
             }
-            // TODO: Multi-client mapping: нужен frame формат с client key (IP/port) или отдельная таблица
+            // TODO: Multi-client mapping: need a frame format with client key (IP/port) or an external mapping table
         }
     }
 end:

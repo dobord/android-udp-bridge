@@ -989,7 +989,7 @@ JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SshTunnelService_initTcpManage
 #endif // !USE_UDP2TCP
 
 // Connect TCP manager to bridge server
-// TCP bridge подключение (legacy only)
+// TCP bridge connect (legacy only)
 #ifndef USE_UDP2TCP
 JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SshTunnelService_connectTcpBridge(
     JNIEnv *env, jobject obj, jstring server_host, jint server_port) {
