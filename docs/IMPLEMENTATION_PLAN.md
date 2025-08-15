@@ -2,18 +2,18 @@
 
 Updated 14 Aug 2025. This document reflects the transition from the custom "UDP Bridge" (protocol, listener, client manager, TCP Connection Manager) to using external `udp2tcp` over SSH port forwarding. Historical phases (1–4) are preserved in the Legacy Summary and detailed in reports in `docs_legacy/`.
 
-### TL;DR Current State
+### TL;DR Current State (Post Legacy Purge)
 | Area | Status | Comment |
 |------|--------|---------|
-| Legacy Phases 1–2 | DONE | Server + Android protocol infra implemented (now legacy) |
-| Legacy Phases 3–4 | PARTIAL | Docs / CI partly done; remainder becomes irrelevant post-udp2tcp |
-| Migration strategy selection | DONE | Chosen: vendored udp2tcp source (NDK) |
-| Adapter `udp2tcp_client_adapter` creation | IN PROGRESS | Stubs / interface exist; full I/O loops needed |
-| README / Tech Spec updates | DONE | Legacy marked; udp2tcp sections added |
-| Legacy source cleanup | PENDING | After udp2tcp e2e confirmation |
-| E2E udp2tcp test | PENDING | Script + docker scenario |
-| CI update (exclude legacy) | PENDING | After file removal |
-| Documentation update (final) | PENDING | After tests + cleanup |
+| Legacy Phases 1–2 | DONE | Historical (archived in docs_legacy) |
+| Legacy Phases 3–4 | DONE | Legacy code fully removed; flag eliminated |
+| Migration strategy selection | DONE | Vendored udp2tcp (mandatory) |
+| Adapter `udp2tcp_client_adapter` creation | PARTIAL | Basic start/stop, stats passthrough pending enhancement |
+| README / Tech Spec updates | DONE | Reflect udp2tcp default path |
+| Legacy source cleanup | DONE | Files deleted; build hard-fails if submodule missing |
+| E2E udp2tcp test | PENDING | Need real client/server echo path |
+| CI update (exclude legacy) | DONE | Workflows enforce submodule + no legacy checks |
+| Documentation update (final) | PENDING | FAQ / comparison / latency metrics |
 
 ---
 ## 1. Historical Context (Legacy Summary)
@@ -45,14 +45,14 @@ Reasons to abandon custom stack: reduce complexity, shrink JNI code, drop checks
 - [ ] Add lightweight udp2tcp flow diagram (optional / later).
 
 ### 3.2 udp2tcp Source Integration
-Approach A: vendor sources under `third_party/udp2tcp/`.
-- [ ] Import current udp2tcp tag/commit (README_IMPORT or git subtree / vendor).
-- [ ] Add Android.mk / CMakeLists fragment (arch-agnostic).
-- [ ] Determine minimal source set (client portion only, exclude tools).
-- [ ] Build verification for all ABIs (arm64-v8a / armeabi-v7a / x86_64 / x86).
+Approach A implemented (vendored sources under `third_party/udp2tcp/`).
+- [x] Import current udp2tcp commit
+- [x] Android CMake integration (mandatory path)
+- [x] Minimal source set (client + dependencies)
+- [x] Multi-ABI build verification via CI
 
 ### 3.3 Adapter (JNI layer)
-Interface (draft):
+Interface (current):
 ```c
 int udp2tcp_init(const char* remote_host, int remote_port, int local_udp_port);
 int udp2tcp_start(void);        // creates RX/TX threads
@@ -60,12 +60,13 @@ int udp2tcp_stop(void);
 void udp2tcp_get_stats(uint64_t* rx_pkts, uint64_t* tx_pkts, uint64_t* rx_bytes, uint64_t* tx_bytes);
 int udp2tcp_is_running(void);
 ```
-- [x] Header / struct scaffolding.
-- [ ] UDP receive loop (local) -> send over tcp (udp2tcp API).
-- [ ] TCP read loop -> inject into local UDP socket.
-- [ ] Error handling / reconnect (configurable intervals).
-- [ ] Atomic stats counters.
-- [ ] JNI methods + Java wrapper (replacing legacy service layer).
+- [x] Header / struct scaffolding
+- [x] Basic init/start/stop using udp2tcp C API
+- [ ] UDP receive loop (local) -> send (`A1`)
+- [ ] TCP read loop -> inject into local UDP socket (`A1`)
+- [ ] Error handling / reconnect (backoff) (`A1`)
+- [ ] Enhanced stats (poll udp2tcp_client_get_stats + deltas) (`A2`)
+- [ ] JNI methods + Java wrapper refinement (remove legacy remnants) (`A3`)
 
 ### 3.4 SSH Integration
 - [ ] Ensure libssh forwarding binds local TCP on <local_forward_port> to <udp2tcp_server_host:udp2tcp_server_port>.
@@ -85,23 +86,23 @@ Tasks:
 - [ ] Load scenario (10k packets, avg size 200B, measure latency).
 - [ ] Log analysis (grep markers udp2tcp_adapter).
 
-### 3.6 Legacy Cleanup
-- [ ] Add temporary build flag `ENABLE_LEGACY_BRIDGE=0`.
-- [ ] After successful e2e: remove `udp_listener.*`, `client_manager.*`, `udp_bridge_protocol.*`, `tcp_connection_manager.*`.
-- [ ] Move remaining reports to `docs_legacy/` (most already migrated).
-- [ ] Remove legacy test scripts (archive path in migration log).
+### 3.6 Legacy Cleanup (Completed)
+- [x] Remove all legacy sources & headers
+- [x] Eliminate feature flags / auto-detect
+- [x] Update workflows to hard-require submodule
+- [ ] Archive legacy test scripts list in LEGACY_REMOVAL_CHANGELOG (`C3`)
 
 ### 3.7 CI/CD Update
-- [ ] Update workflow: drop legacy file checks.
-- [ ] Add udp2tcp adapter build step (ndk-build / cmake).
-- [ ] Add E2E udp2tcp smoke test container.
-- [ ] Publish artifacts: apk + test log.
+- [x] Drop legacy file checks
+- [x] Enforce submodule presence
+- [ ] Add E2E udp2tcp smoke test container (`CI2`)
+- [ ] Publish udp2tcp test log artifact (`CI3`)
 
 ### 3.8 Documentation (Final Round)
-- [ ] Update QUICKSTART (replace custom protocol section).
-- [ ] Add "udp2tcp vs Legacy" comparison (expanded table, README version is short).
-- [ ] FAQ: questions on removal of ping/pong / client ids.
-- [ ] Archive: list removed files + last commit hash.
+- [ ] Update QUICKSTART (udp2tcp steps) (`D1`)
+- [ ] Expanded comparison table (`D2`)
+- [ ] FAQ (ping/pong removal, stats differences) (`D3`)
+- [ ] LEGACY_REMOVAL_CHANGELOG with deleted files + commit hash (`D4`)
 
 ### 3.9 Release Criteria (Migration)
 All checkboxes must be ticked:
@@ -117,22 +118,25 @@ All checkboxes must be ticked:
 
 | Category | Task | ID | Status |
 |----------|------|----|--------|
-| Source Import | Import udp2tcp into third_party | S1 | ☐ |
-| Build | Android.mk/CMake integration | B1 | ☐ |
-| Adapter | TX/RX loop implementation | A1 | ☐ |
-| Adapter | Statistics (atomic counters) | A2 | ☐ |
-| Adapter | JNI methods / Java wrapper | A3 | ☐ |
+| Source Import | Import udp2tcp into third_party | S1 | ☑ |
+| Build | CMake integration (mandatory) | B1 | ☑ |
+| Adapter | TX/RX loop implementation | A1 | ◐ |
+| Adapter | Enhanced statistics | A2 | ◐ |
+| Adapter | JNI methods / Java wrapper cleanup | A3 | ☐ |
 | SSH | Forward binding & teardown | F1 | ☐ |
-| Testing | test_udp2tcp_basic.sh | T1 | ☐ |
+| Testing | test_udp2tcp_basic.sh (apk symbol check) | T1 | ◐ |
 | Testing | E2E integration in run_full_e2e_test.sh | T2 | ☐ |
 | Testing | Load test 10k packets | T3 | ☐ |
-| Cleanup | Legacy disable flag | C1 | ☐ |
-| Cleanup | Remove legacy files | C2 | ☐ |
-| CI/CD | Workflow udp2tcp steps | CI1 | ☐ |
+| Cleanup | Legacy removal (code) | C2 | ☑ |
+| Cleanup | Legacy changelog archive | C3 | ☐ |
+| CI/CD | Enforce submodule & build | CI1 | ☑ |
+| CI/CD | E2E smoke test job | CI2 | ☐ |
+| CI/CD | Test log artifact | CI3 | ☐ |
 | Docs | QUICKSTART udp2tcp update | D1 | ☐ |
 | Docs | FAQ / Comparison table | D2 | ☐ |
+| Docs | Legacy removal changelog | D4 | ☐ |
 | Release | p95 latency verification | R1 | ☐ |
-| Release | No legacy references | R2 | ☐ |
+| Release | No legacy references (grep) | R2 | ☑ |
 
 Legend: ☐ not started, ◐ in progress, ☑ done.
 
@@ -168,7 +172,7 @@ Legend: ☐ not started, ◐ in progress, ☑ done.
 1. Import `udp2tcp` code (S1).
 2. Build adapter for one ABI (arm64-v8a) — smoke build (B1).
 3. Implement RX/TX loops (A1) + counters (A2).
-4. Minimal `test_udp2tcp_basic.sh` (T1).
+4. Minimal `test_udp2tcp_basic.sh` (T1) — extend to verify symbol presence & basic client start.
 5. Manual e2e via SSH port forward (pre-automation).
 
 After validation — parallelize CI (CI1) + cleanup (C1).

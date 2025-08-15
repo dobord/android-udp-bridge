@@ -30,12 +30,6 @@ static int g_dst_port = 0;                // remote destination port (default sa
 static std::atomic<int> g_running{0};     // running state flag
 static udp2tcp_client* g_client_handle = nullptr; // C API client handle
 
-// Simple statistics (not yet aggregated from internal library metrics)
-static std::atomic<uint64_t> g_rx_packets{0};
-static std::atomic<uint64_t> g_tx_packets{0};
-static std::atomic<uint64_t> g_rx_bytes{0};
-static std::atomic<uint64_t> g_tx_bytes{0};
-
 // Logging callback from udp2tcp
 static void udp2tcp_log_cb(int level, const char* message, void* /*user*/) {
     if(!message) return;
@@ -119,7 +113,7 @@ int udp2tcp_stop(void)
 {
     if (!g_running.load()) return 0;
     if (g_client_handle) {
-        udp2tcp_client_stop(g_client_handle);
+        udp2tcp_client_stop(g_client_handle); // triggers joinable state
     }
     return 0; // join is performed in cleanup
 }
@@ -137,14 +131,6 @@ void udp2tcp_cleanup(void)
         g_client_handle = nullptr;
     }
     g_running.store(0);
-}
-
-void udp2tcp_get_stats(uint64_t* rx_packets, uint64_t* tx_packets, uint64_t* rx_bytes, uint64_t* tx_bytes)
-{
-    if (rx_packets) *rx_packets = g_rx_packets.load();
-    if (tx_packets) *tx_packets = g_tx_packets.load();
-    if (rx_bytes) *rx_bytes = g_rx_bytes.load();
-    if (tx_bytes) *tx_bytes = g_tx_bytes.load();
 }
 
 int udp2tcp_get_library_stats(uint64_t* tx_frames, uint64_t* rx_frames,

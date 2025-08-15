@@ -27,10 +27,7 @@ int udp2tcp_stop(void);
 // Cleanup resources
 void udp2tcp_cleanup(void);
 
-// Statistics
-void udp2tcp_get_stats(uint64_t* rx_packets, uint64_t* tx_packets, uint64_t* rx_bytes, uint64_t* tx_bytes);
-
-// Retrieve detailed library statistics (if supported by the C API)
+// Retrieve library statistics (polled from Java layer)
 int udp2tcp_get_library_stats(uint64_t* tx_frames, uint64_t* rx_frames,
 							  uint64_t* tx_bytes, uint64_t* rx_bytes);
 
