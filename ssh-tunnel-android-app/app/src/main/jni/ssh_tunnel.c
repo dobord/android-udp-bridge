@@ -19,6 +19,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/select.h>
+#include <time.h>
 
 // udp2tcp integration only (legacy bridge removed)
 #include "udp2tcp_client_adapter.h"
@@ -250,8 +251,47 @@ static int  g_bridge_local_tcp_port = 0;     // local TCP listen port (127.0.0.1
 
 // Global variable to track port forwarding thread
 static pthread_t port_forward_thread = 0;
-static int port_forward_running = 0;
+static volatile int port_forward_running = 0; // volatile to ensure visibility across threads
 static int g_listen_sock = -1; // listening socket to allow external close during shutdown
+
+// Port forward thread state machine for debugging disconnect hangs
+enum port_forward_state_e {
+    PF_STATE_NONE = 0,
+    PF_STATE_STARTING,
+    PF_STATE_LISTEN_READY,
+    PF_STATE_WAITING_ACCEPT,
+    PF_STATE_CLIENT_ACCEPTED,
+    PF_STATE_FORWARD_LOOP,
+    PF_STATE_SHUTTING_DOWN,
+    PF_STATE_EXIT
+};
+static volatile enum port_forward_state_e g_pf_state = PF_STATE_NONE;
+static volatile uint64_t g_pf_last_state_change_mono_ns = 0;
+
+static uint64_t monotonic_ns() {
+    struct timespec ts; clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (uint64_t)ts.tv_sec * 1000000000ull + (uint64_t)ts.tv_nsec;
+}
+
+static const char* pf_state_str(enum port_forward_state_e st) {
+    switch (st) {
+        case PF_STATE_NONE: return "NONE";
+        case PF_STATE_STARTING: return "STARTING";
+        case PF_STATE_LISTEN_READY: return "LISTEN_READY";
+        case PF_STATE_WAITING_ACCEPT: return "WAITING_ACCEPT";
+        case PF_STATE_CLIENT_ACCEPTED: return "CLIENT_ACCEPTED";
+        case PF_STATE_FORWARD_LOOP: return "FORWARD_LOOP";
+        case PF_STATE_SHUTTING_DOWN: return "SHUTTING_DOWN";
+        case PF_STATE_EXIT: return "EXIT";
+        default: return "?";
+    }
+}
+
+static void pf_set_state(enum port_forward_state_e st) {
+    g_pf_state = st;
+    g_pf_last_state_change_mono_ns = monotonic_ns();
+    LOGI("PortForwardState -> %s", pf_state_str(st));
+}
 
 // Forward buffer (simple dynamic heap buffer for partial writes)
 struct forward_buffer { char *data; size_t size; size_t off; };
@@ -282,7 +322,7 @@ static int fb_append(struct forward_buffer *fb, const char *src, size_t len, siz
 }
 
 // Flush buffer to SSH channel (non-blocking); connection_active becomes 0 on fatal error
-static void fb_flush_to_ssh(struct forward_buffer *fb, ssh_channel channel, int *connection_active, int *running) {
+static void fb_flush_to_ssh(struct forward_buffer *fb, ssh_channel channel, int *connection_active, volatile int *running) {
     while (*running && *connection_active && fb->off < fb->size) {
         int w = ssh_channel_write(channel, fb->data + fb->off, (uint32_t)(fb->size - fb->off));
         if (w == SSH_AGAIN) {
@@ -303,7 +343,7 @@ static void fb_flush_to_ssh(struct forward_buffer *fb, ssh_channel channel, int 
 }
 
 // Flush buffer to client socket; connection_active becomes 0 on fatal error/close
-static void fb_flush_to_client(struct forward_buffer *fb, int client_sock, int *connection_active, int *running) {
+static void fb_flush_to_client(struct forward_buffer *fb, int client_sock, int *connection_active, volatile int *running) {
     while (*running && *connection_active && fb->off < fb->size) {
         ssize_t s = send(client_sock, fb->data + fb->off, fb->size - fb->off, 0);
         if (s < 0) {
@@ -328,6 +368,7 @@ void* tcp_port_forward_thread(void* arg) {
     (void)arg; // Suppress unused parameter warning
     
     LOGI("TCP port forwarding thread started");
+    pf_set_state(PF_STATE_STARTING);
     
     int listen_port = 0;
     const char* remote_host = "127.0.0.1";
@@ -384,10 +425,11 @@ void* tcp_port_forward_thread(void* arg) {
     }
     
     LOGI("TCP port forwarding listening on 127.0.0.1:%d", listen_port);
-    
+    pf_set_state(PF_STATE_LISTEN_READY);
     port_forward_running = 1;
     
     while (port_forward_running) {
+        pf_set_state(PF_STATE_WAITING_ACCEPT);
         struct sockaddr_in client_addr;
         socklen_t client_len = sizeof(client_addr);
         
@@ -400,6 +442,7 @@ void* tcp_port_forward_thread(void* arg) {
         }
         
         LOGI("Accepted TCP connection for forwarding to remote %s:%d", remote_host, remote_port);
+        pf_set_state(PF_STATE_CLIENT_ACCEPTED);
         
         // Create SSH channel for forwarding
         pthread_mutex_lock(&session_mutex);
@@ -433,6 +476,7 @@ void* tcp_port_forward_thread(void* arg) {
                     const size_t MAX_BUFFER_CAP = 256*1024;  // 256 KiB cap per direction
                     
                     while (port_forward_running && connection_active) {
+                        if (g_pf_state != PF_STATE_FORWARD_LOOP) pf_set_state(PF_STATE_FORWARD_LOOP);
                         FD_ZERO(&read_fds);
                         FD_SET(client_sock, &read_fds);
                         if (session_fd >= 0) {
@@ -540,6 +584,7 @@ void* tcp_port_forward_thread(void* arg) {
     
     if (listen_sock >= 0) close(listen_sock);
     if (g_listen_sock == listen_sock) g_listen_sock = -1;
+    pf_set_state(PF_STATE_EXIT);
     LOGI("TCP port forwarding thread exiting");
     return NULL;
 }
@@ -565,15 +610,45 @@ int setup_tcp_port_forwarding() {
 // Stop TCP port forwarding
 void stop_tcp_port_forwarding() {
     if (port_forward_thread != 0) {
+        LOGI("stop_tcp_port_forwarding: initiating shutdown (state=%s)", pf_state_str(g_pf_state));
         port_forward_running = 0;
-        // Proactively close listening socket to wake accept()
+        pf_set_state(PF_STATE_SHUTTING_DOWN);
+        // Close listening socket to wake accept()/select
         if (g_listen_sock >= 0) {
+            LOGI("stop_tcp_port_forwarding: closing listen socket %d", g_listen_sock);
             shutdown(g_listen_sock, SHUT_RDWR);
             close(g_listen_sock);
             g_listen_sock = -1;
         }
-        pthread_join(port_forward_thread, NULL);
+        // Attempt timed join loop for diagnostic logging
+        const uint64_t start_ns = monotonic_ns();
+        int joined = 0;
+#if defined(__ANDROID__) || defined(__linux__)
+        // Try non-portable tryjoin to avoid hard hang (best effort)
+        for (int attempt = 0; attempt < 50; ++attempt) { // ~5s max
+#ifdef __GLIBC__
+            int tj = pthread_tryjoin_np(port_forward_thread, NULL);
+#else
+            int tj = -1; // fallback path if tryjoin not available
+#endif
+            if (tj == 0) { joined = 1; break; }
+            struct timespec slp = {0, 100 * 1000 * 1000}; // 100ms
+            nanosleep(&slp, NULL);
+            if ((attempt % 10) == 0) {
+                uint64_t elapsed_ms = (monotonic_ns() - start_ns)/1000000ull;
+                LOGI("stop_tcp_port_forwarding: waiting join... elapsed=%llums state=%s", (unsigned long long)elapsed_ms, pf_state_str(g_pf_state));
+            }
+            if (g_pf_state == PF_STATE_EXIT) { break; }
+        }
+#endif
+        if (!joined) {
+            // Fallback blocking join (should be quick now or we log after timeout)
+            LOGI("stop_tcp_port_forwarding: performing final blocking join (state=%s)", pf_state_str(g_pf_state));
+            pthread_join(port_forward_thread, NULL);
+        }
         port_forward_thread = 0;
+        uint64_t total_ms = (monotonic_ns() - start_ns)/1000000ull;
+    LOGI("stop_tcp_port_forwarding: completed in %llums final_state=%s", (unsigned long long)total_ms, pf_state_str(g_pf_state));
         LOGI("TCP port forwarding stopped");
     }
 }
@@ -823,6 +898,7 @@ JNIEXPORT void JNICALL Java_com_example_sshtunnel_SshTunnelService_disconnect(JN
     (void)env; (void)obj; // Suppress unused parameter warnings
     
     LOGI("Disconnecting SSH session");
+    uint64_t t0 = monotonic_ns();
     
     // Stop TCP port forwarding first
     stop_tcp_port_forwarding();
@@ -840,6 +916,8 @@ JNIEXPORT void JNICALL Java_com_example_sshtunnel_SshTunnelService_disconnect(JN
     }
     
     pthread_mutex_unlock(&session_mutex);
+    uint64_t elapsed_ms = (monotonic_ns() - t0)/1000000ull;
+    LOGI("Disconnect sequence finished in %llums", (unsigned long long)elapsed_ms);
 }
 
 // Legacy forwardPort removed
@@ -854,6 +932,26 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_isConnect
     pthread_mutex_unlock(&session_mutex);
     
     return connected;
+}
+
+// Debug dump JNI: returns internal native state snapshot (for diagnosing disconnect hangs)
+JNIEXPORT jstring JNICALL Java_com_example_sshtunnel_SshTunnelService_nativeDebugDump(JNIEnv *env, jobject obj) {
+    (void)obj;
+    pthread_mutex_lock(&session_mutex);
+    int session_present = (session != NULL);
+    pthread_mutex_unlock(&session_mutex);
+    uint64_t now_ns = monotonic_ns();
+    uint64_t state_age_ms = (g_pf_last_state_change_mono_ns > 0) ? (now_ns - g_pf_last_state_change_mono_ns)/1000000ull : 0;
+    char buf[512];
+    snprintf(buf, sizeof(buf),
+             "native_debug:\n session_present=%s\n port_forward_thread=%s\n port_forward_running=%d\n pf_state=%s age_ms=%llu\n listen_sock=%d\n",
+             session_present ? "true" : "false",
+             port_forward_thread != 0 ? "true" : "false",
+             port_forward_running,
+             pf_state_str(g_pf_state),
+             (unsigned long long)state_age_ms,
+             g_listen_sock);
+    return (*env)->NewStringUTF(env, buf);
 }
 
 // Legacy getUdpBridgeStats removed

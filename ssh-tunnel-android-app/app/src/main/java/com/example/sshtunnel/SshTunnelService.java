@@ -33,6 +33,8 @@ public class SshTunnelService extends Service {
     public native int nativeTlsSelfTest();
     // Hint for native TCP port forward to match udp2tcp remote TCP server
     public native void nativeSetForwardingHint(String remoteHost, int remotePort, int localPort);
+    // Debug dump of native internal state
+    public native String nativeDebugDump();
 
     public class LocalBinder extends Binder {
         SshTunnelService getService() {
@@ -171,6 +173,12 @@ public class SshTunnelService extends Service {
 
     public void disconnectFromServer() {
         Log.d(TAG, "Disconnecting from server");
+        try {
+            String dbg = nativeDebugDump();
+            if (dbg != null) Log.d(TAG, "Pre-disconnect native debug:\n" + dbg);
+        } catch (Throwable t) {
+            Log.w(TAG, "nativeDebugDump failed (pre)", t);
+        }
         if (isUdp2TcpRunning()) {
             Log.d(TAG, "Stopping udp2tcp before SSH disconnect");
             stopUdp2Tcp();
@@ -178,6 +186,12 @@ public class SshTunnelService extends Service {
         stopUdp2TcpStatsPolling();
         disconnect();
         isConnected = false;
+        try {
+            String dbg2 = nativeDebugDump();
+            if (dbg2 != null) Log.d(TAG, "Post-disconnect native debug:\n" + dbg2);
+        } catch (Throwable t) {
+            Log.w(TAG, "nativeDebugDump failed (post)", t);
+        }
     }
 
     public boolean isConnected() {
