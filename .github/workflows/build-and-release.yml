@@ -24,6 +24,18 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Verify udp2tcp submodule (dependencies job)
+        run: |
+          if [ -d "third_party/udp2tcp/.git" ]; then
+            echo "✅ udp2tcp submodule present (third_party/udp2tcp)"
+            git -C third_party/udp2tcp log --oneline -1 || true
+          else
+            echo "⚠️  udp2tcp submodule NOT present; legacy fallback build will be used later."
+          fi
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -188,6 +200,18 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Verify udp2tcp submodule (android build job)
+        run: |
+          if [ -d "third_party/udp2tcp/.git" ]; then
+            echo "✅ udp2tcp submodule present (third_party/udp2tcp)"
+            git -C third_party/udp2tcp log --oneline -1 | head -1 || true
+          else
+            echo "⚠️  udp2tcp submodule NOT present; CMake will auto-disable USE_UDP2TCP."
+          fi
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4

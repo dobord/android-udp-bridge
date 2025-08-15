@@ -13,6 +13,14 @@ if (EXISTS ${_AUTO_UDP2TCP_DIR}/CMakeLists.txt AND NOT USE_UDP2TCP)
     set(USE_UDP2TCP ON CACHE BOOL "Enable new udp2tcp adapter (excludes legacy udp_listener / protocol sources)" FORCE)
 endif()
 
+# Safety guard: if enabled but headers are missing (e.g. submodule not fetched in CI), disable to avoid build break.
+set(_UDP2TCP_HEADER_PATH ${_AUTO_UDP2TCP_DIR}/include/udp2tcp/c_api.h)
+if (USE_UDP2TCP AND NOT EXISTS ${_UDP2TCP_HEADER_PATH})
+    message(WARNING "USE_UDP2TCP=ON but header ${_UDP2TCP_HEADER_PATH} not found. Disabling USE_UDP2TCP.\n"
+                    "Fetch submodule with: git submodule update --init --recursive")
+    set(USE_UDP2TCP OFF CACHE BOOL "Enable new udp2tcp adapter (excludes legacy udp_listener / protocol sources)" FORCE)
+endif()
+
 # Configure search path modes for libraries and includes (Android cross-compilation friendly)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
