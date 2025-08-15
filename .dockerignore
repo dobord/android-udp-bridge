@@ -1,0 +1,25 @@
+# Speed up docker build context by excluding large/generated artifacts
+
+# Top-level build outputs
+build/
+
+# Any nested build directories (cmake/ninja outputs)
+**/build/
+
+# Test results and logs (runtime artifacts)
+test_results/
+logs/
+**/logs/
+
+# Editor / IDE caches (optional safety)
+.vscode/
+.idea/
+
+# Git metadata not needed in image
+.git/
+.gitmodules
+
+# Temporary files
+*.swp
+*.tmp
+*.log

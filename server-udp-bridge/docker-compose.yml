@@ -1,30 +1,26 @@
 version: '3.8'
 
 services:
-  udp-bridge-server:
-    build: .
-    container_name: udp-bridge-server
+  udp2tcp-server:
+    build:
+      context: ..    # project root (one level up from this compose file)
+      dockerfile: server-udp-bridge/Dockerfile
+    container_name: udp2tcp-server
     ports:
-      - "2222:22"           # SSH port
-      - "8080:8080"         # Bridge TCP port
-      - "5060:5060/udp"     # UDP forwarding port (example for SIP)
+      - "2222:22"            # SSH access
+      - "47000:47000"        # tcp_listen.port from udp2tcp_srv.yaml
+      - "9108:9108"          # metrics (if enabled)
     environment:
-      - TARGET_UDP_HOST=${TARGET_UDP_HOST:-127.0.0.1}
-      - TARGET_UDP_PORT=${TARGET_UDP_PORT:-5060}
-      - BRIDGE_TCP_PORT=8080
-      - CLIENT_TIMEOUT=300
-      - MAX_CLIENTS=1000
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-      - SSH_USER=sshuser
-      - SSH_PASSWORD=sshpassword
+      - LOG_LEVEL=${LOG_LEVEL:-info}
     volumes:
       - ./logs:/opt/udp-bridge/logs
       - ./ssh_keys:/etc/ssh/keys:ro
+      - ../third_party/udp2tcp/configs/udp2tcp_srv.yaml:/opt/udp-bridge/udp2tcp_srv.yaml:ro
     restart: unless-stopped
     networks:
       - udp-bridge-net
     healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "22"]
+      test: ["CMD", "nc", "-z", "localhost", "47000"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -35,4 +31,4 @@ networks:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.20.0.0/16
+        - subnet: 172.30.0.0/16

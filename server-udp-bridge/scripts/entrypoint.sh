@@ -1,10 +1,8 @@
 #!/bin/bash
 set -e
 
-echo "Starting UDP Bridge Server..."
-echo "Target UDP Host: ${TARGET_UDP_HOST:-127.0.0.1}"
-echo "Target UDP Port: ${TARGET_UDP_PORT:-5060}"
-echo "Bridge TCP Port: ${BRIDGE_TCP_PORT:-8080}"
+echo "Starting udp2tcp Server (C++ coroutine version)..."
+echo "Config: /opt/udp-bridge/udp2tcp_srv.yaml (mounted)"
 
 # Setup SSH host keys if they don't exist
 if [ ! -f /etc/ssh/ssh_host_rsa_key ]; then
@@ -37,14 +35,14 @@ fi
 mkdir -p /opt/udp-bridge/logs
 chown root:root /opt/udp-bridge/logs
 
-# Test UDP bridge binary
-if [ ! -f /opt/udp-bridge/udp-bridge-server ]; then
-    echo "ERROR: UDP bridge server binary not found!"
+if [ ! -f /usr/local/bin/udp2tcp_srv ]; then
+    echo "ERROR: udp2tcp_srv binary not found!"
+    ls -l /usr/local/bin
     exit 1
 fi
 
-echo "Testing UDP bridge server..."
-/opt/udp-bridge/udp-bridge-server --version || echo "Version check failed (expected for initial build)"
+echo "Binary version (if --help prints version):"
+/usr/local/bin/udp2tcp_srv --help | head -n 3 || true
 
 echo "Starting services via supervisor..."
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
