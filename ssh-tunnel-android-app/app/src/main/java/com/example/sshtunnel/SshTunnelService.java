@@ -26,6 +26,7 @@ public class SshTunnelService extends Service {
     public native void stopUdp2Tcp();
     public native String getUdp2TcpStats();
     public native boolean isUdp2TcpRunning();
+    public native int nativeTlsSelfTest();
     
     public class LocalBinder extends Binder {
         SshTunnelService getService() {

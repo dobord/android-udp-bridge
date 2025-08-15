@@ -989,6 +989,8 @@ JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SshTunnelService_initTcpManage
 #endif // !USE_UDP2TCP
 
 // Connect TCP manager to bridge server
+// TCP bridge подключение (legacy only)
+#ifndef USE_UDP2TCP
 JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SshTunnelService_connectTcpBridge(
     JNIEnv *env, jobject obj, jstring server_host, jint server_port) {
     
@@ -1170,6 +1172,7 @@ JNIEXPORT void JNICALL Java_com_example_sshtunnel_SshTunnelService_cleanupTcpMan
 }
 
 // ================= udp2tcp adapter JNI (new) =================
+#endif // !USE_UDP2TCP
 
 // Start udp2tcp (initialize + start thread)
 JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SshTunnelService_startUdp2Tcp(
@@ -1239,5 +1242,32 @@ JNIEXPORT jstring JNICALL Java_com_example_sshtunnel_SshTunnelService_getUdp2Tcp
 JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_isUdp2TcpRunning(JNIEnv *env, jobject obj) {
     (void)env; (void)obj;
     return udp2tcp_is_running() ? JNI_TRUE : JNI_FALSE;
+}
+
+// Runtime TLS/OpenSSL self-test to verify that static OpenSSL is correctly linked.
+// Returns >0 (length of version string) on success, 0 on failure or if OpenSSL not in use.
+JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SshTunnelService_nativeTlsSelfTest(JNIEnv *env, jobject obj) {
+    (void)env; (void)obj;
+#ifdef USE_OPENSSL
+    const char *ver = OpenSSL_version(OPENSSL_VERSION);
+    if (!ver) {
+        LOGE("nativeTlsSelfTest: OpenSSL_version returned NULL");
+        return 0;
+    }
+    if (strncmp(ver, "OpenSSL", 7) != 0) {
+        LOGE("nativeTlsSelfTest: Unexpected version string: %s", ver);
+        return 0;
+    }
+    LOGI("nativeTlsSelfTest: OpenSSL version detected: %s", ver);
+    // Touch a couple of symbols to ensure they are linked in (no-op usage)
+    unsigned long vnum = OpenSSL_version_num();
+    if (vnum == 0) {
+        LOGW("nativeTlsSelfTest: OpenSSL_version_num returned 0");
+    }
+    return (jint)strlen(ver);
+#else
+    LOGW("nativeTlsSelfTest: OpenSSL not enabled (USE_OPENSSL not defined)");
+    return 0;
+#endif
 }
 
