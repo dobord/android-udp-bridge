@@ -42,3 +42,8 @@ void ssh_channel_free(ssh_channel channel);
 int ssh_options_set(ssh_session session, ssh_options_e type, const void* value);
 void ssh_set_blocking(ssh_session session, int blocking);
 void ssh_channel_set_blocking(ssh_channel channel, int blocking);
+
+// Additional APIs referenced in ssh_tunnel.c but not needed for real I/O in mock
+int ssh_get_fd(ssh_session session); // Returns a pseudo fd (mocked)
+int ssh_channel_is_eof(ssh_channel channel); // Always 0 (not EOF) in mock
+int ssh_channel_read_nonblocking(ssh_channel channel, void* dest, unsigned int count, int is_stderr);
