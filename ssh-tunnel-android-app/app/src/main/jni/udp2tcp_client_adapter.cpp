@@ -48,6 +48,9 @@ static void udp2tcp_log_cb(int level, const char* message, void* /*user*/) {
     }
 }
 
+// Provide C linkage for functions used by C file ssh_tunnel.c
+extern "C" {
+
 int udp2tcp_init(const char* remote_host, int remote_port, int local_udp_port)
 {
     if (!remote_host) return -1;
@@ -158,3 +161,5 @@ int udp2tcp_get_library_stats(uint64_t* tx_frames, uint64_t* rx_frames,
 }
 
 int udp2tcp_is_running(void) { return g_running.load(); }
+
+} // extern "C"
