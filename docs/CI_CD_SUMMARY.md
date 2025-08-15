@@ -1,96 +1,96 @@
-# CI/CD Setup Summary (полный текст)
+# CI/CD Setup Summary (full text)
 
-## ✅ Что было создано
+## ✅ What was created
 
 ### GitHub Actions Workflows
 
 1. **🏗️ Build and Release** (`build-and-release.yml`)
-	- Полная сборка для всех архитектур (ARM64, ARMv7, x86, x86_64)
-	- Автоматическое тестирование
-	- Создание релизов при тегах
-	- Поддержка как OpenSSL, так и mbedTLS
+	- Full build for all architectures (ARM64, ARMv7, x86, x86_64)
+	- Automated testing
+	- Release creation on tags
+	- Supports both OpenSSL and mbedTLS
 
 2. **🔍 Pull Request Check** (`pr-check.yml`)
-	- Быстрая проверка кода при PR
-	- Линтинг и статический анализ
-	- Сборка с mock библиотеками для ускорения
-	- Автоматические комментарии с результатами
+	- Fast code validation on PR
+	- Linting & static analysis
+	- Build with mock libraries for speed
+	- Automatic comments with results
 
 3. **🌙 Nightly Build** (`nightly.yml`)
-	- Ежедневные сборки в 2:00 UTC
-	- Умная проверка изменений
-	- Автоматическая очистка старых артефактов
-	- Создание nightly релизов
+	- Daily runs at 02:00 UTC
+	- Smart change detection
+	- Automatic cleanup of stale artifacts
+	- Nightly release creation
 
 4. **📦 Release on Tag** (`release.yml`)
-	- Автоматические релизы при создании тегов v*.*.*
-	- Валидация формата тегов
-	- Обновление версий в build.gradle
-	- Подписание APK и генерация чексумм
+	- Automatic releases on v*.*.* tags
+	- Tag format validation
+	- Version bump in build.gradle
+	- APK signing & checksum generation
 
-### Дополнительные файлы
+### Additional Files
 
-5. **📚 Документация** (`.github/README.md`)
-	- Полное руководство по CI/CD
-	- Инструкции по использованию
-	- Устранение неполадок
+5. **📚 Documentation** (`.github/README.md`)
+	- Full CI/CD guide
+	- Usage instructions
+	- Troubleshooting
 
-6. **🧪 Тестирование** (`test-workflows.sh`)
-	- Локальное тестирование workflows
-	- Валидация YAML файлов
-	- Настройка тестового окружения
+6. **🧪 Testing** (`test-workflows.sh`)
+	- Local workflow testing
+	- YAML validation
+	- Test environment setup
 
-## 🚀 Как использовать
+## 🚀 How to use
 
-### Создание релиза
+### Create a release
 ```bash
 git tag -a v1.0.0 -m "Release version 1.0.0"
 git push origin v1.0.0
 ```
 
-### Автоматические сборки
-- **Push в main/openssl** → автоматическая сборка
-- **Создание PR** → проверка кода и быстрая сборка
-- **Каждую ночь** → полная сборка если были изменения
+### Automatic builds
+- **Push to main/openssl** → automatic build
+- **PR creation** → code check & fast build
+- **Nightly** → full build if changes
 
-### Локальное тестирование
+### Local testing
 ```bash
-./test-workflows.sh validate    # Проверка синтаксиса
-./test-workflows.sh setup       # Настройка окружения
+./test-workflows.sh validate    # Syntax validation
+./test-workflows.sh setup       # Environment setup
 ```
 
-## 📋 Возможности
+## 📋 Capabilities
 
-### ✅ Реализовано
-- [x] Автоматическая сборка зависимостей (OpenSSL, libssh)
-- [x] Поддержка множественных архитектур
-- [x] Автоматическое тестирование
-- [x] Создание релизов с changelog
-- [x] Подписание APK файлов
+### ✅ Implemented
+- [x] Automated dependency build (OpenSSL, libssh)
+- [x] Multi-architecture support
+- [x] Automated testing
+- [x] Release creation with changelog
+- [x] APK signing
 - [x] Nightly builds
-- [x] PR проверки
-- [x] Кэширование для ускорения сборки
-- [x] Автоматическая очистка артефактов
-- [x] Генерация SHA256 чексумм
-- [x] Документация
+- [x] PR checks
+- [x] Caching for build speed
+- [x] Automatic artifact cleanup
+- [x] SHA256 checksum generation
+- [x] Documentation
 
-### 🔧 Рекомендуется добавить (опционально)
-- [ ] Настоящий keystore в GitHub Secrets
-- [ ] Slack/Discord уведомления
-- [ ] Автоматическое тестирование на эмуляторах
-- [ ] SonarQube интеграция
-- [ ] Деплой в Google Play
-- [ ] Matrix builds для разных версий Android
+### 🔧 Recommended additions (optional)
+- [ ] Real production keystore in GitHub Secrets
+- [ ] Slack/Discord notifications
+- [ ] Automated emulator tests
+- [ ] SonarQube integration
+- [ ] Google Play deploy
+- [ ] Matrix builds for Android API levels
 
-## 🎉 Результат
+## 🎉 Result
 
-Теперь ваш проект имеет профессиональную CI/CD систему:
+The project now has a professional CI/CD system:
 
-1. **Автоматизация** - все сборки и релизы автоматические
-2. **Качество** - автоматические проверки кода
-3. **Безопасность** - подписанные APK с чексуммами
-4. **Удобство** - простое создание релизов через теги
-5. **Мониторинг** - полная видимость процесса сборки
-6. **Документация** - подробные инструкции
+1. **Automation** - builds & releases fully automated
+2. **Quality** - automatic code checks
+3. **Security** - signed APK with checksums
+4. **Convenience** - easy tag-based releases
+5. **Monitoring** - full build visibility
+6. **Documentation** - detailed instructions
 
-Ваше Android приложение готово к профессиональной разработке! 🚀
+Your Android app is production-ready! 🚀
