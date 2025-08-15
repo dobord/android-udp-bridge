@@ -1,30 +1,30 @@
-# SSH Tunnel Android App - Полная поддержка SSH (полный текст)
+# SSH Tunnel Android App - Full SSH Support (complete text)
 
-## ✅ Успешно реализовано
+## ✅ Implemented
 
-### 🔧 Архитектурные компоненты:
+### 🔧 Architectural Components:
 
-1. **Нативная SSH библиотека**
-	- Расширенная реализация SSH протокола для Android
-	- Поддержка реальных TCP соединений вместо простой заглушки
-	- Поддержка всех архитектур: arm64-v8a, armeabi-v7a, x86, x86_64
-	- Размер библиотеки: ~15-20KB на архитектуру (увеличен для дополнительной функциональности)
+1. **Native SSH library**
+	- Extended SSH protocol surface for Android
+	- Real TCP connections instead of a simple stub
+	- All architectures supported: arm64-v8a, armeabi-v7a, x86, x86_64
+	- Library size: ~15–20 KB per ABI (larger due to added features)
 
-2. **JNI интерфейс**
-	- Полноценные SSH функции через JNI
-	- Безопасная передача паролей и данных
-	- Управление жизненным циклом SSH сессий
+2. **JNI interface**
+	- Full SSH functions exposed via JNI
+	- Secure password & data passing
+	- Session lifecycle management
 
-3. **UDP туннелирование**
-	- Реальное туннелирование UDP трафика через SSH
-	- Многопоточная обработка соединений
-	- Автоматическое управление каналами
+3. **UDP tunneling**
+	- Real tunneling of UDP traffic over SSH
+	- Multi‑threaded connection handling
+	- Automatic channel management
 
-### 🚀 Функциональность:
+### 🚀 Functionality:
 
-#### SSH соединение:
+#### SSH connection:
 ```java
-// Подключение к SSH серверу
+// Connect to SSH server
 boolean connected = sshTunnelService.connectToServer(
 	 "your-server.com", 
 	 22, 
@@ -33,101 +33,101 @@ boolean connected = sshTunnelService.connectToServer(
 );
 ```
 
-#### UDP форвардинг:
+#### UDP forwarding:
 ```java
-// Создание UDP туннеля
+// Create UDP tunnel
 boolean forwarding = sshTunnelService.forwardPort(
-	 8080,           // локальный порт
-	 "localhost",    // удаленный хост
-	 3306           // удаленный порт
+	 8080,           // local port
+	 "localhost",    // remote host
+	 3306            // remote port
 );
 ```
 
-#### Отключение:
+#### Disconnect:
 ```java
-// Закрытие соединений
+// Close connections
 sshTunnelService.disconnect();
 ```
 
-### 📱 APK детали:
+### 📱 APK details:
 
-- **Размер**: 6.6MB
-- **Пакет**: com.example.sshtunnel
-- **Минимальный Android**: API 21 (Android 5.0)
-- **Целевой Android**: API 34 (Android 14)
+- **Size**: 6.6 MB
+- **Package**: com.example.sshtunnel
+- **Min Android**: API 21 (Android 5.0)
+- **Target Android**: API 34 (Android 14)
 
-### 🔍 Встроенные компоненты:
+### 🔍 Bundled components:
 
-1. **libssh_tunnel.so** - основная нативная библиотека
-2. **SSH stub библиотека** - заглушка для тестирования
-3. **Полный JNI мост** между Java и нативным кодом
-4. **Многопоточный UDP форвардинг**
+1. **libssh_tunnel.so** - main native library
+2. **SSH stub library** - test stub
+3. **Full JNI bridge** between Java and native code
+4. **Multi‑threaded UDP forwarding**
 
-### 🛠️ Технические особенности:
+### 🛠️ Technical characteristics:
 
-#### Безопасность:
-- Шифрование SSH соединений
-- Безопасная передача паролей через JNI
-- Изоляция нативного кода
+#### Security:
+- SSH session encryption
+- Secure password passing via JNI
+- Isolation of native code
 
-#### Производительность:
-- Асинхронная обработка UDP пакетов
-- Минимальные задержки туннелирования
-- Эффективное использование памяти
+#### Performance:
+- Asynchronous UDP packet handling
+- Minimal tunneling latency
+- Efficient memory usage
 
-#### Надежность:
-- Автоматическое переподключение при обрывах
-- Обработка ошибок соединения
-- Логирование для отладки
+#### Reliability:
+- Automatic reconnect on drop
+- Connection error handling
+- Logging for troubleshooting
 
-### 📋 Логирование:
+### 📋 Logging:
 
-Приложение записывает подробные логи с тегом "SSHTunnel":
+The app writes detailed logs with tag "SSHTunnel":
 
 ```bash
-# Просмотр логов SSH туннеля
+# View SSH tunnel logs
 adb logcat | grep SSHTunnel
 
-# Просмотр логов libssh
+# View libssh logs
 adb logcat | grep LibSSH_Stub
 ```
 
-### 🧪 Тестирование:
+### 🧪 Testing:
 
-1. **Установка APK**:
+1. **Install APK**:
 	```bash
 	adb install app-debug.apk
 	```
 
-2. **Мониторинг логов**:
+2. **Monitor logs**:
 	```bash
 	adb logcat | grep -E "(SSHTunnel|LibSSH)"
 	```
 
-3. **Тестирование UDP туннеля**:
-	- Настройте SSH сервер с поддержкой туннелирования
-	- Подключитесь через приложение
-	- Отправьте UDP пакеты на локальный порт
-	- Проверьте форвардинг на удаленный сервер
+3. **Test UDP tunnel**:
+	- Configure SSH server with tunneling support
+	- Connect via the app
+	- Send UDP packets to the local port
+	- Verify forwarding to remote server
 
-### 🔄 Следующие шаги:
+### 🔄 Next steps:
 
-1. **Интеграция с расширенной SSH библиотекой**:
-	- ✅ Заменён stub на расширенную SSH библиотеку
-	- ✅ Добавлена поддержка реальных TCP соединений
-	- ✅ Улучшенная обработка ошибок и таймаутов
-	- ✅ Поддержка различных типов SSH ключей
+1. **Integration with advanced SSH library**:
+	- ✅ Stub replaced with advanced SSH library
+	- ✅ Real TCP connections added
+	- ✅ Improved error handling & timeouts
+	- ✅ Various SSH key types supported
 
-2. **Улучшения UI**:
-	- Добавить индикаторы состояния подключения
-	- Улучшить UX для настройки туннелей
-	- Добавить сохранение конфигураций
+2. **UI improvements**:
+	- Add connection state indicators
+	- Improve tunnel setup UX
+	- Add configuration persistence
 
-3. **Расширенные возможности**:
-	- TCP туннелирование
-	- Множественные туннели
-	- Автоматическое переподключение
+3. **Extended capabilities**:
+	- TCP tunneling
+	- Multiple tunnels
+	- Automatic reconnection
 
-### ✅ Готово к использованию!
+### ✅ Ready for use!
 
-Приложение полностью функционально и готово для тестирования на реальных Android устройствах. SSH туннелирование работает через нативную библиотеку с полной поддержкой UDP форвардинга.
+The application is fully functional and ready for real device testing. SSH tunneling operates via the native library with complete UDP forwarding support.

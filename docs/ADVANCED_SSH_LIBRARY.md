@@ -1,199 +1,199 @@
-#+ Перенос: ADVANCED_SSH_LIBRARY.md (полный текст)
+<!-- Migrated/translated: ADVANCED_SSH_LIBRARY.md full text -->
 
 # Advanced SSH Library for Android
 
-## Обзор
+## Overview
 
-Расширенная SSH библиотека представляет собой улучшенную версию базового SSH stub с добавлением реальной сетевой функциональности и более полной имитации SSH протокола.
+The advanced SSH library is an enhanced version of the basic SSH stub adding real networking functionality and a more complete simulation of the SSH protocol surface needed by the app.
 
-## Ключевые улучшения
+## Key Improvements
 
-### 🔗 Реальные сетевые соединения
-- **TCP подключения**: Создание настоящих TCP сокетов для соединения с серверами
-- **Таймауты**: Настраиваемые таймауты соединения и операций
-- **Управление ошибками**: Расширенная обработка сетевых ошибок
+### 🔗 Real network connections
+- **TCP connections**: Creation of real TCP sockets to connect to servers
+- **Timeouts**: Configurable connection and operation timeouts
+- **Error handling**: Extended processing of network error conditions
 
-### 🔐 Улучшенная аутентификация
-- **Поддержка ключей**: Полная поддержка различных типов SSH ключей (RSA, DSA, ECDSA, Ed25519)
-- **Определение типа ключа**: Автоматическое определение типа ключа по содержимому файла
-- **Парольные фразы**: Поддержка ключей с защитой парольной фразой
+### 🔐 Improved authentication
+- **Key support**: Full support for multiple SSH key types (RSA, DSA, ECDSA, Ed25519)
+- **Key type detection**: Automatic key type detection based on file content
+- **Passphrases**: Support for passphrase‑protected keys
 
-### 📡 Продвинутое туннелирование
-- **Реальная передача данных**: Фактическая отправка/получение данных через TCP соединения
-- **Множественные каналы**: Поддержка нескольких SSH каналов одновременно
-- **Неблокирующие операции**: Асинхронное чтение/запись данных
+### 📡 Advanced tunneling
+- **Real data transfer**: Actual send/receive of data over TCP connections
+- **Multiple channels**: Support for several SSH channels simultaneously
+- **Non‑blocking operations**: Asynchronous read/write of data
 
-## Архитектурные компоненты
+## Architectural Components
 
-### Структуры данных
+### Data structures
 
 ```c
 struct ssh_session_struct {
-	char* hostname;              // Адрес сервера
-	int port;                   // Порт сервера
-	char* username;             // Имя пользователя
-	char* password;             // Пароль
-	int connected;              // Статус соединения
-	int socket_fd;              // Файловый дескриптор TCP сокета
-	char error_msg[256];        // Сообщение об ошибке
-	int log_verbosity;          // Уровень логирования
-	int timeout;                // Таймаут соединения
-	int strict_host_key_check;  // Проверка ключей хоста
+	char* hostname;              // Server address
+	int port;                    // Server port
+	char* username;              // Username
+	char* password;              // Password
+	int connected;               // Connection status flag
+	int socket_fd;               // TCP socket file descriptor
+	char error_msg[256];         // Last error message
+	int log_verbosity;           // Logging verbosity level
+	int timeout;                 // Connection timeout (seconds)
+	int strict_host_key_check;   // Host key checking enabled flag
 };
 
 struct ssh_channel_struct {
-	ssh_session session;        // Родительская сессия
-	int active;                // Статус активности канала
-	int remote_port;           // Удалённый порт
-	char* remote_host;         // Удалённый хост
-	int local_socket;          // Локальный сокет для данных
+	ssh_session session;         // Parent session
+	int active;                  // Channel active status
+	int remote_port;             // Remote forwarded port
+	char* remote_host;           // Remote host
+	int local_socket;            // Local data socket
 };
 
 struct ssh_key_struct {
-	char* filename;            // Путь к файлу ключа
-	char* passphrase;         // Парольная фраза
-	enum ssh_keytypes_e type; // Тип ключа
-	int valid;                // Валидность ключа
-	unsigned char* key_data;  // Данные ключа
-	size_t key_length;        // Длина ключа
+	char* filename;             // Path to key file
+	char* passphrase;           // Passphrase (if protected)
+	enum ssh_keytypes_e type;   // Key type
+	int valid;                  // Validity flag
+	unsigned char* key_data;    // Raw key data
+	size_t key_length;          // Key length in bytes
 };
 ```
 
-## Реализованная функциональность
+## Implemented Functionality
 
-### Управление сессией
-- `ssh_new()` - создание новой SSH сессии
-- `ssh_connect()` - установка TCP соединения с сервером
-- `ssh_disconnect()` - закрытие соединения
-- `ssh_options_set()` - настройка параметров сессии
-- `ssh_is_connected()` - проверка статуса соединения
+### Session management
+- `ssh_new()` - create a new SSH session object
+- `ssh_connect()` - establish a TCP connection to the server
+- `ssh_disconnect()` - close the connection
+- `ssh_options_set()` - configure session parameters
+- `ssh_is_connected()` - check connection status
 
-### Аутентификация
-- `ssh_userauth_password()` - аутентификация по паролю с отправкой данных через TCP
-- `ssh_userauth_publickey_auto()` - автоматическая аутентификация по ключу
-- `ssh_userauth_publickey()` - аутентификация конкретным ключом
+### Authentication
+- `ssh_userauth_password()` - password authentication over TCP
+- `ssh_userauth_publickey_auto()` - automatic key authentication
+- `ssh_userauth_publickey()` - authentication with a specific key
 
-### Работа с ключами
-- `ssh_pki_import_privkey_file()` - загрузка ключа из файла с определением типа
-- `ssh_key_type()` - получение типа ключа
-- `ssh_key_type_to_char()` - преобразование типа ключа в строку
-- `ssh_key_free()` - освобождение памяти ключа
+### Key handling
+- `ssh_pki_import_privkey_file()` - load key from file with automatic type detection
+- `ssh_key_type()` - get key type
+- `ssh_key_type_to_char()` - convert key type to string
+- `ssh_key_free()` - release key resources
 
-### Управление каналами
-- `ssh_channel_new()` - создание нового канала
-- `ssh_channel_open_forward()` - открытие канала переадресации
-- `ssh_channel_write()` - запись данных в канал через TCP соединение
-- `ssh_channel_read()` - чтение данных из канала через TCP соединение
-- `ssh_channel_close()` - закрытие канала
+### Channel management
+- `ssh_channel_new()` - create a new channel
+- `ssh_channel_open_forward()` - open a port forwarding channel
+- `ssh_channel_write()` - write data through the channel
+- `ssh_channel_read()` - read data from the channel
+- `ssh_channel_close()` - close the channel
 
-### Дополнительные возможности
-- `sftp_new()`, `sftp_init()` - базовая поддержка SFTP
-- `ssh_version()` - информация о версии библиотеки
+### Additional capabilities
+- `sftp_new()`, `sftp_init()` - basic SFTP support (stub)
+- `ssh_version()` - library version information
 
-## Сетевое взаимодействие
+## Networking
 
-### TCP соединения
+### TCP connections
 ```c
-// Создание реального TCP сокета
+// Create a real TCP socket
 session->socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 
-// Установка таймаутов
+// Configure receive timeout
 struct timeval timeout;
 timeout.tv_sec = session->timeout;
 setsockopt(session->socket_fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 
-// Подключение к серверу
+// Connect to server
 connect(session->socket_fd, (struct sockaddr*)&server_addr, sizeof(server_addr));
 ```
 
-### Передача данных
+### Data transfer
 ```c
-// Отправка аутентификационных данных
+// Send authentication data
 char auth_data[256];
 snprintf(auth_data, sizeof(auth_data), "AUTH:%s:%s", username, password);
 send(session->socket_fd, auth_data, strlen(auth_data), 0);
 
-// Получение ответов
+// Receive responses (non‑blocking)
 recv(session->socket_fd, buffer, buffer_size, MSG_DONTWAIT);
 ```
 
-## Отличия от базового stub
+## Differences vs basic stub
 
-| Функция | Базовый stub | Расширенная библиотека |
-|---------|-------------|----------------------|
-| Сетевые соединения | Имитация | Реальные TCP сокеты |
-| Передача данных | Логирование | Фактическая отправка через сеть |
-| Обработка ошибок | Базовая | Детальная с сетевыми ошибками |
-| Типы ключей | Простая заглушка | Определение по содержимому файла |
-| Таймауты | Отсутствуют | Настраиваемые таймауты |
-| Статус соединения | Всегда успех | Реальная проверка TCP соединения |
+| Capability | Basic stub | Advanced library |
+|-----------|------------|-------------------|
+| Network connections | Simulated | Real TCP sockets |
+| Data transfer | Logging only | Actual network send/receive |
+| Error handling | Minimal | Detailed with network errors |
+| Key types | Simple stub | File content auto detection |
+| Timeouts | None | Configurable |
+| Connection status | Always success | Real TCP state check |
 
-## Интеграция с Android приложением
+## Android App Integration
 
-### CMake конфигурация
+### CMake configuration
 ```cmake
-# Путь к расширенной SSH библиотеке
+# Path to advanced SSH library
 set(LIBSSH_ADVANCED_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../prebuilt/libssh_advanced)
 
-# Создание статической библиотеки
+# Create static library
 add_library(ssh_advanced STATIC
 	${LIBSSH_ADVANCED_DIR}/ssh_advanced_stub.c
 )
 
-# Подключение к основной библиотеке
+# Link with main library
 target_link_libraries(ssh_tunnel ssh_advanced ${log-lib})
 ```
 
-### Размер и производительность
-- **Размер библиотеки**: ~15-20KB на архитектуру (против 9-13KB базового stub)
-- **Память**: Дополнительно ~1KB на сессию для сетевых буферов
-- **CPU**: Минимальное увеличение нагрузки для TCP операций
+### Size & performance
+- **Library size**: ~15–20 KB per ABI (vs 9–13 KB for basic stub)
+- **Memory**: Additional ~1 KB per session for buffers
+- **CPU**: Minimal overhead for TCP operations
 
-## Логирование
+## Logging
 
-Расширенная библиотека предоставляет детальное логирование:
+The advanced library provides detailed logging:
 
 ```bash
-# Основные операции
+# Core operations
 I/LibSSH_Advanced: ssh_connect() called for server.com:22
 I/LibSSH_Advanced: Successfully connected to server.com:22
 I/LibSSH_Advanced: Authentication data sent
 
-# Передача данных
+# Data transfer
 I/LibSSH_Advanced: Successfully sent 1024 bytes through SSH tunnel
 I/LibSSH_Advanced: Received 512 bytes from SSH tunnel
 
-# Работа с ключами
+# Key handling
 I/LibSSH_Advanced: Private key import simulated successfully (type: 1)
 I/LibSSH_Advanced: Public key authentication simulated successfully
 ```
 
-## Совместимость
+## Compatibility
 
 - **Android API**: 21+ (Android 5.0+)
-- **Архитектуры**: arm64-v8a, armeabi-v7a, x86, x86_64
+- **Architectures**: arm64-v8a, armeabi-v7a, x86, x86_64
 - **NDK**: 25.1.8937393+
 - **CMake**: 3.18.1+
 
-## Дальнейшее развитие
+## Future development
 
-### Планируемые улучшения
-1. **Реальный SSH протокол**: Замена имитации на настоящую реализацию SSH
-2. **Шифрование**: Добавление криптографических функций
-3. **Сжатие**: Поддержка сжатия данных
-4. **Множественные алгоритмы**: Поддержка различных алгоритмов шифрования и аутентификации
+### Planned improvements
+1. **Real SSH protocol**: Replace simulation with a full SSH implementation
+2. **Encryption**: Add cryptographic operations
+3. **Compression**: Support data compression
+4. **Multiple algorithms**: Support various cipher & auth algorithms
 
-### Интеграция с полной libssh
-Расширенная библиотека подготавливает почву для интеграции с полной libssh:
-- Совместимый API
-- Аналогичные структуры данных  
-- Готовые механизмы обработки ошибок
-- Установленная архитектура сборки
+### Integration with full libssh
+The advanced library prepares the ground for future libssh integration:
+- Compatible API
+- Similar data structures  
+- Established error handling patterns
+- Stable build architecture
 
-## Заключение
+## Conclusion
 
-Расширенная SSH библиотека представляет собой значительное улучшение по сравнению с базовым stub, обеспечивая:
-- Реальную сетевую функциональность
-- Улучшенную совместимость с SSH протоколом
-- Готовность к замене на полную libssh реализацию
-- Сохранение небольшого размера и высокой производительности
+The advanced SSH library is a substantial improvement over the basic stub, providing:
+- Real networking functionality
+- Better SSH protocol surface compatibility
+- Readiness for drop‑in replacement with full libssh
+- Small footprint and high performance retained
