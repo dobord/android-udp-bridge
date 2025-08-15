@@ -406,7 +406,7 @@ jobs:
           echo "" >> $GITHUB_OUTPUT
           echo "## Changes in this release:" >> $GITHUB_OUTPUT
           echo "- Android UDP bridge with SSH tunnel support" >> $GITHUB_OUTPUT
-          echo "- OpenSSL/mbedTLS crypto backend" >> $GITHUB_OUTPUT
+          echo "- OpenSSL crypto backend" >> $GITHUB_OUTPUT
           echo "- Support for password and key authentication" >> $GITHUB_OUTPUT
           echo "" >> $GITHUB_OUTPUT
           echo "## Downloads:" >> $GITHUB_OUTPUT

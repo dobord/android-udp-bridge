@@ -31,6 +31,8 @@ public class SshTunnelService extends Service {
     public native String getUdp2TcpStats();
     public native boolean isUdp2TcpRunning();
     public native int nativeTlsSelfTest();
+    // Hint for native TCP port forward to match udp2tcp remote TCP server
+    public native void nativeSetForwardingHint(String remoteHost, int remotePort, int localPort);
 
     public class LocalBinder extends Binder {
         SshTunnelService getService() {
@@ -71,6 +73,13 @@ public class SshTunnelService extends Service {
         this.pendingLocalPort = localPort;
         this.pendingRemoteHost = remoteHost;
         this.pendingRemotePort = remotePort;
+        if (localPort != null && remoteHost != null && remotePort != null) {
+            try {
+                nativeSetForwardingHint(remoteHost, remotePort, localPort);
+            } catch (Throwable t) {
+                Log.w(TAG, "Failed to set native forwarding hint", t);
+            }
+        }
     }
 
     private void tryAutoStartForwarding() {

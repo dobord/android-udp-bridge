@@ -8,7 +8,7 @@
 	- Full build for all architectures (ARM64, ARMv7, x86, x86_64)
 	- Automated testing
 	- Release creation on tags
-	- Supports both OpenSSL and mbedTLS
+	- Uses OpenSSL (mbedTLS support removed)
 
 2. **🔍 Pull Request Check** (`pr-check.yml`)
 	- Fast code validation on PR

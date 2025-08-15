@@ -126,33 +126,23 @@ Detailed documentation: [.github/README.md](.github/README.md)
 - Gradle 8.4+
 - Java 21
 
-### Prebuilt libraries (libssh + TLS backend)
+### Prebuilt libraries (OpenSSL only)
 
-Static prebuilt libraries accelerate local builds:
+Static prebuilt libraries accelerate local builds.
 
-**Available libraries:**
-- OpenSSL 3.5.0 + libssh 0.11.2
-- mbedTLS 2.28.7 + libssh 0.11.2
+**Provided:** OpenSSL 3.5.0 + libssh 0.11.2 (arm64-v8a, armeabi-v7a, x86_64, x86)
 
-**Architectures:** arm64-v8a, armeabi-v7a, x86_64, x86
-
-**Prebuilt build commands:**
+**Build commands:**
 ```bash
 # Build all architectures (default)
-./build_openssl.sh                    # OpenSSL + libssh
-./build_mbedtls.sh                    # mbedTLS + libssh
+./build_openssl.sh
 
-# Build specific architecture (for CI/CD)
+# Build specific architecture
 ANDROID_ABI=arm64-v8a ./build_openssl.sh
-ANDROID_ABI=x86_64 ./build_mbedtls.sh
-
-# Empty variable = all architectures
-ANDROID_ABI= ./build_openssl.sh
+ANDROID_ABI=x86_64 ./build_openssl.sh
 ```
 
-**Architecture selection logic:**
-- Without `ANDROID_ABI` or empty → build **all ABIs**
-- `ANDROID_ABI=<specific>` → build **only specified ABI**
+If `ANDROID_ABI` empty or unset all ABIs are built.
 
 ### Build commands
 ```bash
@@ -170,9 +160,9 @@ cd ssh-tunnel-android-app
 # If ANDROID_HOME not set, define in local.properties:
 #   ssh-tunnel-android-app\local.properties -> sdk.dir=E:\Android\Sdk
 
-# 2) Build and install prebuilt libraries (mbedTLS + libssh)
+# 2) Build and install prebuilt libraries (OpenSSL + libssh)
 cd E:\projects\android-udp-bridge
-./build_mbedtls.bat
+./build_openssl.bat
 
 # 3) Build APK
 ./build_app.bat

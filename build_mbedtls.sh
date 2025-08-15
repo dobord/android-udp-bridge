@@ -1,43 +1,7 @@
 #!/bin/bash
-
-# Script to build libssh with mbedTLS for Android
-# Requires Android NDK and CMake
-
-set -e
-
-# Validate environment variables
-if [ -z "$ANDROID_NDK_HOME" ] && [ -z "$ANDROID_NDK_ROOT" ]; then
-    # Try to locate NDK automatically
-    if [ -d "$HOME/Android/Sdk/ndk" ]; then
-        export ANDROID_NDK_HOME="$HOME/Android/Sdk/ndk/$(ls $HOME/Android/Sdk/ndk/ | sort -V | tail -1)"
-    elif [ -d "/opt/android-sdk/ndk" ]; then
-        export ANDROID_NDK_HOME="/opt/android-sdk/ndk/$(ls /opt/android-sdk/ndk/ | sort -V | tail -1)"
-    else
-    echo "Error: ANDROID_NDK_HOME not set and NDK was not auto-detected"
-        exit 1
-    fi
-fi
-
-NDK_PATH="${ANDROID_NDK_HOME:-$ANDROID_NDK_ROOT}"
-echo "Using Android NDK: $NDK_PATH"
-
-# Build parameters
-LIBSSH_VERSION="0.11.2"
-MBEDTLS_VERSION="2.28.7"
-MIN_API_LEVEL=24
-# Linker flags for 16K page size (Android 15 compatibility)
-MAX_PAGE_LDFLAGS="-Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384"
-
-# Determine ABIs to build
-if [ -n "$ANDROID_ABI" ] && [ "$ANDROID_ABI" != "" ]; then
-    # If ANDROID_ABI is set (e.g. in CI) build only that one
-    ABIS=("$ANDROID_ABI")
-    echo "🎯 Building only for ANDROID_ABI: $ANDROID_ABI"
-else
-    # Otherwise build all primary ABIs
-    ABIS=("arm64-v8a" "armeabi-v7a" "x86_64" "x86")
-    echo "🔄 Building for all ABIs: ${ABIS[*]}"
-fi
+# Deprecated: mbedTLS build removed. Kept as stub for backward compatibility with old docs/scripts.
+echo "[build_mbedtls.sh] mbedTLS backend removed. Use ./build_openssl.sh instead." >&2
+exit 1
 
 # Working directories
 WORK_DIR="$(pwd)/libssh_build"

@@ -36,7 +36,6 @@ Thumbs.db
 # Vendor/lib builds (keep source archives, ignore build outputs)
 libssh_build/build/
 libssh_build/libssh-**
-libssh_build/mbedtls/
 libssh_build/**/build/
 libssh_build/**/CMakeFiles/
 libssh_build/**/CMakeCache.txt
@@ -54,12 +53,7 @@ mbedtls_build/
 *_build/**/CMakeFiles/
 *_build/**/CMakeCache.txt
 
-mbedtls/build/
-mbedtls/**/build/
-mbedtls/**/CMakeFiles/
-mbedtls/**/CMakeCache.txt
-mbedtls/**/cmake_install.cmake
-mbedtls/**/Makefile
+# mbedTLS build artifacts removed (legacy)
 
 # Legacy top-level Android module (if present)
 /app/

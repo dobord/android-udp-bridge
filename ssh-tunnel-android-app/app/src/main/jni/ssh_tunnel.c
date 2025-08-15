@@ -23,7 +23,7 @@
 // udp2tcp integration only (legacy bridge removed)
 #include "udp2tcp_client_adapter.h"
 
-// Crypto library includes for manual crypto initialization
+// Crypto library includes (OpenSSL only; mbedTLS support removed)
 #ifndef USE_LIBSSH_MOCK
 #ifdef USE_OPENSSL
 #include <openssl/rand.h>
@@ -31,12 +31,6 @@
 #include <openssl/ssl.h>
 #include <openssl/crypto.h>
 #include <openssl/evp.h>
-#else
-#include <mbedtls/entropy.h>
-#include <mbedtls/ctr_drbg.h>
-#include <mbedtls/platform.h>
-#include <mbedtls/error.h>
-#include <mbedtls/threading.h>
 #endif
 #endif
 
@@ -59,13 +53,8 @@ static pthread_mutex_t session_mutex = PTHREAD_MUTEX_INITIALIZER;
 static volatile int g_libssh_initialized = 0;
 
 #ifdef USE_OPENSSL
-// Global OpenSSL objects for manual crypto initialization
+// Global OpenSSL state flag
 static volatile int g_openssl_initialized = 0;
-#else
-// Global mbedTLS objects for manual crypto initialization
-static mbedtls_entropy_context g_entropy;
-static mbedtls_ctr_drbg_context g_ctr_drbg;
-static volatile int g_mbedtls_initialized = 0;
 #endif
 
 // Global libssh log callback (file-scope). Needed to compile with Clang (no nested functions).
@@ -131,56 +120,9 @@ static int init_openssl_directly() {
 #endif
 
 #ifdef USE_OPENSSL
-static int force_crypto_init() {
-    return init_openssl_directly();
-}
+static int force_crypto_init() { return init_openssl_directly(); }
 #else
-static int init_mbedtls_directly() {
-    if (g_mbedtls_initialized) {
-        LOGI("mbedTLS already initialized");
-        return 0;
-    }
-    
-    LOGI("Initializing mbedTLS directly");
-    
-    // Initialize mbedTLS entropy and DRBG
-    mbedtls_entropy_init(&g_entropy);
-    mbedtls_ctr_drbg_init(&g_ctr_drbg);
-    
-    // Add custom entropy source
-    int ret = mbedtls_entropy_add_source(&g_entropy, android_entropy_source, 
-                                        NULL, 32, MBEDTLS_ENTROPY_SOURCE_STRONG);
-    if (ret != 0) {
-        char error_buf[100];
-        mbedtls_strerror(ret, error_buf, sizeof(error_buf));
-        LOGE("Failed to add entropy source: %s", error_buf);
-        return -1;
-    }
-    
-    // Seed the DRBG
-    const char *personalization = "SSH_TUNNEL_ANDROID";
-    ret = mbedtls_ctr_drbg_seed(&g_ctr_drbg, mbedtls_entropy_func, &g_entropy,
-                               (const unsigned char *)personalization, strlen(personalization));
-    if (ret != 0) {
-        char error_buf[100];
-        mbedtls_strerror(ret, error_buf, sizeof(error_buf));
-        LOGE("Failed to seed DRBG: %s", error_buf);
-        return -1;
-    }
-    
-    g_mbedtls_initialized = 1;
-    LOGI("mbedTLS initialized successfully");
-    return 0;
-}
-
-static int force_crypto_init() {
-    if (init_mbedtls_directly() != 0) {
-        LOGE("Direct mbedTLS init failed");
-        return -1;
-    }
-    
-    return 0;
-}
+static int force_crypto_init() { return 0; }
 #endif
 
 // Enhanced initialization with entropy source
@@ -209,7 +151,7 @@ static int init_libssh_with_entropy() {
     // Attempt standard ssh_init
     int ret = ssh_init();
     if (ret == SSH_OK) {
-        LOGI("ssh_init succeeded with mbedTLS pre-initialized");
+        LOGI("ssh_init succeeded");
         return 1; // Success
     } else {
         LOGW("ssh_init failed with code %d, proceeding with manual crypto", ret);
@@ -233,10 +175,10 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
     ssh_set_log_level(SSH_LOG_TRACE);
     LOGI("JNI_OnLoad: libssh logging configured");
     
-    // Initialize libssh (and underlying crypto/RNG such as mbedTLS) once per process
+    // Initialize libssh (global crypto/RNG)
     LOGI("JNI_OnLoad: Attempting enhanced initialization with entropy");
     
-    // Try bypassing ssh_init for now and test direct crypto functionality
+    // Test direct crypto functionality (version + session allocation)
     LOGI("JNI_OnLoad: Testing libssh version info");
     const char* version = ssh_version(0);
     if (version) {
@@ -286,13 +228,7 @@ JNIEXPORT void JNICALL JNI_OnUnload(JavaVM* vm, void* reserved) {
         ERR_free_strings();
         g_openssl_initialized = 0;
     }
-#else
-    if (g_mbedtls_initialized) {
-        mbedtls_ctr_drbg_free(&g_ctr_drbg);
-        mbedtls_entropy_free(&g_entropy);
-        g_mbedtls_initialized = 0;
-    }
-#endif
+#endif // USE_OPENSSL
     
     LOGI("JNI_OnUnload: Cleanup completed");
 }
@@ -501,8 +437,7 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_connectTo
         LOGI("Pre-connect entropy generation successful: %zu bytes", entropy_len);
         
         // Try to seed randomness manually if possible
-        // Note: This is a workaround for mbedTLS DRBG not being properly initialized
-        // We're attempting to ensure entropy is available before crypto operations
+    // Extra entropy rounds (defensive; may be redundant when using OpenSSL)
         for (int i = 0; i < 3; i++) {
             unsigned char more_entropy[32];
             size_t more_len;
@@ -734,6 +669,30 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_isConnect
 // Legacy TCP manager JNI removed
 
 // udp2tcp JNI section (real implementation only when USE_UDP2TCP defined)
+#ifdef USE_UDP2TCP
+// Forwarding hint: allow Java to inform native which remote TCP host:port carries udp2tcp
+static char g_forward_host[128] = {0};
+static int  g_forward_port = 0;
+static int  g_forward_local = 0;
+
+JNIEXPORT void JNICALL Java_com_example_sshtunnel_SshTunnelService_nativeSetForwardingHint(
+    JNIEnv* env, jobject obj, jstring remote_host, jint remote_port, jint local_port) {
+    (void)obj;
+    const char* h = (*env)->GetStringUTFChars(env, remote_host, 0);
+    strncpy(g_forward_host, h ? h : "", sizeof(g_forward_host)-1);
+    g_forward_host[sizeof(g_forward_host)-1] = '\0';
+    g_forward_port = remote_port;
+    g_forward_local = local_port;
+    LOGI("Forwarding hint set remote=%s:%d local_udp=%d", g_forward_host, g_forward_port, g_forward_local);
+    if (h) (*env)->ReleaseStringUTFChars(env, remote_host, h);
+}
+#else
+JNIEXPORT void JNICALL Java_com_example_sshtunnel_SshTunnelService_nativeSetForwardingHint(
+    JNIEnv* env, jobject obj, jstring remote_host, jint remote_port, jint local_port) {
+    (void)env; (void)obj; (void)remote_host; (void)remote_port; (void)local_port;
+    LOGW("udp2tcp not enabled: nativeSetForwardingHint ignored");
+}
+#endif
 #ifdef USE_UDP2TCP
 // Start udp2tcp (initialize + start thread)
 JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SshTunnelService_startUdp2Tcp(
