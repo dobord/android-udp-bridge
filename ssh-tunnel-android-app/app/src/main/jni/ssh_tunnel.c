@@ -41,6 +41,7 @@
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 #define LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
 
+
 static ssh_session session = NULL;
 static int tunnel_active = 0;
 static pthread_mutex_t session_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -251,6 +252,76 @@ static int  g_bridge_local_tcp_port = 0;     // local TCP listen port (127.0.0.1
 static pthread_t port_forward_thread = 0;
 static int port_forward_running = 0;
 
+// Forward buffer (simple dynamic heap buffer for partial writes)
+struct forward_buffer { char *data; size_t size; size_t off; };
+
+static void fb_init(struct forward_buffer *fb) { fb->data = NULL; fb->size = fb->off = 0; }
+
+static void fb_dispose(struct forward_buffer *fb) {
+    if (fb->data) free(fb->data);
+    fb->data = NULL; fb->size = fb->off = 0;
+}
+
+// Append data, performing compaction; returns 0 on success, -1 on OOM/overflow
+static int fb_append(struct forward_buffer *fb, const char *src, size_t len, size_t max_cap) {
+    if (len == 0) return 0;
+    size_t pending = fb->size - fb->off;
+    if (pending + len > max_cap) return -1;
+    if (fb->off > 0) { // compact
+        if (pending > 0) memmove(fb->data, fb->data + fb->off, pending);
+        fb->size = pending;
+        fb->off = 0;
+    }
+    char *nd = (char*)realloc(fb->data, fb->size + len);
+    if (!nd) return -1;
+    fb->data = nd;
+    memcpy(fb->data + fb->size, src, len);
+    fb->size += len;
+    return 0;
+}
+
+// Flush buffer to SSH channel (non-blocking); connection_active becomes 0 on fatal error
+static void fb_flush_to_ssh(struct forward_buffer *fb, ssh_channel channel, int *connection_active, int *running) {
+    while (*running && *connection_active && fb->off < fb->size) {
+        int w = ssh_channel_write(channel, fb->data + fb->off, (uint32_t)(fb->size - fb->off));
+        if (w == SSH_AGAIN) {
+            break; // need wait
+        } else if (w == SSH_ERROR || w == SSH_EOF) {
+            LOGE("flush_to_ssh: write error (%d)", w);
+            *connection_active = 0;
+            break;
+        } else if (w > 0) {
+            fb->off += (size_t)w;
+        } else { // w == 0 unexpected
+            break;
+        }
+    }
+    if (fb->off == fb->size) {
+        fb->off = fb->size = 0;
+    }
+}
+
+// Flush buffer to client socket; connection_active becomes 0 on fatal error/close
+static void fb_flush_to_client(struct forward_buffer *fb, int client_sock, int *connection_active, int *running) {
+    while (*running && *connection_active && fb->off < fb->size) {
+        ssize_t s = send(client_sock, fb->data + fb->off, fb->size - fb->off, 0);
+        if (s < 0) {
+            if (errno == EWOULDBLOCK || errno == EAGAIN) break;
+            LOGE("flush_to_client: send error: %s", strerror(errno));
+            *connection_active = 0;
+            break;
+        } else if (s == 0) {
+            *connection_active = 0; // peer closed
+            break;
+        } else {
+            fb->off += (size_t)s;
+        }
+    }
+    if (fb->off == fb->size) {
+        fb->off = fb->size = 0;
+    }
+}
+
 // TCP Port forwarding thread function
 void* tcp_port_forward_thread(void* arg) {
     (void)arg; // Suppress unused parameter warning
@@ -337,82 +408,121 @@ void* tcp_port_forward_thread(void* arg) {
                 if (rc == SSH_OK) {
                     LOGI("SSH channel opened for TCP forwarding %d -> %s:%d", listen_port, remote_host, remote_port);
                     
-                    // Simple forwarding loop (simplified version)
+                    // Improved forwarding loop with non-blocking SSH channel & backpressure handling
+                    ssh_channel_set_blocking(channel, 0);
                     char buffer[4096];
                     fd_set read_fds;
                     int session_fd = ssh_get_fd(session);
+                    if (session_fd < 0) {
+                        LOGW("ssh_get_fd returned <0; forwarding may not progress correctly");
+                    }
                     int max_fd = (client_sock > session_fd) ? client_sock : session_fd;
-                    uint64_t last_keepalive_sec = 0;
+                    uint64_t last_tick_sec = 0;
+                    int connection_active = 1;
+                    // Make client socket non-blocking (so send won't stall the loop)
+                    int flags = fcntl(client_sock, F_GETFL, 0);
+                    if (flags >= 0) fcntl(client_sock, F_SETFL, flags | O_NONBLOCK);
+
+                    // Dynamic buffering for partial writes in both directions
+                    struct forward_buffer to_ssh;     // client -> ssh
+                    struct forward_buffer to_client;  // ssh -> client
+                    fb_init(&to_ssh);
+                    fb_init(&to_client);
+                    const size_t MAX_BUFFER_CAP = 256*1024;  // 256 KiB cap per direction
                     
-                    while (port_forward_running) {
+                    while (port_forward_running && connection_active) {
                         FD_ZERO(&read_fds);
                         FD_SET(client_sock, &read_fds);
                         if (session_fd >= 0) {
                             FD_SET(session_fd, &read_fds);
                         }
-                        struct timeval tv = {1, 0}; // 1 second tick
+                        struct timeval tv = {1, 0}; // 1 second tick granularity
                         int ready = select(max_fd + 1, &read_fds, NULL, NULL, &tv);
                         if (ready < 0) {
                             if (errno == EINTR) continue;
                             LOGE("select() error in forwarding loop: %s", strerror(errno));
                             break;
                         }
-                        // Optional keepalive / rekey tick
+                        // Periodic tick to allow libssh internal housekeeping (rekey, keepalive, window adjust)
                         time_t now_sec = time(NULL);
-                        if (now_sec != (time_t)last_keepalive_sec) {
-                            last_keepalive_sec = (uint64_t)now_sec;
-                            // Cheap keepalive: ask libssh to process packets with zero timeout.
-                            if (session_fd >= 0) {
-                                ssh_handle_packets_timeout(session, 0);
-                            }
-                        }
-                        // Local client socket readable
-                        if (FD_ISSET(client_sock, &read_fds)) {
-                            int bytes = recv(client_sock, buffer, sizeof(buffer), 0);
-                            if (bytes <= 0) {
-                                if (bytes < 0) LOGE("recv() error: %s", strerror(errno));
-                                break; // client closed or error
-                            }
-                            // Write may block; for large bursts consider non-blocking channel mode.
-                            int written = ssh_channel_write(channel, buffer, (uint32_t)bytes);
-                            if (written < 0) {
-                                LOGE("ssh_channel_write failed (closing channel)");
+                        if (now_sec != (time_t)last_tick_sec) {
+                            last_tick_sec = (uint64_t)now_sec;
+                            // Session tick: rely on nonblocking reads to process packets
+                            if (session != NULL && !ssh_is_connected(session)) {
+                                LOGW("SSH session no longer connected");
                                 break;
                             }
+                            // Try flushing pending both directions on tick
+                            if (to_ssh.size > to_ssh.off) fb_flush_to_ssh(&to_ssh, channel, &connection_active, &port_forward_running);
+                            if (to_client.size > to_client.off) fb_flush_to_client(&to_client, client_sock, &connection_active, &port_forward_running);
                         }
-                        // Remote session socket has data
-                        if (session_fd >= 0 && FD_ISSET(session_fd, &read_fds)) {
-                            // Let libssh pull pending packets (0 timeout = non-blocking)
-                            ssh_handle_packets_timeout(session, 0);
-                        }
-                        // Drain all available channel data
-                        while (port_forward_running) {
-                            int ssh_bytes = ssh_channel_read_nonblocking(channel, buffer, sizeof(buffer), 0);
-                            if (ssh_bytes > 0) {
-                                ssize_t sent = send(client_sock, buffer, (size_t)ssh_bytes, 0);
-                                if (sent <= 0) {
-                                    LOGE("send() to local client failed: %s", strerror(errno));
-                                    port_forward_running = 0; // force exit
+                        // Local client socket readable -> read and forward to SSH channel
+                        if (FD_ISSET(client_sock, &read_fds)) {
+                            for (;;) { // drain local socket
+                                int bytes = recv(client_sock, buffer, sizeof(buffer), 0);
+                                if (bytes == 0) { // client closed
+                                    connection_active = 0;
+                                    break;
+                                } else if (bytes < 0) {
+                                    if (errno == EWOULDBLOCK || errno == EAGAIN) {
+                                        break; // no more data now
+                                    }
+                                    LOGE("recv() error: %s", strerror(errno));
+                                    connection_active = 0;
                                     break;
                                 }
-                                continue; // attempt to drain more
-                            } else if (ssh_bytes == SSH_ERROR) {
-                                LOGE("ssh_channel_read_nonblocking error, closing channel");
-                                port_forward_running = 0;
-                                break;
+                                // Append to to_ssh buffer (may flush immediately)
+                                if (fb_append(&to_ssh, buffer, (size_t)bytes, MAX_BUFFER_CAP) < 0) {
+                                    LOGE("to_ssh buffer overflow, closing");
+                                    connection_active = 0;
+                                    break;
+                                }
+                                fb_flush_to_ssh(&to_ssh, channel, &connection_active, &port_forward_running);
+                                // If still pending and buffer large, pause further reads to apply backpressure
+                                if (to_ssh.size - to_ssh.off > 64*1024) {
+                                    break; // exit inner drain loop
+                                }
+                                continue; // attempt to read more from client
+                            }
+                        }
+                        // SSH session fd readable -> process incoming packets
+                        if (session_fd >= 0 && FD_ISSET(session_fd, &read_fds)) {
+                            // SSH session socket readable; channel reads below will parse incoming packets
+                            if (to_ssh.size > to_ssh.off) fb_flush_to_ssh(&to_ssh, channel, &connection_active, &port_forward_running);
+                        }
+                        // Drain SSH channel data to local client
+                        while (port_forward_running && connection_active) {
+                            int ssh_bytes = ssh_channel_read_nonblocking(channel, buffer, sizeof(buffer), 0);
+                            if (ssh_bytes > 0) {
+                                if (fb_append(&to_client, buffer, (size_t)ssh_bytes, MAX_BUFFER_CAP) < 0) {
+                                    LOGE("to_client buffer overflow, closing");
+                                    connection_active = 0;
+                                    break;
+                                }
+                                fb_flush_to_client(&to_client, client_sock, &connection_active, &port_forward_running);
+                                continue; // try to read even more from channel
+                            } else if (ssh_bytes == 0 || ssh_bytes == SSH_AGAIN) {
+                                break; // nothing more now
                             } else if (ssh_bytes == SSH_EOF || ssh_channel_is_eof(channel)) {
                                 LOGI("SSH channel EOF reached");
-                                port_forward_running = 0;
+                                connection_active = 0;
+                                break;
+                            } else if (ssh_bytes == SSH_ERROR) {
+                                LOGE("ssh_channel_read_nonblocking error (SSH_ERROR)");
+                                connection_active = 0;
                                 break;
                             }
-                            // ssh_bytes == 0 or SSH_AGAIN -> no more data now
-                            break;
                         }
+                        // Flush any pending to_client data (if channel produced earlier but socket was blocked)
+                        if (to_client.size > to_client.off) fb_flush_to_client(&to_client, client_sock, &connection_active, &port_forward_running);
                         if (!ssh_channel_is_open(channel) || ssh_channel_is_closed(channel)) {
-                            LOGI("SSH channel closed by remote");
+                            LOGI("SSH channel closed by remote side");
                             break;
                         }
                     }
+
+                    fb_dispose(&to_ssh);
+                    fb_dispose(&to_client);
                     
                     ssh_channel_close(channel);
                 } else {
