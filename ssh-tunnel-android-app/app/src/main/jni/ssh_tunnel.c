@@ -251,6 +251,7 @@ static int  g_bridge_local_tcp_port = 0;     // local TCP listen port (127.0.0.1
 // Global variable to track port forwarding thread
 static pthread_t port_forward_thread = 0;
 static int port_forward_running = 0;
+static int g_listen_sock = -1; // listening socket to allow external close during shutdown
 
 // Forward buffer (simple dynamic heap buffer for partial writes)
 struct forward_buffer { char *data; size_t size; size_t off; };
@@ -358,6 +359,7 @@ void* tcp_port_forward_thread(void* arg) {
         LOGE("Failed to create listening socket for port forwarding");
         return NULL;
     }
+    g_listen_sock = listen_sock;
     
     // Enable socket reuse
     int opt = 1;
@@ -536,7 +538,8 @@ void* tcp_port_forward_thread(void* arg) {
         close(client_sock);
     }
     
-    close(listen_sock);
+    if (listen_sock >= 0) close(listen_sock);
+    if (g_listen_sock == listen_sock) g_listen_sock = -1;
     LOGI("TCP port forwarding thread exiting");
     return NULL;
 }
@@ -563,6 +566,12 @@ int setup_tcp_port_forwarding() {
 void stop_tcp_port_forwarding() {
     if (port_forward_thread != 0) {
         port_forward_running = 0;
+        // Proactively close listening socket to wake accept()
+        if (g_listen_sock >= 0) {
+            shutdown(g_listen_sock, SHUT_RDWR);
+            close(g_listen_sock);
+            g_listen_sock = -1;
+        }
         pthread_join(port_forward_thread, NULL);
         port_forward_thread = 0;
         LOGI("TCP port forwarding stopped");
