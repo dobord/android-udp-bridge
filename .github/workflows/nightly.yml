@@ -24,27 +24,27 @@ jobs:
       should_build: ${{ steps.check.outputs.should_build }}
       
     steps:
-    - name: Checkout code
+    - name: Checkout code (full history for change scan)
       uses: actions/checkout@v4
       with:
-        fetch-depth: 2
-        
-    - name: Check for changes
+        fetch-depth: 0
+
+    - name: Determine change window & scan
       id: check
       run: |
-        if [ "${{ github.event.inputs.force_build }}" == "true" ]; then
+        FORCE="${{ github.event.inputs.force_build }}"
+        if [ "${FORCE}" = "true" ]; then
+          echo "Force build requested via workflow_dispatch input"
           echo "should_build=true" >> $GITHUB_OUTPUT
-          echo "Force build requested"
+          exit 0
+        fi
+        CHANGED_COUNT=$(git log --since="24 hours ago" --name-only --pretty=format: | \
+          grep -E '\\.(c|cpp|cxx|h|hpp|java|kt|gradle|sh)$' | grep -v '^$' | sort -u | wc -l || true)
+        echo "Detected ${CHANGED_COUNT} changed source files in last 24h"
+        if [ "${CHANGED_COUNT}" -gt 0 ]; then
+          echo "should_build=true" >> $GITHUB_OUTPUT
         else
-          # Check changes in the last 24 hours
-          CHANGES=$(git diff --name-only HEAD~1 HEAD | grep -E "\.(c|cpp|h|hpp|java|kt|gradle|sh)$" | wc -l)
-          if [ $CHANGES -gt 0 ]; then
-            echo "should_build=true" >> $GITHUB_OUTPUT
-            echo "Found $CHANGES code changes"
-          else
-            echo "should_build=false" >> $GITHUB_OUTPUT
-            echo "No significant changes found"
-          fi
+          echo "should_build=false" >> $GITHUB_OUTPUT
         fi
 
   nightly-build:
@@ -54,11 +54,29 @@ jobs:
     strategy:
       matrix:
         build_type: [debug, release]
-        arch: [arm64-v8a, armeabi-v7a]
+        arch: [arm64-v8a, armeabi-v7a, x86, x86_64]
     
     steps:
-    - name: Checkout code
+    - name: Checkout code (full)
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Optional fetch udp2tcp submodule (full recursive)
+      run: |
+        echo "Attempting full recursive fetch of udp2tcp submodule..."
+        set +e
+        git submodule update --init --recursive third_party/udp2tcp 2>&1
+        status=$?
+        if [ $status -ne 0 ]; then
+          echo "⚠️  udp2tcp submodule fetch failed (status=$status); continuing in legacy mode."
+        fi
+        set -e
+        if [ -d third_party/udp2tcp/include ]; then
+          echo "✅ udp2tcp present"; git -C third_party/udp2tcp log --oneline -1 | head -1 || true
+        else
+          echo "ℹ️  udp2tcp not present; legacy path will be built." 
+        fi
       
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
@@ -72,7 +90,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y build-essential cmake ninja-build pkg-config
-        sudo apt-get install -y autotools-dev autoconf automake libtool
+        sudo apt-get install -y autotools-dev autoconf automake libtool util-linux gh jq
         
     - name: Setup Android environment
       run: |
@@ -168,14 +186,14 @@ jobs:
         key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
         restore-keys: |
           ${{ runner.os }}-gradle-
-          
+            
     - name: Build ${{ matrix.build_type }} APK for ${{ matrix.arch }}
       working-directory: ssh-tunnel-android-app
       run: |
-        if [ "${{ matrix.build_type }}" == "debug" ]; then
-          ./gradlew assembleDebug --no-daemon --stacktrace
+        if [ "${{ matrix.build_type }}" = "debug" ]; then
+          ./gradlew assembleDebug --no-daemon --stacktrace -PcmakeArgs=-DANDROID_ABI=${{ matrix.arch }}
         else
-          ./gradlew assembleRelease --no-daemon --stacktrace
+          ./gradlew assembleRelease --no-daemon --stacktrace -PcmakeArgs=-DANDROID_ABI=${{ matrix.arch }}
         fi
         
     - name: Run tests
@@ -210,7 +228,7 @@ jobs:
         pattern: nightly-*
         merge-multiple: false
         
-    - name: Create nightly tag
+    - name: Create nightly tag env var (not pushing tag)
       run: |
         DATE=$(date +'%Y%m%d')
         echo "NIGHTLY_TAG=nightly-$DATE" >> $GITHUB_ENV
@@ -226,20 +244,22 @@ jobs:
     - name: Create nightly release
       run: |
         DATE=$(date +'%Y-%m-%d %H:%M UTC')
-        
+        NOTES_FILE=nightly_notes.md
+        {
+          echo 'Nightly Build';
+          echo;
+          echo 'Automated nightly build containing the latest changes (potentially unstable).';
+          echo;
+          echo 'Included builds:';
+          echo ' - Debug + Release APKs for arm64-v8a, armeabi-v7a, x86, x86_64';
+          echo;
+          echo 'Installation:';
+          echo " 1. Enable 'Unknown sources'";
+          echo ' 2. Install matching APK for your device architecture';
+        } > "$NOTES_FILE"
         gh release create nightly-latest \
           --title "Nightly Build - $DATE" \
-          --notes "🌙 **Nightly Build** - $DATE
-        
-        This is an automated nightly build containing the latest changes.
-        
-        **⚠️ Warning**: Nightly builds are unstable and for testing purposes only.
-        
-        **Included builds**:
-        - Debug APKs for arm64-v8a and armeabi-v7a
-        - Release APKs for arm64-v8a and armeabi-v7a
-        
-        **Installation**: Enable 'Unknown sources' and install the appropriate APK for your device architecture." \
+          --notes-file "$NOTES_FILE" \
           --prerelease \
           nightly-*/app-*.apk
       env:
