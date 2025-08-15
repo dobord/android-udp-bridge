@@ -7,10 +7,10 @@ Android application for secure UDP tunneling over SSH using `udp2tcp` encapsulat
 ## Quick Overview
 
 | Component | Status | Description |
-|-----------|--------|----------|
-| SSH (libssh + extended stub) | Stable | Password / key auth, port forwarding |
-| udp2tcp integration | In progress | Replaces custom UDP Bridge protocol |
-| Legacy UDP Bridge | Deprecated | Moved to `docs_legacy/`, pending removal after migration |
+|-----------|--------|-------------|
+| SSH (libssh) | Stable | Password / key auth, port forwarding |
+| udp2tcp integration | Complete | Default and only data path (UDP over TCP via SSH) |
+| Legacy UDP Bridge | Removed | Historical docs retained under `docs_legacy/` |
 
 ## Documentation Structure
 
@@ -29,9 +29,11 @@ Legacy / reports (`docs_legacy/` examples):
 - Fixes: `ARCH_FLAGS_FIX*.md`, `ARCHITECTURE_FIX_REPORT.md`
 
 ## Migration Status
-- JNI simplification: removing internal listener / client manager in favor of `udp2tcp` client
-- Port forwarding remains the secure transport basis
-- After stabilization: purge legacy sources and update CI
+Migration to `udp2tcp` is complete:
+- Legacy listener / client manager / custom protocol removed
+- CI enforces presence of `third_party/udp2tcp` submodule
+- Tech spec & migration docs updated to udp2tcp-only
+- README no longer references feature flags or legacy toggle
 
 `udp2tcp` repository: git@github.com:dobord/udp2tcp.git
 
@@ -54,10 +56,8 @@ This application establishes an SSH tunnel for UDP traffic on Android. Key capab
 - Reduced JNI code (removal of `udp_listener.*`, `udp_bridge_protocol.*`, client manager — phased out)
 - Reuse of proven `udp2tcp` code instead of maintaining a custom protocol
 
-### Legacy (custom UDP Bridge protocol)
-- Custom header (magic, version, crc32)
-- Client table and multiplexing MSG_DATA / MSG_PING / MSG_PONG
-- Moved to legacy section and slated for removal after migration (see `MIGRATION_UDP2TCP.md`)
+### Legacy (custom UDP Bridge protocol) – Historical
+Former implementation used a custom binary header (magic, version, crc32) plus client table (registration, ping/pong). Entire stack was removed; see `docs_legacy/` and migration doc for history.
 
 ## Usage
 
@@ -78,11 +78,8 @@ This application establishes an SSH tunnel for UDP traffic on Android. Key capab
 1. After successful SSH connection
 2. Enter local UDP port (clients will send to it)
 3. Specify remote (target) UDP host/port (or use saved config)
-4. App sets/reuses SSH TCP port forwarding to the `udp2tcp` server port
-5. Click "Start Forwarding" — local udp2tcp client connects to remote server through SSH tunnel
-
-### Legacy mode (if enabled in developer settings)
-Old protocol starts internal UDP listener + TCP connection manager. Scheduled for removal after udp2tcp stabilization.
+4. The app ensures SSH TCP port forwarding to the `udp2tcp` server port
+5. Click "Start Forwarding" — udp2tcp client connects to server through SSH tunnel
 
 ## Documentation (short index)
 See "Documentation Structure" above. New material goes only into `docs/`.
@@ -197,15 +194,35 @@ adb logcat | grep -E "(SSHTunnel|LibSSH_Advanced|udp2tcp)"
 
 ```
 
+### Tip: always use absolute path for adb install
+Во избежание ошибок вида "adb: failed to stat ..." используйте полный путь (через `realpath`):
+```bash
+ABS_APK="$(realpath ssh-tunnel-android-app/app/build/outputs/apk/debug/app-debug.apk)"
+adb install -r "$ABS_APK"
+```
+Windows (PowerShell):
+```powershell
+$apk = Resolve-Path .\ssh-tunnel-android-app\app\build\outputs\apk\debug\app-debug.apk
+adb install -r $apk
+```
+Если APK ещё не собран – сначала выполните сборку:
+```bash
+cd ssh-tunnel-android-app
+./gradlew :app:assembleDebug
+```
+
 ## FAQ (short)
 Q: Where are historical PHASE / TASK reports?  
 A: In `docs_legacy/`.
 
-Q: When will legacy code be removed?  
-A: After successful udp2tcp e2e tests and CI updates (see migration doc).
+Q: Is legacy code still present?  
+A: No. Only documentation and historical reports remain in `docs_legacy/`.
 
-Q: Any build changes needed during transition?  
-A: No; scripts remain, udp2tcp client inclusion is added.
+Q: Do I need to enable a feature flag for udp2tcp?  
+A: No. It is always on and required.
+
+Q: How are stats obtained now?  
+A: Java polls a single JNI method exposing aggregate frame/byte counters from the library.
 
 ## License
 MIT (unless specified otherwise in individual third_party folders).

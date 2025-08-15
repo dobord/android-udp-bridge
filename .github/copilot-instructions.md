@@ -64,3 +64,31 @@ Following these rules keeps coroutine lifetimes explicit, avoids scheduler misma
 - All modifications to C/C++ files (*.c, *.cc, *.cpp, *.cxx, *.h, *.hpp) must be auto-formatted with `clang-format` using the root `.clang-format` file.
 - Before finalizing a git commit: run `cmake --build <build_dir> --target format` (or manually `clang-format -i` for the changed files) and ensure `scripts/check_format.sh` passes without errors.
 - Non-formatted changes must not be committed.
+
+## Android build & deployment (APK install) guidance
+To avoid intermittent install failures caused by relative working directories, always use the absolute path when installing an APK via `adb install -r`.
+
+Examples:
+```bash
+# Build (if needed)
+cd ssh-tunnel-android-app
+./gradlew :app:assembleDebug
+
+# Resolve absolute path and install
+ABS_APK="$(realpath app/build/outputs/apk/debug/app-debug.apk)"
+adb install -r "$ABS_APK"
+```
+
+PowerShell:
+```powershell
+cd ssh-tunnel-android-app
+./gradlew :app:assembleDebug
+$apk = Resolve-Path .\app\build\outputs\apk\debug\app-debug.apk
+adb install -r $apk
+```
+
+Rationale:
+- Prevents `adb: failed to stat ...` when commands are run from unexpected directories or via CI wrappers.
+- Makes logs and reproduction steps unambiguous.
+
+When writing automation (scripts, CI steps), always compute and echo the resolved APK path before calling `adb install`.
