@@ -114,8 +114,10 @@ else()
         ../jni/client_manager.c
         ../jni/udp_bridge_protocol.c
         ../jni/udp_bridge_service_jni.c
-        ../jni/udp2tcp_client_adapter.cpp  # keep adapter for JNI methods, but inactive without flag
     )
+    # Note: udp2tcp_client_adapter.cpp excluded when USE_UDP2TCP=OFF to avoid dependency
+    # on missing third_party/udp2tcp headers in environments (e.g. CI minimal jobs) where
+    # the new library is not checked out. JNI stub methods are provided directly in ssh_tunnel.c.
 endif()
 
 # Import real or mock libssh depending on presence of prebuilt artifacts
