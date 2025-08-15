@@ -340,30 +340,77 @@ void* tcp_port_forward_thread(void* arg) {
                     // Simple forwarding loop (simplified version)
                     char buffer[4096];
                     fd_set read_fds;
-                    int max_fd = (client_sock > ssh_get_fd(session)) ? client_sock : ssh_get_fd(session);
+                    int session_fd = ssh_get_fd(session);
+                    int max_fd = (client_sock > session_fd) ? client_sock : session_fd;
+                    uint64_t last_keepalive_sec = 0;
                     
                     while (port_forward_running) {
                         FD_ZERO(&read_fds);
                         FD_SET(client_sock, &read_fds);
-                        
-                        struct timeval tv = {1, 0}; // 1 second timeout
+                        if (session_fd >= 0) {
+                            FD_SET(session_fd, &read_fds);
+                        }
+                        struct timeval tv = {1, 0}; // 1 second tick
                         int ready = select(max_fd + 1, &read_fds, NULL, NULL, &tv);
-                        
-                        if (ready <= 0) continue;
-                        
+                        if (ready < 0) {
+                            if (errno == EINTR) continue;
+                            LOGE("select() error in forwarding loop: %s", strerror(errno));
+                            break;
+                        }
+                        // Optional keepalive / rekey tick
+                        time_t now_sec = time(NULL);
+                        if (now_sec != (time_t)last_keepalive_sec) {
+                            last_keepalive_sec = (uint64_t)now_sec;
+                            // Cheap keepalive: ask libssh to process packets with zero timeout.
+                            if (session_fd >= 0) {
+                                ssh_handle_packets_timeout(session, 0);
+                            }
+                        }
+                        // Local client socket readable
                         if (FD_ISSET(client_sock, &read_fds)) {
                             int bytes = recv(client_sock, buffer, sizeof(buffer), 0);
-                            if (bytes <= 0) break;
-                            
-                            ssh_channel_write(channel, buffer, bytes);
+                            if (bytes <= 0) {
+                                if (bytes < 0) LOGE("recv() error: %s", strerror(errno));
+                                break; // client closed or error
+                            }
+                            // Write may block; for large bursts consider non-blocking channel mode.
+                            int written = ssh_channel_write(channel, buffer, (uint32_t)bytes);
+                            if (written < 0) {
+                                LOGE("ssh_channel_write failed (closing channel)");
+                                break;
+                            }
                         }
-                        
-                        // Check for data from SSH channel
-                        if (ssh_channel_is_eof(channel)) break;
-                        
-                        int ssh_bytes = ssh_channel_read_nonblocking(channel, buffer, sizeof(buffer), 0);
-                        if (ssh_bytes > 0) {
-                            send(client_sock, buffer, ssh_bytes, 0);
+                        // Remote session socket has data
+                        if (session_fd >= 0 && FD_ISSET(session_fd, &read_fds)) {
+                            // Let libssh pull pending packets (0 timeout = non-blocking)
+                            ssh_handle_packets_timeout(session, 0);
+                        }
+                        // Drain all available channel data
+                        while (port_forward_running) {
+                            int ssh_bytes = ssh_channel_read_nonblocking(channel, buffer, sizeof(buffer), 0);
+                            if (ssh_bytes > 0) {
+                                ssize_t sent = send(client_sock, buffer, (size_t)ssh_bytes, 0);
+                                if (sent <= 0) {
+                                    LOGE("send() to local client failed: %s", strerror(errno));
+                                    port_forward_running = 0; // force exit
+                                    break;
+                                }
+                                continue; // attempt to drain more
+                            } else if (ssh_bytes == SSH_ERROR) {
+                                LOGE("ssh_channel_read_nonblocking error, closing channel");
+                                port_forward_running = 0;
+                                break;
+                            } else if (ssh_bytes == SSH_EOF || ssh_channel_is_eof(channel)) {
+                                LOGI("SSH channel EOF reached");
+                                port_forward_running = 0;
+                                break;
+                            }
+                            // ssh_bytes == 0 or SSH_AGAIN -> no more data now
+                            break;
+                        }
+                        if (!ssh_channel_is_open(channel) || ssh_channel_is_closed(channel)) {
+                            LOGI("SSH channel closed by remote");
+                            break;
                         }
                     }
                     
