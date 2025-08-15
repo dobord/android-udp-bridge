@@ -53,10 +53,15 @@ Tasks:
 - [x] Added thread-safe atomic counters (std::atomic in C++ adapter)
 
 ### Phase 4 — Cleanup & legacy marking
-- [ ] Move legacy files to `legacy/` or delete after successful tests (some docs already marked)
-- [ ] Remove `udp2tcp_client_adapter.c` (legacy stub) after confirming C++ adapter works on target ABIs
-- [ ] Update CI: skip `udp_listener.c` & protocol checks when `USE_UDP2TCP` active
-- [ ] Update `IMPLEMENTATION_PLAN.md` (add migration section)
+- [x] Move legacy files to `legacy/` or delete after successful tests (some docs already marked)
+	- Migrated sources now under `app/src/main/jni/legacy/`: `udp_listener.c`, `udp_bridge_protocol.c`, `client_manager.c`, `tcp_connection_manager.c`, `udp_bridge_service_jni.c` (originals replaced by thin stubs including legacy versions).
+	- Build system (`CMakeLists.txt`) already conditioned to include only `legacy/*.c` when `USE_UDP2TCP=OFF`.
+- [x] Create placeholder `legacy/README.md` describing the deprecation plan.
+- [x] Remove `udp2tcp_client_adapter.c` (legacy C stub) after confirming C++ adapter (`udp2tcp_client_adapter.cpp`) works on all ABIs.
+- [x] Update CI: (initially added matrix with legacy OFF build) — now simplified: legacy forced build removed from CI; only auto & force-on paths kept.
+- [ ] Update `IMPLEMENTATION_PLAN.md` (add migration section summarizing completed phases and remaining risks).
+
+Status: Phase 4 initiated (this commit). Next concrete change will be relocating legacy sources and guarding their inclusion.
 
 ### Phase 5 — Testing
 - [ ] Adapt `run_full_e2e_test.sh` for udp2tcp end-to-end scenario
@@ -119,35 +124,15 @@ Exit code `-100` means "not implemented in minimal embed" and is not treated as 
 --
 Update status as tasks progress.
 
-## Enabling / Disabling in CI (auto-detect behavior)
-The Android native build now auto-enables `USE_UDP2TCP` if the `third_party/udp2tcp` directory (with its `CMakeLists.txt`) is present. A safety guard then verifies the header `include/udp2tcp/c_api.h`; if it is missing (e.g. submodule not fetched) the flag is automatically turned OFF to avoid a hard build failure.
+## Configuration (auto-detect removed)
+Auto-detection of `udp2tcp` has been removed. The new implementation is ON by default (`USE_UDP2TCP=ON`).
 
-### CI workflow integration
-- The GitHub Actions workflow (`build-and-release.yml`) performs a recursive checkout (`submodules: recursive`).
-- A verification step logs the latest commit of the submodule if present.
-- If the submodule is absent the build proceeds in legacy mode (flag disabled by guard) and JNI stub methods return fallback values.
+| Scenario | How |
+|----------|-----|
+| Standard build | `./gradlew assembleDebug` (requires `third_party/udp2tcp` present) |
+| Fetch submodule after clone | `git submodule update --init --recursive` |
+| Legacy code | Purged (sources and headers removed from repository) |
 
-### Forcing modes
-| Desired Mode | Action |
-|--------------|--------|
-| Force ON (fail if headers missing) | Pass `-DUSE_UDP2TCP=ON -DREQUIRE_UDP2TCP=ON` (future optional knob) or temporarily remove the guard (not recommended). |
-| Force OFF even if submodule present | Pass `-DUSE_UDP2TCP=OFF` to Gradle via `-PcmakeArgs=-DUSE_UDP2TCP=OFF`. |
-| Legacy build in local dev | Simply do not init the submodule (`git clone` without `--recursive`). |
+If `USE_UDP2TCP=ON` but headers are missing the build now fails fast with a clear message instead of silently falling back.
 
-### Typical local workflows
-```bash
-# Clone with submodule to exercise udp2tcp path
-git clone --recursive git@github.com:dobord/android-udp-bridge.git
-
-# If you already cloned without submodules:
-git submodule update --init --recursive
-
-# Build (auto-detect will enable if present)
-./gradlew assembleDebug --no-daemon
-
-# Force legacy path even though submodule exists
-./gradlew assembleDebug --no-daemon -PcmakeArgs=-DUSE_UDP2TCP=OFF
-```
-
-### Rationale
-This approach keeps CI green during transition while still testing the new integration when the submodule is available, reducing manual toggling and eliminating failures due to a missing include file.
+Rationale: Legacy path fully removed from build logic and repository; simplifies maintenance and avoids dual-testing overhead.

@@ -62,21 +62,15 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Optional fetch udp2tcp submodule (full recursive)
+    - name: Fetch udp2tcp submodule (required)
       run: |
-        echo "Attempting full recursive fetch of udp2tcp submodule..."
-        set +e
-        git submodule update --init --recursive third_party/udp2tcp 2>&1
-        status=$?
-        if [ $status -ne 0 ]; then
-          echo "⚠️  udp2tcp submodule fetch failed (status=$status); continuing in legacy mode."
+        echo "Fetching udp2tcp submodule (required)..."
+        git submodule update --init --recursive third_party/udp2tcp
+        if [ ! -d third_party/udp2tcp/include ]; then
+          echo "❌ Required udp2tcp headers missing (third_party/udp2tcp/include)." >&2
+          exit 1
         fi
-        set -e
-        if [ -d third_party/udp2tcp/include ]; then
-          echo "✅ udp2tcp present"; git -C third_party/udp2tcp log --oneline -1 | head -1 || true
-        else
-          echo "ℹ️  udp2tcp not present; legacy path will be built." 
-        fi
+        echo "✅ udp2tcp present: $(git -C third_party/udp2tcp log --oneline -1 | head -1 || true)"
       
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
@@ -186,7 +180,7 @@ jobs:
         key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
         restore-keys: |
           ${{ runner.os }}-gradle-
-            
+
     - name: Build ${{ matrix.build_type }} APK for ${{ matrix.arch }}
       working-directory: ssh-tunnel-android-app
       run: |

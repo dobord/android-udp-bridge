@@ -132,7 +132,7 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-gradle-
           
-    - name: Build (mock or udp2tcp quick check)
+    - name: Build (udp2tcp quick check)
       working-directory: ssh-tunnel-android-app
       shell: bash
       run: |
@@ -140,18 +140,7 @@ jobs:
         echo "[quick-build] Start"
         rm -rf app/src/main/prebuilt/ app/.cxx/ app/build/intermediates/cxx/
         ./gradlew clean --no-daemon || true
-        if [ -d ../third_party/udp2tcp ]; then
-          echo "udp2tcp detected (migration mode)"; LEGACY_MODE=0
-        else
-          LEGACY_MODE=1
-        fi
-        if [ "$LEGACY_MODE" = 1 ]; then
-          for f in udp_listener.c tcp_connection_manager.c client_manager.c udp_bridge_protocol.c; do
-            test -f app/src/main/jni/$f || { echo "Missing legacy source: $f"; exit 1; }
-          done
-        else
-          echo "Skipping legacy file checks"
-        fi
+        test -d ../third_party/udp2tcp/include || { echo "udp2tcp submodule missing"; exit 1; }
         cp app/build.gradle app/build.gradle.backup
         sed -i 's/abiFilters ".*"/abiFilters "arm64-v8a"/' app/build.gradle || true
         ./gradlew assembleDebug --no-daemon --stacktrace --info 2>&1 | tee build.log
@@ -162,7 +151,7 @@ jobs:
           echo "[quick-build] Failed"; tail -50 build.log; exit 1
         fi
         echo "[quick-build] End"
-        
+
     - name: Upload quick build APK
       if: success()
       uses: actions/upload-artifact@v4
