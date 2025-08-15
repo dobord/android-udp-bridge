@@ -1,107 +1,107 @@
-# SSH Key Authentication Support (полный текст)
+# SSH Key Authentication Support (full text)
 
-## Обзор
+## Overview
 
-В Android UDP Bridge приложение добавлена поддержка аутентификации по SSH ключам в дополнение к существующей аутентификации по паролю.
+The Android UDP Bridge application adds SSH key authentication support in addition to existing password authentication.
 
-## Методы аутентификации
+## Authentication Methods
 
-### 1. Аутентификация по паролю (существующий метод)
-- Простая аутентификация с использованием логина и пароля
-- Подходит для быстрого тестирования и простых случаев использования
+### 1. Password authentication (existing method)
+- Simple authentication using username & password
+- Suitable for quick testing and simple use cases
 
-### 2. Аутентификация по приватному ключу (новый метод)
-- Более безопасный метод аутентификации
-- Поддерживает ключи с парольной фразой и без неё
-- Рекомендуется для продакшн использования
+### 2. Private key authentication (new method)
+- More secure authentication method
+- Supports keys with and without passphrase
+- Recommended for production use
 
-## Интерфейс пользователя
+## User Interface
 
-### Выбор метода аутентификации
-- Radio buttons для переключения между методами:
-	- "Password" - аутентификация по паролю
-	- "Private Key" - аутентификация по ключу
+### Selecting authentication method
+- Radio buttons to switch between methods:
+	- "Password" – password authentication
+	- "Private Key" – key authentication
 
-### Поля ввода для аутентификации по ключу
-- **Private Key Path**: путь к файлу приватного ключа на устройстве
-- **Key Passphrase**: парольная фраза для защищённого ключа (опционально)
+### Input fields for key authentication
+- **Private Key Path**: path to the private key file on the device
+- **Key Passphrase**: passphrase for protected key (optional)
 
-## Технические детали
+## Technical Details
 
-### JNI методы
+### JNI methods
 ```java
-// Подключение с паролем
+// Connect with password
 public native boolean connectToServer(String host, int port, String username, String password);
 
-// Подключение с приватным ключом
+// Connect with private key
 public native boolean connectWithKey(String host, int port, String username, String privateKeyPath, String passphrase);
 ```
 
-### Native функции C
+### Native C functions
 ```c
-// Аутентификация по ключу
+// Key authentication
 int ssh_userauth_publickey_auto(ssh_session session, const char *username, const char *passphrase);
 int ssh_userauth_publickey(ssh_session session, const char *username, const ssh_key privkey);
 int ssh_pki_import_privkey_file(const char *filename, const char *passphrase, void *auth_fn, void *auth_data, ssh_key *pkey);
 void ssh_key_free(ssh_key key);
 ```
 
-## Поддерживаемые форматы ключей
+## Supported Key Formats
 
-В текущей реализации с stub библиотекой поддерживаются любые файлы ключей (симуляция).
-При интеграции с реальной libssh будут поддерживаться:
-- RSA ключи
-- DSA ключи 
-- ECDSA ключи
-- Ed25519 ключи
-- OpenSSH формат
-- PEM формат
+In the current stub implementation any key file is accepted (simulation).
+Upon integration with real libssh the following will be supported:
+- RSA keys
+- DSA keys 
+- ECDSA keys
+- Ed25519 keys
+- OpenSSH format
+- PEM format
 
-## Использование
+## Usage
 
-### Настройка подключения с ключом
-1. Выберите "Private Key" в разделе Authentication Method
-2. Введите путь к приватному ключу (например: /sdcard/ssh_keys/id_rsa)
-3. При необходимости введите парольную фразу
-4. Нажмите "Connect"
+### Setup connection with a key
+1. Select "Private Key" in Authentication Method
+2. Enter private key path (e.g. /sdcard/ssh_keys/id_rsa)
+3. Enter passphrase if required
+4. Press "Connect"
 
-### Пример путей к ключам на Android
-- `/sdcard/ssh_keys/id_rsa` - внешнее хранилище
-- `/data/data/com.example.sshtunnel/files/keys/id_rsa` - внутреннее хранилище приложения
-- `/storage/emulated/0/Download/my_key` - папка загрузок
+### Example key paths on Android
+- `/sdcard/ssh_keys/id_rsa` - external storage
+- `/data/data/com.example.sshtunnel/files/keys/id_rsa` - app internal storage
+- `/storage/emulated/0/Download/my_key` - downloads folder
 
-## Безопасность
+## Security
 
-### Рекомендации по безопасности
-- Используйте ключи с парольными фразами
-- Храните ключи в защищённом хранилище приложения
-- Не оставляйте ключи в общедоступных папках
-- Регулярно обновляйте ключи
+### Recommendations
+- Use passphrase‑protected keys
+- Store keys in protected app storage
+- Avoid leaving keys in publicly accessible folders
+- Rotate keys regularly
 
-### Права доступа к файлам
-Приложению требуются права на чтение файлов для загрузки приватных ключей:
+### File permissions
+The app requires file read permissions to load private keys:
 ```xml
 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 ```
 
-## Отладка
+## Debugging
 
-### Логирование аутентификации
-Все операции аутентификации логируются с тегом "SSHTunnel":
+### Authentication logging
+All authentication operations are logged with tag "SSHTunnel":
 ```
 I/SSHTunnel: Attempting to connect to server:22 with user username using key /path/to/key
 I/SSHTunnel: SSH key authentication successful
 ```
 
-### Возможные ошибки
-- "SSH key authentication failed" - неверный ключ или парольная фраза
-- "Failed to create SSH session" - проблемы с подключением
-- "Please specify private key path" - не указан путь к ключу
+### Possible errors
+- "SSH key authentication failed" - invalid key or passphrase
+- "Failed to create SSH session" - connection/setup issue
+- "Please specify private key path" - key path missing
 
-## Будущие улучшения
+## Future Enhancements
 
-1. **Интеграция с Android Keystore** - безопасное хранение ключей
-2. **Генерация ключей в приложении** - создание новых ключей
-3. **Поддержка SSH-Agent** - использование системного агента
-4. **Импорт ключей из файлов** - UI для выбора файлов ключей
-5. **Сертификаты SSH** - поддержка certificate-based аутентификации
+1. **Integration with Android Keystore** - secure key storage
+2. **In-app key generation** - create new keys
+3. **SSH Agent support** - use system agent
+4. **Key file import UI** - file picker for keys
+5. **SSH certificates** - certificate-based authentication support

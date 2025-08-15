@@ -1,106 +1,106 @@
-# Техническое задание: Новая архитектура UDP-over-SSH
+# Technical Specification: New UDP-over-SSH Architecture
 
-## 1. Обзор архитектуры
+## 1. Architecture Overview
 
-> NOTE: Этот документ обновлен для отражения перехода на `udp2tcp`. Разделы, описывающие кастомный "UDP Bridge" протокол, помечены как Legacy и будут удалены после завершения миграции (см. `MIGRATION_UDP2TCP.md`).
+> NOTE: This document was updated to reflect the transition to `udp2tcp`. Sections describing the custom "UDP Bridge" protocol are marked Legacy and will be removed after migration completion (see `MIGRATION_UDP2TCP.md`).
 
-### 1.1 Актуальная архитектура (udp2tcp)
-Текущая реализация использует:
-- SSH (libssh) для установки защищенного TCP канала (port forwarding)
-- Протокол/клиент `udp2tcp` для инкапсуляции UDP в единый TCP поток без кастомного заголовка и логики мультиплексирования на стороне Android
+### 1.1 Current architecture (udp2tcp)
+Current implementation uses:
+- SSH (libssh) to establish a secure TCP channel (port forwarding)
+- `udp2tcp` protocol/client to encapsulate UDP in a single TCP stream without custom header or client-side multiplexing logic
 
 ```
-[UDP Client] ⇄ (UDP localhost:<local_udp_port>) ⇄ [udp2tcp client (Android)] ⇄ (TCP через SSH forward) ⇄ [udp2tcp server] ⇄ (UDP) ⇄ [Target UDP Server]
+[UDP Client] ⇄ (UDP localhost:<local_udp_port>) ⇄ [udp2tcp client (Android)] ⇄ (TCP via SSH forward) ⇄ [udp2tcp server] ⇄ (UDP) ⇄ [Target UDP Server]
 ```
 
-Характеристики:
-- Нет внутреннего `udp_listener` / client_table в JNI — упрощение
-- Статистика собирается на адаптере udp2tcp (пакеты/байты)
-- Надежность и упрощение сопровождения за счет использования внешнего проверенного компонента
+Characteristics:
+- No internal `udp_listener` / client_table in JNI — simplified
+- Statistics collected inside udp2tcp adapter (packets/bytes)
+- Reliability & maintenance improvements via external component reuse
 
-### 1.2 Legacy архитектура (кастомный UDP Bridge протокол)
-Исторически использовалась client-server модель с собственным бинарным заголовком и мультиплексированием:
+### 1.2 Legacy architecture (custom UDP Bridge protocol)
+Historically a client-server model with proprietary binary header & multiplexing:
 ```
 [UDP Client] ←→ [Android UDP Bridge] ←→ [SSH TCP Tunnel] ←→ [Server UDP Bridge] ←→ [Target UDP Server]
 ```
-Этот путь включал `udp_bridge_protocol.[ch]`, `udp_listener.[ch]`, `client_manager.[ch]`, PING/PONG, CRC32 и пр. — теперь помечено как Legacy.
+This path included `udp_bridge_protocol.[ch]`, `udp_listener.[ch]`, `client_manager.[ch]`, PING/PONG, CRC32 etc — now marked Legacy.
 
-## 2. Компоненты системы
+## 2. System Components
 
-### 2.1 Android UDP Bridge (Актуально)
+### 2.1 Android UDP Bridge (Current)
 
-Минимальный слой:
-- SSH соединение (аутентификация пароль/ключ)
-- Настройка локального UDP порта
-- Запуск udp2tcp клиента, направляющего UDP трафик в SSH‑проброшенный TCP порт сервера
-- Сбор простой статистики
+Minimal layer:
+- SSH connection (password/key auth)
+- Local UDP port setup
+- Start udp2tcp client forwarding UDP into SSH-forwarded TCP port
+- Collect simple statistics
 
 ### 2.1L (Legacy) UDP Listener / Protocol Handler / TCP Connection Manager
-Следующие подсекции сохранены для исторической справки и будут удалены после миграции.
+The following subsections are preserved for historical context and will be removed after migration.
 
 #### 2.1.1L UDP Listener (Legacy)
-**Функции:**
-- Прослушивание UDP портов для входящих пакетов от клиентов
-- Идентификация клиентов по адресу и порту отправителя
-- Присвоение уникального `client_id` для каждого клиента
+**Functions:**
+- Listen on UDP ports for incoming client packets
+- Identify clients by source address & port
+- Assign unique `client_id`
 
-**Структура данных клиента:**
+**Client data structure:**
 ```c
 typedef struct {
-		uint32_t client_id;         // Уникальный ID клиента
-		struct sockaddr_in addr;    // IP адрес и порт клиента
-		time_t last_activity;       // Время последней активности
-		uint32_t packet_count;      // Счетчик пакетов
+		uint32_t client_id;         // Unique client ID
+		struct sockaddr_in addr;    // Client IP address and port
+		time_t last_activity;       // Time of last activity
+		uint32_t packet_count;      // Packet counter
 } udp_client_t;
 ```
 
-**Алгоритм работы:**
-1. Принять UDP пакет от клиента
-2. Извлечь адрес отправителя (IP:Port)
-3. Найти или создать запись клиента в таблице
-4. Присвоить/получить `client_id`
-5. Упаковать данные в протокольное сообщение
-6. Отправить через TCP туннель
+**Flow:**
+1. Receive UDP packet
+2. Extract sender address (IP:Port)
+3. Find/create client entry
+4. Assign/get `client_id`
+5. Pack protocol message
+6. Send via TCP tunnel
 
 #### 2.1.2L Protocol Handler (Legacy)
-**Протокол сообщений:**
+**Message header:**
 ```c
 typedef struct {
-		uint8_t  magic[4];          // "UDPB" - магические байты
-		uint8_t  version;           // Версия протокола (1)
-		uint8_t  message_type;      // Тип сообщения
-		uint16_t flags;             // Флаги
-		uint32_t client_id;         // ID клиента
-		uint32_t payload_size;      // Размер полезной нагрузки
-		uint32_t checksum;          // CRC32 заголовка
+		uint8_t  magic[4];          // "UDPB" - magic bytes
+		uint8_t  version;           // Protocol version (1)
+		uint8_t  message_type;      // Message type
+		uint16_t flags;             // Flags
+		uint32_t client_id;         // Client ID
+		uint32_t payload_size;      // Payload size
+		uint32_t checksum;          // CRC32 of header
 } __attribute__((packed)) udp_bridge_header_t;
 ```
 
-**Типы сообщений:**
-- `MSG_DATA` (0x01) - данные UDP пакета
-- `MSG_CLIENT_REGISTER` (0x02) - регистрация нового клиента
-- `MSG_CLIENT_TIMEOUT` (0x03) - таймаут клиента
-- `MSG_PING` (0x04) - проверка соединения
-- `MSG_PONG` (0x05) - ответ на ping
+**Message types:**
+- `MSG_DATA` (0x01) - UDP packet data
+- `MSG_CLIENT_REGISTER` (0x02) - register new client
+- `MSG_CLIENT_TIMEOUT` (0x03) - client timeout
+- `MSG_PING` (0x04) - connectivity check
+- `MSG_PONG` (0x05) - ping reply
 
 #### 2.1.3L TCP Connection Manager (Legacy)
-**Функции:**
-- Управление SSH TCP соединением
-- Отправка протокольных сообщений серверу
-- Получение ответов и маршрутизация обратно к UDP клиентам
-- Переподключение при обрыве связи
+**Functions:**
+- Manage SSH TCP connection
+- Send protocol messages to server
+- Receive responses and route back to UDP clients
+- Reconnect on failure
 
 ### 2.2 Server Side
 
-#### 2.2.1 Актуально (udp2tcp server)
-- Легковесный сервер udp2tcp принимает TCP (через SSH forward) и пересылает пакеты на целевой UDP endpoint.
-- Может быть развёрнут как отдельный сервис или в контейнере рядом с целевым приложением.
+#### 2.2.1 Current (udp2tcp server)
+- A lightweight udp2tcp server accepts TCP (via SSH forward) and forwards packets to the target UDP endpoint.
+- Can be deployed as a standalone service or container next to the target application.
 
 #### 2.2.2L Legacy Server UDP Bridge
-(Описывает старый сервер с protocol.c, client_table.c, udp_forwarder.c)
+(Describes the old server with protocol.c, client_table.c, udp_forwarder.c)
 
 #### 2.2.1 Docker Environment
-**Структура контейнера:**
+**Container structure:**
 ```yaml
 # docker-compose.yml
 version: '3.8'
@@ -108,8 +108,8 @@ services:
 	udp-bridge-server:
 		build: .
 		ports:
-			- "22:22"           # SSH порт
-			- "9999:9999/udp"   # UDP форвардинг порт (проброшен наружу)
+			- "22:22"           # SSH port
+			- "9999:9999/udp"   # UDP forwarding port (exposed)
 		environment:
 			- TARGET_UDP_HOST=target-server.example.com
 			- TARGET_UDP_PORT=5060
@@ -119,42 +119,42 @@ services:
 ```
 
 #### 2.2.2 TCP Protocol Handler
-**Функции:**
-- Прослушивание TCP подключений от Android клиентов
-- Парсинг протокольных сообщений
-- Управление таблицей активных клиентов
-- Маршрутизация UDP пакетов
+**Functions:**
+- Listen for TCP connections from Android clients
+- Parse protocol messages
+- Manage active client table
+- Route UDP packets
 
-**Структура сервера:**
+**Server structure:**
 ```c
 typedef struct {
-		int tcp_socket;             // TCP сокет для Android клиентов
-		int udp_socket;             // UDP сокет для целевого сервера
-		struct sockaddr_in target;  // Адрес целевого UDP сервера
-		pthread_t tcp_thread;       // Поток обработки TCP
-		pthread_t udp_thread;       // Поток обработки UDP ответов
-		client_table_t* clients;    // Таблица клиентов
+		int tcp_socket;             // TCP socket for Android clients
+		int udp_socket;             // UDP socket for the target server
+		struct sockaddr_in target;  // Target UDP server address
+		pthread_t tcp_thread;       // TCP handling thread
+		pthread_t udp_thread;       // UDP response handling thread
+		client_table_t* clients;    // Client table
 } udp_bridge_server_t;
 ```
 
 #### 2.2.3 UDP Forwarder
-**Функции:**
-- Конвертация протокольных сообщений в UDP пакеты
-- Отправка UDP пакетов на целевой сервер
-- Получение ответов от целевого сервера
-- Сопоставление ответов с клиентами и отправка обратно
+**Functions:**
+- Convert protocol messages to UDP packets
+- Send UDP packets to target server
+- Receive responses from target server
+- Map responses back to clients and send
 
-## 3. Протокол взаимодействия
+## 3. Interaction Protocol
 
-### 3.1 Актуально (udp2tcp)
-Используется потоковая передача: каждый UDP датаграмм помещается в TCP поток с минимальной framing логикой из проекта udp2tcp (без кастомного магического заголовка вида "UDPB"). Поддержка ping/pong может обеспечиваться стандартными TCP keepalive или опциональным heartbeat (не реализовано на момент миграции).
+### 3.1 Current (udp2tcp)
+A streaming approach is used: each UDP datagram is placed into the TCP stream with minimal framing logic from the udp2tcp project (no custom "UDPB" magic header). Ping/pong can be handled via standard TCP keepalive or an optional heartbeat (not implemented at migration time).
 
-### 3.2L Legacy протокол
+### 3.2L Legacy protocol
 
-### 3.2.1L Регистрация клиента
+### 3.2.1L Client registration
 ```
 Android → Server: MSG_CLIENT_REGISTER
-	client_id: 0 (новый клиент)
+	client_id: 0 (new client)
 	payload: client_address_info
 
 Server → Android: MSG_CLIENT_REGISTER
@@ -162,7 +162,7 @@ Server → Android: MSG_CLIENT_REGISTER
 	payload: success/error
 ```
 
-### 3.2.2L Передача данных
+### 3.2.2L Data transfer
 ```
 Android → Server: MSG_DATA
 	client_id: [assigned_id]
@@ -179,7 +179,7 @@ Server → Android: MSG_DATA
 Android → Client: UDP response to original client
 ```
 
-### 3.2.3L Управление таймаутами
+### 3.2.3L Timeout management
 ```
 Android → Server: MSG_CLIENT_TIMEOUT
 	client_id: [expired_id]
@@ -188,43 +188,43 @@ Android → Server: MSG_CLIENT_TIMEOUT
 Server: Cleanup client entry
 ```
 
-## 4. Конфигурация
+## 4. Configuration
 
-### 4.1 Актуально (udp2tcp)
+### 4.1 Current (udp2tcp)
 ```java
 public class Udp2TcpConfig {
 	private String sshHost;
 	private int sshPort = 22;
 	private String sshUsername;
-	private String sshPassword; // или ключ
-	private int localUdpPort = 5060;      // Локальный UDP listen
-	private int remoteUdpPort = 5060;     // Целевой конечный UDP порт
-	private String remoteUdpHost;         // Целевой хост
-	private int udp2tcpServerPort = 8080; // Порт udp2tcp сервера (TCP), к которому делается SSH forward
+	private String sshPassword; // or key
+	private int localUdpPort = 5060;      // Local UDP listen
+	private int remoteUdpPort = 5060;     // Target final UDP port
+	private String remoteUdpHost;         // Target host
+	private int udp2tcpServerPort = 8080; // udp2tcp server port (TCP) used for SSH forward
 }
 ```
 
-### 4.2L Legacy конфигурация
+### 4.2L Legacy configuration
 
-### 4.1 Android приложение
+### 4.1 Android application
 ```java
 public class UdpBridgeConfig {
-		// SSH настройки
+		// SSH settings
 		private String sshHost;
 		private int sshPort = 22;
 		private String sshUsername;
 		private String sshPassword;
 		private String sshPrivateKey;
     
-		// Bridge настройки
-		private int localUdpPort = 5060;        // Локальный UDP порт
-		private int bridgeTcpPort = 8080;       // TCP порт на сервере
-		private int clientTimeout = 300;        // Таймаут клиента (сек)
-		private int maxClients = 1000;          // Максимум клиентов
+		// Bridge settings
+		private int localUdpPort = 5060;        // Local UDP port
+		private int bridgeTcpPort = 8080;       // TCP port on server
+		private int clientTimeout = 300;        // Client timeout (sec)
+		private int maxClients = 1000;          // Max clients
     
-		// Целевой сервер (настраивается на server side)
-		// private String targetHost;  // Не нужно в Android
-		// private int targetPort;     // Настраивается на сервере
+		// Target server (configured on server side)
+		// private String targetHost;  // Not needed in Android
+		// private int targetPort;     // Configured on server
 }
 ```
 
@@ -239,146 +239,146 @@ MAX_CLIENTS=1000
 LOG_LEVEL=INFO
 ```
 
-### 4.3 UI (Актуально)
-UI упрощается: поля client timeout/max clients скрыты (не применимы к udp2tcp), остаются SSH + локальный/удалённый UDP порты.
+### 4.3 UI (Current)
+UI simplified: client timeout/max clients fields hidden (not applicable to udp2tcp); remains SSH + local/remote UDP ports.
 
-### 4.3L Пользовательский интерфейс (Legacy)
+### 4.3L User Interface (Legacy)
 
-#### 4.3.1 Главный экран
-**Структура интерфейса:**
-- **Список подключений** - основная область экрана
-- **Кнопка "+"** - в верхней части экрана для добавления новой настройки
-- **Переключатель ON/OFF** - справа от каждого элемента списка
+#### 4.3.1 Main screen
+**Interface structure:**
+- **Connections list** - main area
+- **"+" button** - top of screen to add new configuration
+- **ON/OFF switch** - right side of each list item
 
-#### 4.3.2 Элемент списка подключений
-**Отображаемая информация:**
+#### 4.3.2 Connection list item
+**Displayed info:**
 ```
 ┌─────────────────────────────────────────┬──────┐
-│ [Название подключения]                  │ [ON] │
+│ [Connection Name]                       │ [ON] │
 │ ssh://user@server.com:22 → 192.168.1.1 │ OFF  │
 │ UDP: 5060 → 5060                        │      │
 └─────────────────────────────────────────┴──────┘
 ```
 
-**Элементы:**
-- **Название подключения** - пользовательское имя конфигурации
-- **SSH строка подключения** - формат "ssh://user@host:port"
-- **Целевой сервер** - IP адрес или домен целевого UDP сервера
-- **UDP порты** - локальный порт → удаленный порт
-- **Переключатель** - включение/выключение туннеля
+**Elements:**
+- **Connection name** - user-friendly config label
+- **SSH connection string** - format "ssh://user@host:port"
+- **Target server** - IP or domain of target UDP server
+- **UDP ports** - local port → remote port
+- **Switch** - enable/disable tunnel
 
-#### 4.3.3 Действия пользователя
-**Основные действия:**
-- **Клик по кнопке "+"** → Открытие экрана создания новой настройки
-- **Клик по элементу списка** → Открытие экрана редактирования настройки
-- **Переключатель ON/OFF** → Включение/выключение туннеля
-- **Долгий клик** → Контекстное меню (удалить, дублировать, экспорт)
+#### 4.3.3 User actions
+**Primary actions:**
+- **Click "+" button** → open create configuration screen
+- **Click list item** → open edit screen
+- **ON/OFF switch** → toggle tunnel
+- **Long press** → context menu (delete, duplicate, export)
 
-#### 4.3.4 Экран настройки подключения
-**Поля конфигурации:**
+#### 4.3.4 Connection settings screen
+**Configuration fields:**
 ```
 ┌─────────────────────────────────────────┐
-│ Название подключения                    │
-│ [Офисный SIP сервер                  ]  │
+│ Connection Name                         │
+│ [Office SIP server                   ]  │
 │                                         │
-│ SSH подключение                         │
-│ Хост: [server.company.com            ]  │
-│ Порт: [22                            ]  │
-│ Пользователь: [username              ]  │
-│ Пароль: [••••••••                   ]  │
-│ ☐ Использовать SSH ключ                │
+│ SSH Connection                          │
+│ Host: [server.company.com            ]  │
+│ Port: [22                            ]  │
+│ User: [username                      ]  │
+│ Password: [••••••••                 ]  │
+│ ☐ Use SSH key                          │
 │                                         │
-│ UDP настройки                           │
-│ Локальный порт: [5060                ]  │
-│ Удаленный хост: [192.168.1.100       ]  │
-│ Удаленный порт: [5060                ]  │
+│ UDP Settings                            │
+│ Local port: [5060                   ]  │
+│ Remote host: [192.168.1.100         ]  │
+│ Remote port: [5060                  ]  │
 │                                         │
-│ Дополнительные настройки                │
-│ Таймаут клиента: [300] сек              │
-│ Максимум клиентов: [1000             ]  │
+│ Additional settings                     │
+│ Client timeout: [300] s                │
+│ Max clients: [1000                   ]  │
 │                                         │
-│ [ Сохранить ] [ Тест подключения ]      │
+│ [ Save ] [ Connection Test ]           │
 └─────────────────────────────────────────┘
 ```
 
-#### 4.3.5 Индикаторы состояния
-**Визуальные индикаторы:**
-- **Зеленый** - туннель активен и работает
-- **Красный** - ошибка подключения
-- **Желтый** - подключение в процессе
-- **Серый** - туннель выключен
+#### 4.3.5 Status indicators
+**Visual indicators:**
+- **Green** - tunnel active
+- **Red** - connection error
+- **Yellow** - connecting
+- **Gray** - tunnel disabled
 
-**Дополнительная информация:**
-- Количество активных клиентов
-- Время работы туннеля
-- Статистика пакетов (отправлено/получено)
+**Additional info:**
+- Active client count
+- Tunnel uptime
+- Packet statistics (sent/received)
 
-## 5. Реализация
+## 5. Implementation
 
-### 5.1 Актуальный фокус
-1. Интеграция udp2tcp (NDK модуль)
-2. Удаление/инкапсуляция legacy JNI слоёв
-3. Обновление CI/CD (исключить проверки legacy файлов)
-4. E2E тестирование с udp2tcp
+### 5.1 Current focus
+1. Integrate udp2tcp (NDK module)
+2. Remove/encapsulate legacy JNI layers
+3. Update CI/CD (exclude legacy file checks)
+4. E2E testing with udp2tcp
 
-### 5.2L Legacy план (исторический)
+### 5.2L Legacy plan (historical)
 
-### 5.1 План реализации
+### 5.1 Implementation plan
 
-#### Этап 1: Подготовка инфраструктуры (1-2 дня)
-1. ✓ Создание технической спецификации
-2. Создание базовой структуры проекта
-3. Настройка среды разработки
+#### Phase 1: Infrastructure preparation (1-2 days)
+1. ✓ Create technical specification
+2. Create basic project structure
+3. Configure development environment
 
-#### Этап 2: Server UDP Bridge - Базовая функциональность (3-4 дня)
-1. Создание Docker образа с SSH сервером
-2. Реализация протокола сообщений (protocol.h/c)
-3. Реализация таблицы клиентов (client_table.h/c)
-4. Базовый TCP сервер для приема подключений
-5. Базовый UDP форвардинг
+#### Phase 2: Server UDP Bridge - Basic functionality (3-4 days)
+1. Create Docker image with SSH server
+2. Implement message protocol (protocol.h/c)
+3. Implement client table (client_table.h/c)
+4. Basic TCP server accepting connections
+5. Basic UDP forwarding
 
-#### Этап 3: Server UDP Bridge - Полная функциональность (2-3 дня)
-1. Обработка всех типов сообщений протокола
-2. Управление жизненным циклом клиентов
-3. Обработка ошибок и переподключений
-4. Логирование и мониторинг
+#### Phase 3: Server UDP Bridge - Full functionality (2-3 days)
+1. Handle all protocol message types
+2. Manage client lifecycle
+3. Error handling and reconnection
+4. Logging and monitoring
 
-#### Этап 4: Android UDP Bridge - Протокол (2-3 дня)
-1. Реализация структур протокола
-2. Сериализация/десериализация сообщений
-3. Управление client_id
-4. Базовый TCP клиент
+#### Phase 4: Android UDP Bridge - Protocol (2-3 days)
+1. Implement protocol structures
+2. Serialization/deserialization
+3. client_id management
+4. Basic TCP client
 
-#### Этап 5: Android UDP Bridge - Интеграция (2-3 дня)
-1. Модификация UDP listener
-2. Интеграция с SSH туннелем
-3. Обновление пользовательского интерфейса
-4. Управление конфигурацией
+#### Phase 5: Android UDP Bridge - Integration (2-3 days)
+1. Modify UDP listener
+2. Integrate with SSH tunnel
+3. Update user interface
+4. Configuration management
 
-#### Этап 6: Тестирование и отладка (3-4 дня)
-1. Unit тесты для протокола
-2. Integration тесты end-to-end
-3. Тестирование производительности
-4. Отладка и оптимизация
+#### Phase 6: Testing and debugging (3-4 days)
+1. Unit tests for protocol
+2. End-to-end integration tests
+3. Performance testing
+4. Debugging and optimization
 
-#### Этап 7: Документация и деплой (1-2 дня)
-1. Документация по развертыванию
-2. Инструкции для пользователей
-3. Финальное тестирование
-4. Подготовка к релизу
+#### Phase 7: Documentation and deployment (1-2 days)
+1. Deployment documentation
+2. User instructions
+3. Final testing
+4. Release preparation
 
-**Общее время реализации: 14-21 день**
+**Total implementation time: 14-21 days**
 
-### 5.2 Структура файлов (Target)
+### 5.2 File structure (Target)
 ```
 ssh-tunnel-android-app/
 	app/src/main/jni/
-		ssh_tunnel.c (упрощённая логика)
+		ssh_tunnel.c (simplified logic)
 		udp2tcp_client_adapter.[ch]
-third_party/udp2tcp/ (исходники)
+third_party/udp2tcp/ (sources)
 ```
 
-### 5.2L Структура файлов (Legacy)
+### 5.2L File structure (Legacy)
 
 ```
 server-udp-bridge/
@@ -401,56 +401,56 @@ server-udp-bridge/
 
 ssh-tunnel-android-app/
 ├── app/src/main/jni/
-│   ├── udp_bridge_protocol.h      # Новый
-│   ├── udp_bridge_protocol.c      # Новый
-│   ├── client_manager.h           # Новый
-│   ├── client_manager.c           # Новый
-│   └── ssh_tunnel_bridge.c        # Модифицированный
+│   ├── udp_bridge_protocol.h      # New
+│   ├── udp_bridge_protocol.c      # New
+│   ├── client_manager.h           # New
+│   ├── client_manager.c           # New
+│   └── ssh_tunnel_bridge.c        # Modified
 └── app/src/main/java/
 		└── com/example/sshtunnel/
-				├── UdpBridgeConfig.java   # Новый
-				└── UdpBridgeService.java  # Модифицированный
+				├── UdpBridgeConfig.java   # New
+				└── UdpBridgeService.java  # Modified
 ```
 
-## 6. Преимущества udp2tcp
-- Меньше собственного кода => ниже риск ошибок
-- Нет необходимости поддерживать свой бинарный протокол и таблицы клиентов
-- Проще отладка (tcpdump, стандартные инструменты)
-- Поддержка повторного использования udp2tcp в других проектах
+## 6. Advantages of udp2tcp
+- Less custom code => lower risk of bugs
+- No need to maintain own binary protocol and client tables
+- Easier debugging (tcpdump, standard tools)
+- Enables reuse of udp2tcp in other projects
 
-## 6L Преимущества Legacy (для истории)
+## 6L Legacy advantages (historical)
 
-### 6.1 Производительность
+### 6.1 Performance
 
-### 6.2 Масштабируемость
+### 6.2 Scalability
 
-### 6.3 Надежность
+### 6.3 Reliability
 
-### 6.4 Гибкость
+### 6.4 Flexibility
 
-## 7. Совместимость и миграция
-Актуальная миграция описана в `MIGRATION_UDP2TCP.md`.
+## 7. Compatibility & Migration
+Current migration described in `MIGRATION_UDP2TCP.md`.
 
-### 7.1 Обратная совместимость
+### 7.1 Backward compatibility
 
-### 7.2L План миграции (старый)
-1. Развертывание server bridge в тестовой среде
-2. Добавление переключателя в Android приложение
-3. Тестирование с реальными пользователями
-4. Постепенный переход на новую архитектуру
-5. Удаление старого кода после стабилизации
+### 7.2L Migration plan (old)
+1. Deploy server bridge in test environment
+2. Add feature toggle in Android app
+3. Test with real users
+4. Gradual transition to new architecture
+5. Remove old code after stabilization
 
-## 8. Мониторинг и метрики
+## 8. Monitoring & Metrics
 ### 8.1 Server metrics
-- Количество активных клиентов
-- Throughput UDP пакетов
-- Latency обработки
-- Ошибки протокола
+- Active client count
+- UDP packet throughput
+- Processing latency
+- Protocol errors
 
 ### 8.2 Android metrics
-- Время подключения
+- Connection time
 - Packet loss rate
 - Reconnection frequency
 - Memory usage
 
-Это техническое задание обеспечивает основу для реализации новой эффективной архитектуры UDP-over-SSH с улучшенной производительностью и масштабируемостью.
+This technical specification provides the foundation for implementing the new efficient UDP-over-SSH architecture with improved performance and scalability.

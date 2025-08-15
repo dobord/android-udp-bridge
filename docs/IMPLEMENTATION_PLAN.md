@@ -55,7 +55,7 @@ Approach A: vendor sources under `third_party/udp2tcp/`.
 Interface (draft):
 ```c
 int udp2tcp_init(const char* remote_host, int remote_port, int local_udp_port);
-int udp2tcp_start(void);        // создает потоки RX/TX
+int udp2tcp_start(void);        // creates RX/TX threads
 int udp2tcp_stop(void);
 void udp2tcp_get_stats(uint64_t* rx_pkts, uint64_t* tx_pkts, uint64_t* rx_bytes, uint64_t* tx_bytes);
 int udp2tcp_is_running(void);

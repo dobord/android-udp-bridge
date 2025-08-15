@@ -1,8 +1,8 @@
 # Changelog: Root Markdown Cleanup
 
-Дата: 11 августа 2025
+Date: 11 Aug 2025
 
-Удалены из корня (перенесены ранее в docs/ или docs_legacy/):
+Removed from root (previously moved into docs/ or docs_legacy/):
 - ADVANCED_SSH_LIBRARY.md -> docs/ADVANCED_SSH_LIBRARY.md
 - CI_CD_SUMMARY.md -> docs/CI_CD_SUMMARY.md
 - IMPLEMENTATION_PLAN.md -> docs/IMPLEMENTATION_PLAN.md
@@ -11,7 +11,7 @@
 - SSH_KEY_AUTHENTICATION.md -> docs/SSH_KEY_AUTHENTICATION.md
 - TECH_SPEC_NEW_ARCHITECTURE.md -> docs/TECH_SPEC_NEW_ARCHITECTURE.md
 
-Legacy отчёты (снимки) перемещены в docs_legacy/:
+Legacy reports (snapshots) moved into docs_legacy/:
 - ARCHITECTURE_FIX_REPORT.md
 - ARCH_FLAGS_FIX.md / ARCH_FLAGS_FIX_COMPLETE.md
 - BRIDGE_CONFIG_REMOVAL.md
@@ -36,8 +36,8 @@ Legacy отчёты (снимки) перемещены в docs_legacy/:
 - UDP_BRIDGE_SCHEMA.md
 - UI_REDESIGN_SUMMARY.md
 
-Все содержимое сохранено без потерь; placeholder без расширения TCP_CONNECTION_MANAGER_REPORT удалён.
+All content preserved without loss; extension-less placeholder TCP_CONNECTION_MANAGER_REPORT removed.
 
-Дальнейшие шаги (optional):
-- Обновить ссылки внутри документов, если ещё указывают на корень.
-- Добавить диаграммы в MIGRATION_UDP2TCP.md.
+Next steps (optional):
+- Update links inside docs if any still point to root.
+- Add diagrams to MIGRATION_UDP2TCP.md.

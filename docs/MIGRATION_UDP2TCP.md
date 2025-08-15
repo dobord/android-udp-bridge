@@ -1,120 +1,120 @@
-# Миграция на udp2tcp (полный документ)
+# Migration to udp2tcp (full document)
 
-## Статус
-- Текущая ветка: `feature/udp2tcp`
-- Цель: Заменить кастомный UDP Bridge протокол и listener на использование проекта `udp2tcp` (git@github.com:dobord/udp2tcp.git) при сохранении SSH port forwarding.
- - Текущий прогресс: внедрён минимальный "embed" режим udp2tcp на Android без coroutine scheduler / networking / TLS (флаг `UDP2TCP_EMBED_NO_SCHEDULER`). C API собирается, старт клиента/сервера возвращает exit_code = -100 (Not Implemented) как временная заглушка.
+## Status
+- Current branch: `feature/udp2tcp`
+- Goal: Replace custom UDP Bridge protocol & listener with the `udp2tcp` project (git@github.com:dobord/udp2tcp.git) while preserving SSH port forwarding.
+- Current progress: minimal "embed" mode of udp2tcp on Android without coroutine scheduler / networking / TLS (`UDP2TCP_EMBED_NO_SCHEDULER`). C API builds; client/server start returns exit_code = -100 (Not Implemented) as a temporary stub.
 
-## Обоснование
-| Аспект | Legacy UDP Bridge | udp2tcp |
+## Rationale
+| Aspect | Legacy UDP Bridge | udp2tcp |
 |--------|-------------------|---------|
-| Мультиплексирование | Свой бинарный протокол с заголовком | Потоковая инкапсуляция UDP в TCP с минимализмом |
-| Кодовая база | ~несколько сотен строк JNI + протокол | Внешний, переиспользуемый код |
-| Надёжность | Поддержка и тесты внутри проекта | Отдельный проект, упрощение сопровождения |
-| Сложность | Клиентские таблицы, ping/pong, CRC | Прозрачная передача без доп. слоёв |
+| Multiplexing | Custom binary protocol w/ header | Stream encapsulation of UDP in TCP (minimal) |
+| Code base | ~hundreds of lines JNI + protocol | External reusable code |
+| Reliability | Supported & tested inside project | Separate project simplifies maintenance |
+| Complexity | Client tables, ping/pong, CRC | Transparent forwarding w/out extra layers |
 
-## Объем изменений
-1. Удаление / деприкация:
+## Scope of change
+1. Removal / deprecation:
 	- `udp_listener.c/h`
 	- `udp_bridge_protocol.c/h`
-	- client manager (JNI часть)
-	- Документы: пометка Legacy (`UDP_BRIDGE_SCHEMA.md`, отчёты PHASE_2.x, PROTOCOL_IMPLEMENTATION_REPORT.md)
-2. Добавление:
-	- Встраивание клиента `udp2tcp` (либо как статическая библиотека, либо запуск бинаря через JNI/Java wrapper)
-	- Конфигурационный слой: mapping локальный UDP порт -> удалённый target (host:port)
-	- Минимальная статистика (пакеты/байты) собирается локально по сокету
+	- client manager (JNI part)
+	- Docs: mark Legacy (`UDP_BRIDGE_SCHEMA.md`, PHASE_2.x reports, PROTOCOL_IMPLEMENTATION_REPORT.md)
+2. Addition:
+	- Embed `udp2tcp` client (static library or binary via JNI/Java wrapper)
+	- Configuration layer: map local UDP port -> remote target (host:port)
+	- Minimal stats (packets/bytes) gathered locally via socket
 3. SSH:
-	- Сохранить существующий установочный SSH workflow (пароль / ключ)
-	- Использовать `ssh -L localhost:<bridge_port>:127.0.0.1:<udp2tcp_server_port>` аналог внутри libssh (уже есть портфорвардинг на 8080 — перенастроить на порт сервера udp2tcp)
+	- Retain existing SSH setup workflow (password / key)
+	- Use `ssh -L localhost:<bridge_port>:127.0.0.1:<udp2tcp_server_port>` equivalent inside libssh (already forwarding 8080 — retarget to udp2tcp server port)
 
-## Пошаговый план
-### Этап 1 — Подготовка (done/ongoing)
-- [x] Создан `MIGRATION_UDP2TCP.md`
-- [x] Обновлен `README.md` (добавлена ссылка и пометки legacy)
-- [x] Обновлен `TECH_SPEC_NEW_ARCHITECTURE.md` (добавлен udp2tcp, legacy помечены)
+## Step-by-step plan
+### Phase 1 — Preparation (done/ongoing)
+- [x] Created `MIGRATION_UDP2TCP.md`
+- [x] Updated `README.md` (added link + legacy notes)
+- [x] Updated `TECH_SPEC_NEW_ARCHITECTURE.md` (added udp2tcp, marked legacy)
 
-### Этап 2 — Интеграция клиента udp2tcp
-Варианты:
-A. Встроить исходники как модуль NDK
-B. Собрать как внешнюю lib и подключить
-C. Запуск отдельного процесса (менее предпочтительно на Android)
+### Phase 2 — udp2tcp client integration
+Options:
+A. Embed sources as NDK module
+B. Build as external library & link
+C. Separate process (least preferred)
 
-Выбранный подход: A (исходники в субдиректорию `third_party/udp2tcp/` + Android.mk / CMakeLists). Если лицензия/структура позволит. Иначе fallback B.
+Chosen: A (sources under `third_party/udp2tcp/` + Android.mk / CMakeLists). If blocked by licensing/structure fallback B.
 
-Задачи:
-- [x] Импортировать код udp2tcp в `third_party/` (выполнено вручную)
-- [x] Создать обёртку `udp2tcp_client_adapter.c/h` (init, start, stop, stats) — реализована заглушка + одно-клиентский ответ
-- [x] JNI методы заменить вызовами адаптера (добавлены start/stop/stats/isRunning)
-- [x] Обновить Gradle / Android.mk для сборки (Android.mk обновлен; Gradle часть — позже при необходимости)
+Tasks:
+- [x] Imported udp2tcp code into `third_party/`
+- [x] Created wrapper `udp2tcp_client_adapter.c/h` (init, start, stop, stats) — stub + single-client reply
+- [x] Replaced JNI methods with adapter calls (start/stop/stats/isRunning)
+- [x] Updated Gradle / Android.mk for build (Android.mk done; Gradle later if needed)
 
-### Этап 3 — Замена JNI логики
-- [x] В `ssh_tunnel.c` условно исключить legacy блоки (флаг `USE_UDP2TCP`) и оставить SSH + udp2tcp (добавлен в `CMakeLists.txt`)
-- [x] Реализован простой локальный UDP socket listener внутри адаптера (stub C версия будет удалена после полной миграции)
-- [x] Добавить потокобезопасные atomic counters (используются std::atomic в C++ адаптере)
+### Phase 3 — Replace JNI logic
+- [x] In `ssh_tunnel.c` conditionally exclude legacy blocks (`USE_UDP2TCP`) leaving SSH + udp2tcp (added to `CMakeLists.txt`)
+- [x] Implemented simple local UDP socket listener inside adapter (stub C version to be removed later)
+- [x] Added thread-safe atomic counters (std::atomic in C++ adapter)
 
-### Этап 4 — Очистка и Legacy маркировка
-- [ ] Переместить legacy файлы в `legacy/` или удалить после успешных тестов (часть документов уже помечена/готовится к удалению)
-- [ ] Удалить `udp2tcp_client_adapter.c` (legacy stub) после подтверждения работы C++ адаптера на целевых ABI
-- [ ] Обновить CI: убрать проверки на `udp_listener.c` и протокол при активном `USE_UDP2TCP`
-- [ ] Обновить `IMPLEMENTATION_PLAN.md` (добавить секцию миграции)
+### Phase 4 — Cleanup & legacy marking
+- [ ] Move legacy files to `legacy/` or delete after successful tests (some docs already marked)
+- [ ] Remove `udp2tcp_client_adapter.c` (legacy stub) after confirming C++ adapter works on target ABIs
+- [ ] Update CI: skip `udp_listener.c` & protocol checks when `USE_UDP2TCP` active
+- [ ] Update `IMPLEMENTATION_PLAN.md` (add migration section)
 
-### Этап 5 — Тестирование
-- [ ] Адаптировать `run_full_e2e_test.sh` для проверки udp2tcp сквозного сценария
-- [x] Добавить скрипт `test_udp2tcp_basic.sh` (плейсхолдер)
-- [ ] Нагрузочный тест: отправка 10k UDP пакетов -> проверка целостности
+### Phase 5 — Testing
+- [ ] Adapt `run_full_e2e_test.sh` for udp2tcp end-to-end scenario
+- [x] Add script `test_udp2tcp_basic.sh` (placeholder)
+- [ ] Load test: send 10k UDP packets -> integrity check
 
-### Этап 6 — Документация финал
-- [ ] Дополнить README разделом "Сравнение архитектур"
-- [ ] Краткий FAQ по миграции
-- [ ] Обновить схемы (удалить кастомный заголовок, упростить диаграмму)
+### Phase 6 — Documentation final
+- [ ] Extend README with "Architecture comparison"
+- [ ] Short migration FAQ
+- [ ] Update diagrams (remove custom header, simplify diagram)
 
-## Интерфейс адаптера (черновик)
+## Adapter interface (draft)
 ```c
 // udp2tcp_client_adapter.h
 int udp2tcp_init(const char* remote_host, int remote_port, int local_udp_port);
-int udp2tcp_start(void);   // неблокирующий запуск фонового потока
+int udp2tcp_start(void);   // non-blocking background thread start
 int udp2tcp_stop(void);
 void udp2tcp_get_stats(uint64_t* rx_packets, uint64_t* tx_packets, uint64_t* rx_bytes, uint64_t* tx_bytes);
 ```
 
-## Риски
-| Риск | Митигация |
+## Risks
+| Risk | Mitigation |
 |------|-----------|
-| Несовместимость API udp2tcp с Android NDK | При необходимости создать минимальный patch/fork |
-| Отсутствие scheduler на Android embed этапе | Используется заглушка -100; план: по мере готовности включить реальные client/server пути |
-| Производительность при высоком RTT | Включить опции TCP_NODELAY, tune буферы |
-| Потеря функциональности ping/pong | Использовать статистику активности сокета / опционально реализовать keepalive |
+| API incompatibility (udp2tcp vs Android NDK) | Minimal patch/fork if needed |
+| No scheduler during embed phase | Use -100 stub; later enable real client/server paths |
+| Performance under high RTT | Enable TCP_NODELAY, tune buffers |
+| Loss of ping/pong | Use socket activity stats / optional keepalive |
 
-## Решения, требующие подтверждения
-- Нужно ли полностью удалять legacy код сразу или оставить feature flag? (рекомендуется короткий флаговый период)
-- Формат статистики — оставить прежний JNI интерфейс или упростить.
- - Подтвердить стратегию: сначала MVP без реального трафика (embed stub -100), затем поэтапно включить networking (libcoro FEATURE_NETWORKING) и при необходимости TLS.
+## Decisions needing confirmation
+- Remove legacy code immediately or keep feature flag? (short flag period recommended)
+- Statistics format — keep previous JNI interface or simplify
+- Strategy: initial MVP without real traffic (embed stub -100), then gradually enable networking (libcoro FEATURE_NETWORKING) and TLS if required.
 
-## Минимальный embed режим (Android)
-Промежуточный шаг для получения зелёной сборки и интеграции JNI:
+## Minimal embed mode (Android)
+Intermediate step to achieve a green build & JNI integration:
 
-| Аспект | Значение |
-|--------|----------|
-| Макрос | `UDP2TCP_EMBED_NO_SCHEDULER` |
-| Отключено | `LIBCORO_FEATURE_NETWORKING=OFF`, `LIBCORO_FEATURE_TLS=OFF` |
-| Исключённые исходники | `server_impl.cpp`, `client_impl.cpp` |
-| Логирование | Синхронное (`src/common/log.cpp` переписан) |
-| C API функции start | Создают handle, выставляют `exit_code=-100` |
-| Цель | Поднять JNI, стабилизировать сборку, затем постепенно вернуть функциональность |
+| Aspect | Value |
+|--------|-------|
+| Macro | `UDP2TCP_EMBED_NO_SCHEDULER` |
+| Disabled | `LIBCORO_FEATURE_NETWORKING=OFF`, `LIBCORO_FEATURE_TLS=OFF` |
+| Excluded sources | `server_impl.cpp`, `client_impl.cpp` |
+| Logging | Synchronous (rewritten `src/common/log.cpp`) |
+| C API start functions | Create handle, set `exit_code=-100` |
+| Goal | Bring up JNI, stabilize build, then progressively restore functionality |
 
-Код `-100` трактуется как "not implemented in minimal embed" и не считается ошибкой инфраструктуры.
+Exit code `-100` means "not implemented in minimal embed" and is not treated as an infrastructure failure.
 
-### План выхода из embed режима
-1. Включить `LIBCORO_FEATURE_NETWORKING=ON` только после появления готовых OpenSSL headers/binaries для всех ABI.
-2. Вернуть coroutine logger при наличии `<stop_token>` (NDK будущих версий) или заменить на std::jthread совместимый слой.
-3. Удалить макрос `UDP2TCP_EMBED_NO_SCHEDULER`; вернуть реальные `run_client` / `run_server` вызовы.
-4. Добавить e2e тесты UDP инкапсуляции (генерация и приём UDP пакетов) под feature-флагом.
+### Exit plan from embed mode
+1. Enable `LIBCORO_FEATURE_NETWORKING=ON` only after OpenSSL headers/binaries exist for all ABIs.
+2. Restore coroutine logger when `<stop_token>` available (future NDK) or add std::jthread compatible layer.
+3. Remove `UDP2TCP_EMBED_NO_SCHEDULER`; restore real `run_client` / `run_server` calls.
+4. Add e2e UDP encapsulation tests (generate & receive packets) under feature flag.
 
-## Критерии завершения
-- Приложение успешно форвардит UDP через udp2tcp + SSH
-- Legacy код удалён или изолирован, CI не ссылается на него
-- E2E тесты зелёные
-- Документация обновлена, пользователю не требуется знание старого протокола
+## Completion criteria
+- App successfully forwards UDP via udp2tcp + SSH
+- Legacy code removed or isolated; CI no longer references it
+- E2E tests pass (green)
+- Documentation updated; user does not require knowledge of old protocol
 
 --
-Обновляйте статус по мере выполнения задач.
+Update status as tasks progress.
