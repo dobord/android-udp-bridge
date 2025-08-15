@@ -26,8 +26,6 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-import com.example.udpbridge.UdpBridgeConfig;
-import com.example.udpbridge.UdpBridgeService;
 import com.example.sshtunnel.models.ServerConfig;
 import com.example.sshtunnel.models.ServerConfigManager;
 
@@ -38,9 +36,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_SERVER_CONFIG = 1001;
 
     private SshTunnelService sshTunnelService;
-    private UdpBridgeService udpBridgeService;
     private boolean serviceBound = false;
-    private boolean bridgeServiceBound = false;
     
     // UI update handler
     private Handler uiUpdateHandler = new Handler();
@@ -72,56 +68,7 @@ public class MainActivity extends AppCompatActivity {
         }
     };
     
-    private ServiceConnection bridgeServiceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            UdpBridgeService.LocalBinder binder = (UdpBridgeService.LocalBinder) service;
-            udpBridgeService = binder.getService();
-            bridgeServiceBound = true;
-            
-            // Set up bridge event listener
-            udpBridgeService.setEventListener(bridgeEventListener);
-            udpBridgeService.setSshTunnelService(sshTunnelService);
-            
-            updateBridgeUI();
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            bridgeServiceBound = false;
-        }
-    };
-    
-    // Bridge event listener
-    private UdpBridgeService.BridgeEventListener bridgeEventListener = new UdpBridgeService.BridgeEventListener() {
-        @Override
-        public void onStateChanged(UdpBridgeService.BridgeState newState) {
-            runOnUiThread(() -> updateBridgeUI());
-        }
-
-        @Override
-        public void onClientConnected(int clientId) {
-            runOnUiThread(() -> updateBridgeStats());
-        }
-
-        @Override
-        public void onClientDisconnected(int clientId) {
-            runOnUiThread(() -> updateBridgeStats());
-        }
-
-        @Override
-        public void onDataTransferred(long bytes) {
-            runOnUiThread(() -> updateBridgeStats());
-        }
-
-        @Override
-        public void onError(String error) {
-            runOnUiThread(() -> {
-                Toast.makeText(MainActivity.this, "Bridge Error: " + error, Toast.LENGTH_LONG).show();
-                updateBridgeUI();
-            });
-        }
-    };
+    // Removed legacy UdpBridgeService: stats now come from SshTunnelService udp2tcp polling
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -138,10 +85,6 @@ public class MainActivity extends AppCompatActivity {
         // Bind to SSH service
         Intent intent = new Intent(this, SshTunnelService.class);
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
-        
-        // Bind to UDP Bridge service
-        Intent bridgeIntent = new Intent(this, UdpBridgeService.class);
-        bindService(bridgeIntent, bridgeServiceConnection, Context.BIND_AUTO_CREATE);
         
         // Start periodic UI updates
         startPeriodicUIUpdates();
@@ -392,51 +335,11 @@ public class MainActivity extends AppCompatActivity {
     // UDP Bridge methods
     
     private void startUdpBridge() {
-        if (!bridgeServiceBound) {
-            Toast.makeText(this, "Bridge service not available", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        
-        if (currentServerConfig == null) {
-            Toast.makeText(this, "Bridge not configured for selected server", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        
-        // Create UDP bridge config from current server config
-        UdpBridgeConfig udpBridgeConfig = new UdpBridgeConfig(this);
-        udpBridgeConfig.setBridgeHost(currentServerConfig.getBridgeHost());
-        udpBridgeConfig.setBridgePort(currentServerConfig.getBridgePort());
-        udpBridgeConfig.setLocalPort(currentServerConfig.getLocalPort());
-        udpBridgeConfig.setAutoReconnectEnabled(currentServerConfig.isAutoReconnect());
-        udpBridgeConfig.setConnectionTimeout(currentServerConfig.getConnectionTimeout());
-        
-        // Validate configuration
-        if (!udpBridgeConfig.isValid()) {
-            Toast.makeText(this, "Invalid bridge configuration", Toast.LENGTH_LONG).show();
-            return;
-        }
-        
-        // Check if SSH tunnel is needed
-        if (udpBridgeService.isSshTunnelRequired() && !udpBridgeService.isSshTunnelAvailable()) {
-            Toast.makeText(this, "SSH tunnel required but not connected. Please establish SSH connection first.", Toast.LENGTH_LONG).show();
-            return;
-        }
-        
-        // Start bridge
-        if (udpBridgeService.startBridge()) {
-            Toast.makeText(this, "Starting UDP Bridge...", Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(this, "Failed to start UDP Bridge", Toast.LENGTH_SHORT).show();
-        }
+        Toast.makeText(this, "Legacy bridge removed; SSH udp2tcp starts automatically.", Toast.LENGTH_SHORT).show();
     }
     
     private void stopUdpBridge() {
-        if (!bridgeServiceBound) {
-            return;
-        }
-        
-        udpBridgeService.stopBridge();
-        Toast.makeText(this, "Stopping UDP Bridge...", Toast.LENGTH_SHORT).show();
+    // No-op after migration
     }
     
     @Override
@@ -502,29 +405,15 @@ public class MainActivity extends AppCompatActivity {
         if (serviceBound) {
             unbindService(serviceConnection);
         }
-        if (bridgeServiceBound) {
-            unbindService(bridgeServiceConnection);
-        }
         super.onDestroy();
     }
     
     private void updateBridgeUI() {
-        if (!bridgeServiceBound) {
-            return;
-        }
-        
         updateBridgeStats();
     }
     
     private void updateBridgeStats() {
-        if (!bridgeServiceBound) {
-            return;
-        }
-        
-        String stats = udpBridgeService.getStatisticsString();
-        if (stats != null && !stats.isEmpty()) {
-            bridgeStatsTextView.setText(stats);
-        }
+    // For now rely on udp2tcp stats log; could fetch via SshTunnelService native method if exposed
     }
     
     /**
@@ -565,9 +454,7 @@ public class MainActivity extends AppCompatActivity {
         uiUpdateRunnable = new Runnable() {
             @Override
             public void run() {
-                if (bridgeServiceBound) {
-                    updateBridgeStats();
-                }
+                updateBridgeStats();
                 // Schedule next update in 2 seconds
                 uiUpdateHandler.postDelayed(this, 2000);
             }
