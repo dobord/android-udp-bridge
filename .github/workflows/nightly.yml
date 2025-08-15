@@ -2,7 +2,7 @@ name: Nightly Build
 
 on:
   schedule:
-    # Запуск каждый день в 2:00 UTC
+    # Run every day at 02:00 UTC
     - cron: '0 2 * * *'
   workflow_dispatch:
     inputs:
@@ -36,7 +36,7 @@ jobs:
           echo "should_build=true" >> $GITHUB_OUTPUT
           echo "Force build requested"
         else
-          # Проверить изменения за последние 24 часа
+          # Check changes in the last 24 hours
           CHANGES=$(git diff --name-only HEAD~1 HEAD | grep -E "\.(c|cpp|h|hpp|java|kt|gradle|sh)$" | wc -l)
           if [ $CHANGES -gt 0 ]; then
             echo "should_build=true" >> $GITHUB_OUTPUT
@@ -92,61 +92,61 @@ jobs:
           
     - name: Pre-download sources with mirrors
       run: |
-        echo "📥 Скачиваем исходники с использованием зеркал..."
+        echo "📥 Downloading sources using mirrors..."
         
-        # Создаём директорию для кеша исходников
+        # Create directory for source cache
         mkdir -p ~/source_cache
         cd ~/source_cache
         
-        # Функция для скачивания с зеркалами
+        # Function to download with mirrors
         download_with_mirrors() {
           local filename=$1
           local primary_url=$2
           local mirror_urls=("${@:3}")
           
           if [ -f "$filename" ]; then
-            echo "✅ $filename уже скачан"
+            echo "✅ $filename already downloaded"
             return 0
           fi
           
-          echo "⬇️ Скачиваем $filename..."
+          echo "⬇️ Downloading $filename..."
           
-          # Пробуем основной URL
+          # Try primary URL
           if wget -O "$filename.tmp" "$primary_url" 2>/dev/null; then
             mv "$filename.tmp" "$filename"
-            echo "✅ Скачано с основного источника: $primary_url"
+            echo "✅ Downloaded from primary: $primary_url"
             return 0
           fi
           
-          # Пробуем зеркала
+          # Try mirrors
           for mirror_url in "${mirror_urls[@]}"; do
-            echo "🔄 Пробуем зеркало: $mirror_url"
+            echo "🔄 Trying mirror: $mirror_url"
             if wget -O "$filename.tmp" "$mirror_url" 2>/dev/null; then
               mv "$filename.tmp" "$filename"
-              echo "✅ Скачано с зеркала: $mirror_url"
+              echo "✅ Downloaded from mirror: $mirror_url"
               return 0
             fi
           done
           
-          echo "❌ Не удалось скачать $filename"
+          echo "❌ Failed to download $filename"
           rm -f "$filename.tmp"
           return 1
         }
         
-        # Скачиваем OpenSSL с зеркалами
+        # Download OpenSSL with mirrors
         download_with_mirrors "openssl-3.5.0.tar.gz" \
           "https://github.com/openssl/openssl/releases/download/openssl-3.5.0/openssl-3.5.0.tar.gz" \
           "https://www.openssl.org/source/openssl-3.5.0.tar.gz" \
           "https://ftp.openssl.org/source/openssl-3.5.0.tar.gz" \
           "https://mirror.yandex.ru/pub/OpenSSL/openssl-3.5.0.tar.gz"
         
-        # Скачиваем libssh с зеркалами
+        # Download libssh with mirrors
         download_with_mirrors "libssh-0.11.2.tar.xz" \
           "https://www.libssh.org/files/0.11/libssh-0.11.2.tar.xz" \
           "https://git.libssh.org/projects/libssh.git/snapshot/libssh-0.11.2.tar.xz" \
           "https://mirror.yandex.ru/debian/pool/main/libs/libssh/libssh_0.11.2.orig.tar.xz"
         
-        echo "✅ Исходники загружены в кеш"
+        echo "✅ Sources cached"
         ls -la ~/source_cache/
         
     - name: Build OpenSSL and libssh for ${{ matrix.arch }}
@@ -263,7 +263,7 @@ jobs:
           
           const oldArtifacts = artifacts.artifacts.filter(artifact => {
             const ageInDays = (Date.now() - new Date(artifact.created_at)) / (1000 * 60 * 60 * 24);
-            return ageInDays > 7; // Удаляем артефакты старше 7 дней
+            return ageInDays > 7; // Remove artifacts older than 7 days
           });
           
           for (const artifact of oldArtifacts) {
