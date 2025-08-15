@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- API 27+ overrides: windowLightNavigationBar attribute only valid from 27 -->
+    <style name="AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Keep base colors by referencing original colors -->
+        <item name="colorPrimary">@color/golden_apricot</item>
+        <item name="colorPrimaryVariant">@color/burnt_orange</item>
+        <item name="colorOnPrimary">@color/midnight_black</item>
+        <item name="colorSecondary">@color/pale_gray</item>
+        <item name="colorSecondaryVariant">@color/light_gray</item>
+        <item name="colorOnSecondary">@color/midnight_black</item>
+        <item name="android:colorBackground">@color/midnight_black</item>
+        <item name="colorOnBackground">@color/pale_gray</item>
+        <item name="colorSurface">@color/onyx_black</item>
+        <item name="colorOnSurface">@color/pale_gray</item>
+        <item name="android:statusBarColor">@color/midnight_black</item>
+        <item name="android:navigationBarColor">@color/midnight_black</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="materialAlertDialogTheme">@style/AlertDialogTheme</item>
+    </style>
+</resources>
