@@ -2,23 +2,11 @@ cmake_minimum_required(VERSION 3.18.1)
 
 project("sshtunnel")
 
-# Option to enable new udp2tcp adapter instead of legacy UDP Bridge implementation
-# (Excludes legacy udp_listener / protocol sources when ON)
-option(USE_UDP2TCP "Enable new udp2tcp adapter (excludes legacy udp_listener / protocol sources)" OFF)
-
-# Auto-enable USE_UDP2TCP if udp2tcp third_party sources are present and the user did not force OFF.
+# Legacy flag removed: udp2tcp path is now mandatory.
 set(_AUTO_UDP2TCP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../third_party/udp2tcp)
-if (EXISTS ${_AUTO_UDP2TCP_DIR}/CMakeLists.txt AND NOT USE_UDP2TCP)
-    message(STATUS "Detected third_party/udp2tcp sources – auto-enabling USE_UDP2TCP")
-    set(USE_UDP2TCP ON CACHE BOOL "Enable new udp2tcp adapter (excludes legacy udp_listener / protocol sources)" FORCE)
-endif()
-
-# Safety guard: if enabled but headers are missing (e.g. submodule not fetched in CI), disable to avoid build break.
 set(_UDP2TCP_HEADER_PATH ${_AUTO_UDP2TCP_DIR}/include/udp2tcp/c_api.h)
-if (USE_UDP2TCP AND NOT EXISTS ${_UDP2TCP_HEADER_PATH})
-    message(WARNING "USE_UDP2TCP=ON but header ${_UDP2TCP_HEADER_PATH} not found. Disabling USE_UDP2TCP.\n"
-                    "Fetch submodule with: git submodule update --init --recursive")
-    set(USE_UDP2TCP OFF CACHE BOOL "Enable new udp2tcp adapter (excludes legacy udp_listener / protocol sources)" FORCE)
+if (NOT EXISTS ${_UDP2TCP_HEADER_PATH})
+    message(FATAL_ERROR "udp2tcp headers not found at ${_UDP2TCP_HEADER_PATH}. Ensure submodule is fetched: git submodule update --init --recursive")
 endif()
 
 # Configure search path modes for libraries and includes (Android cross-compilation friendly)
@@ -69,63 +57,37 @@ if (EXISTS ${_OPENSSL_EARLY_INCLUDE_DIR}/openssl/ssl.h)
     endif()
 endif()
 
-# Create the primary shared library (JNI)
-if (USE_UDP2TCP)
-    message(STATUS "Building with USE_UDP2TCP=ON (legacy UDP bridge sources excluded)")
-    add_library(ssh_tunnel SHARED
-        ../jni/ssh_tunnel.c
-        ../jni/udp2tcp_client_adapter.cpp
-    )
-    target_compile_definitions(ssh_tunnel PRIVATE USE_UDP2TCP=1)
-    # Include directory for udp2tcp headers (requires code imported under third_party/udp2tcp).
-    # Path explanation: cpp -> main -> src -> app -> ssh-tunnel-android-app -> (repo root)
-    set(UDP2TCP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../third_party/udp2tcp)
-    message(STATUS "Resolved UDP2TCP_DIR=${UDP2TCP_DIR}")
-    if (EXISTS ${UDP2TCP_DIR}/include/udp2tcp/c_api.h)
-    target_include_directories(ssh_tunnel PRIVATE ${UDP2TCP_DIR}/include)
-    else()
-        message(WARNING "udp2tcp headers not found under ${UDP2TCP_DIR}/include — ensure the submodule/repository content is present.\n        See docs/MIGRATION_UDP2TCP.md")
-    endif()
-    # Enable C API and disable tests/example targets of udp2tcp for Android build
-    if (EXISTS ${UDP2TCP_DIR}/CMakeLists.txt)
-        set(UDP2TCP_ENABLE_C_API ON CACHE BOOL "" FORCE)
-        set(UDP2TCP_BUILD_SHARED OFF CACHE BOOL "" FORCE)
-        set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
-        # Enable full libcoro capabilities (networking + TLS)
-        set(LIBCORO_FEATURE_NETWORKING ON CACHE BOOL "" FORCE)
-        set(LIBCORO_FEATURE_TLS ON CACHE BOOL "" FORCE)
-        # libcoro will skip find_package(OpenSSL) after our earlier target injection (guard by existing TARGETs),
-        # so we rely on vendored dependencies (like c-ares) and keep EXTERNAL_DEPENDENCIES OFF.
-    set(LIBCORO_EXTERNAL_DEPENDENCIES OFF CACHE BOOL "" FORCE)
-        # (Removed shim include for <stop_token>; NDK 29+ provides the standard header)
-        add_subdirectory(${UDP2TCP_DIR} ${CMAKE_BINARY_DIR}/third_party/udp2tcp EXCLUDE_FROM_ALL)
-        # Пытаемся скомпилировать простой тест с <stop_token>; если не удаётся, не критично — просто подключим shim.
-        include(CheckCXXSourceCompiles)
-        set(CMAKE_REQUIRED_FLAGS "-std=c++20")
-        check_cxx_source_compiles("#include <stop_token>\nint main(){return 0;}" HAVE_STD_STOP_TOKEN)
-        if (NOT HAVE_STD_STOP_TOKEN)
-            message(STATUS "std::stop_token not available in this NDK")
-        endif()
-        if (TARGET udp2tcp)
-            target_link_libraries(ssh_tunnel PRIVATE udp2tcp)
-        else()
-            message(WARNING "udp2tcp target not created; adapter symbols may fail to link")
-        endif()
-    else()
-        message(WARNING "CMakeLists for udp2tcp not found; skipping embedded build")
-    endif()
+# Create the primary shared library (JNI) — only udp2tcp path remains
+add_library(ssh_tunnel SHARED
+    ../jni/ssh_tunnel.c
+    ../jni/udp2tcp_client_adapter.cpp
+)
+add_definitions(-DUSE_UDP2TCP=1)
+
+# Include directory for udp2tcp headers
+set(UDP2TCP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../third_party/udp2tcp)
+message(STATUS "Resolved UDP2TCP_DIR=${UDP2TCP_DIR}")
+target_include_directories(ssh_tunnel PRIVATE ${UDP2TCP_DIR}/include)
+
+# Enable C API and disable tests/example targets of udp2tcp for Android build
+set(UDP2TCP_ENABLE_C_API ON CACHE BOOL "" FORCE)
+set(UDP2TCP_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
+set(LIBCORO_FEATURE_NETWORKING ON CACHE BOOL "" FORCE)
+set(LIBCORO_FEATURE_TLS ON CACHE BOOL "" FORCE)
+set(LIBCORO_EXTERNAL_DEPENDENCIES OFF CACHE BOOL "" FORCE)
+add_subdirectory(${UDP2TCP_DIR} ${CMAKE_BINARY_DIR}/third_party/udp2tcp EXCLUDE_FROM_ALL)
+
+include(CheckCXXSourceCompiles)
+set(CMAKE_REQUIRED_FLAGS "-std=c++20")
+check_cxx_source_compiles("#include <stop_token>\nint main(){return 0;}" HAVE_STD_STOP_TOKEN)
+if (NOT HAVE_STD_STOP_TOKEN)
+    message(STATUS "std::stop_token not available in this NDK")
+endif()
+if (TARGET udp2tcp)
+    target_link_libraries(ssh_tunnel PRIVATE udp2tcp)
 else()
-    add_library(ssh_tunnel SHARED
-        ../jni/ssh_tunnel.c
-        ../jni/udp_listener.c
-        ../jni/tcp_connection_manager.c
-        ../jni/client_manager.c
-        ../jni/udp_bridge_protocol.c
-        ../jni/udp_bridge_service_jni.c
-    )
-    # Note: udp2tcp_client_adapter.cpp excluded when USE_UDP2TCP=OFF to avoid dependency
-    # on missing third_party/udp2tcp headers in environments (e.g. CI minimal jobs) where
-    # the new library is not checked out. JNI stub methods are provided directly in ssh_tunnel.c.
+    message(FATAL_ERROR "udp2tcp target not created; build cannot continue")
 endif()
 
 # Import real or mock libssh depending on presence of prebuilt artifacts

@@ -5,21 +5,9 @@ include $(CLEAR_VARS)
 # Define the library name
 LIBRARY_NAME := ssh_tunnel
 
-# Default (legacy / mock friendly) source set without udp2tcp dependency; Gradle CMake path controls new mode.
-LOCAL_SRC_FILES := ssh_tunnel.c udp_bridge_protocol.c client_manager.c udp_listener.c tcp_connection_manager.c
-LOCAL_CPPFLAGS += -std=c++20
-
-# To enable NDK-build path for udp2tcp (optional), define USE_UDP2TCP_NDK in your env and append sources below.
-ifeq ($(USE_UDP2TCP_NDK),1)
-  LOCAL_SRC_FILES += udp2tcp_client_adapter.cpp \
-	../../../../third_party/udp2tcp/src/common/config.cpp \
-	../../../../third_party/udp2tcp/src/common/log.cpp \
-	../../../../third_party/udp2tcp/src/protocol/frame.cpp \
-	../../../../third_party/udp2tcp/src/c_api/c_api.cpp
-  LOCAL_CFLAGS += -DUSE_UDP2TCP
-  LOCAL_CPPFLAGS += -DUSE_UDP2TCP
-  LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../../../third_party/udp2tcp/include
-endif
+# Legacy sources removed; keep minimal placeholder to prevent accidental ndk-build usage.
+LOCAL_SRC_FILES := ssh_tunnel.c
+LOCAL_CPPFLAGS += -std=c++20 -DUSE_UDP2TCP
 
 # Include headers
 LOCAL_C_INCLUDES := $(LOCAL_PATH)

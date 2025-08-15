@@ -27,24 +27,17 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Optional fetch udp2tcp submodule (full recursive)
+      - name: Fetch udp2tcp submodule (required)
         run: |
-          echo "Attempting full recursive fetch of udp2tcp submodule..."
-          set +e
-          git submodule update --init --recursive third_party/udp2tcp 2>&1
-          status=$?
-          if [ $status -ne 0 ]; then
-            echo "⚠️  udp2tcp submodule fetch failed (status=$status); proceeding in legacy mode."
+          echo "Fetching udp2tcp submodule (required)..."
+          git submodule update --init --recursive third_party/udp2tcp
+          if [ ! -d third_party/udp2tcp/include ]; then
+            echo "❌ Required udp2tcp headers missing (third_party/udp2tcp/include)." >&2
+            exit 1
           fi
-          set -e
-          if [ -d third_party/udp2tcp/include ]; then
-            echo "✅ udp2tcp submodule present (third_party/udp2tcp)"
-            git -C third_party/udp2tcp log --oneline -1 | head -1 || true
-            if [ -d third_party/udp2tcp/third_party/libcoro/.git ]; then
-              echo "Nested libcoro: $(git -C third_party/udp2tcp/third_party/libcoro log --oneline -1 | head -1 || true)"
-            fi
-          else
-            echo "ℹ️  udp2tcp sources not present; CMake auto-detect will stay OFF."
+          echo "✅ udp2tcp present: $(git -C third_party/udp2tcp log --oneline -1 | head -1 || true)"
+          if [ -d third_party/udp2tcp/third_party/libcoro/.git ]; then
+            echo "libcoro: $(git -C third_party/udp2tcp/third_party/libcoro log --oneline -1 | head -1 || true)"
           fi
 
       - name: Setup Android SDK
@@ -207,30 +200,27 @@ jobs:
   build-android:
     needs: build-dependencies
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [auto, force-on]
     steps:
       - name: Checkout code (no submodules to allow optional fetch)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Optional fetch udp2tcp submodule (full recursive)
+      - name: Fetch udp2tcp submodule (required)
         run: |
-          echo "Attempting full recursive fetch of udp2tcp submodule..."
-          set +e
-          git submodule update --init --recursive third_party/udp2tcp 2>&1
-          status=$?
-          if [ $status -ne 0 ]; then
-            echo "⚠️  udp2tcp submodule fetch failed (status=$status); continuing with legacy fallback."
+          echo "Fetching udp2tcp submodule (required)..."
+          git submodule update --init --recursive third_party/udp2tcp
+          if [ ! -d third_party/udp2tcp/include ]; then
+            echo "❌ Required udp2tcp headers missing (third_party/udp2tcp/include)." >&2
+            exit 1
           fi
-          set -e
-          if [ -d third_party/udp2tcp/include ]; then
-            echo "✅ udp2tcp submodule present (third_party/udp2tcp)"
-            git -C third_party/udp2tcp log --oneline -1 | head -1 || true
-            if [ -d third_party/udp2tcp/third_party/libcoro/.git ]; then
-              echo "Nested libcoro: $(git -C third_party/udp2tcp/third_party/libcoro log --oneline -1 | head -1 || true)"
-            fi
-          else
-            echo "ℹ️  udp2tcp sources not present; build will use legacy path."
+          echo "✅ udp2tcp present: $(git -C third_party/udp2tcp log --oneline -1 | head -1 || true)"
+          if [ -d third_party/udp2tcp/third_party/libcoro/.git ]; then
+            echo "libcoro: $(git -C third_party/udp2tcp/third_party/libcoro log --oneline -1 | head -1 || true)"
           fi
 
       - name: Set up JDK 17
@@ -285,11 +275,23 @@ jobs:
 
       - name: Build Debug APK
         working-directory: ssh-tunnel-android-app
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
+        run: |
+          echo "Selected udp2tcp mode: ${{ matrix.mode }}"
+          case "${{ matrix.mode }}" in
+            force-on)
+              CMAKE_ARGS="" # force-on retained for naming consistency; build always uses udp2tcp now
+              ;;
+            auto)
+              CMAKE_ARGS=""
+              ;;
+          esac
+          ./gradlew assembleDebug --no-daemon --stacktrace $CMAKE_ARGS
 
       - name: Build Release APK
         working-directory: ssh-tunnel-android-app
-        run: ./gradlew assembleRelease --no-daemon --stacktrace
+        if: ${{ matrix.mode == 'auto' }}
+        run: |
+          ./gradlew assembleRelease --no-daemon --stacktrace
 
       - name: Sign Release APK
         if: startsWith(github.ref, 'refs/tags/')
@@ -312,11 +314,11 @@ jobs:
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug
+          name: app-debug-${{ matrix.mode }}
           path: ssh-tunnel-android-app/app/build/outputs/apk/debug/app-debug.apk
 
       - name: Upload Release APK
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/') && matrix.mode == 'auto'
         uses: actions/upload-artifact@v4
         with:
           name: app-release
@@ -328,13 +330,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Download Debug APK
+      - name: Download Debug APK (auto mode)
         uses: actions/download-artifact@v4
         with:
-          name: app-debug
+          name: app-debug-auto
           path: .
-
       - name: Test APK installation
         run: |
           chmod +x ./test_apk.sh
@@ -359,7 +359,7 @@ jobs:
       - name: Download Debug APK
         uses: actions/download-artifact@v4
         with:
-          name: app-debug
+          name: app-debug-auto
           path: .
 
       - name: Generate release notes
