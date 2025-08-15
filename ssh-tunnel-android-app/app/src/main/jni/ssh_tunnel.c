@@ -1174,6 +1174,8 @@ JNIEXPORT void JNICALL Java_com_example_sshtunnel_SshTunnelService_cleanupTcpMan
 // ================= udp2tcp adapter JNI (new) =================
 #endif // !USE_UDP2TCP
 
+// udp2tcp JNI section (real implementation only when USE_UDP2TCP defined)
+#ifdef USE_UDP2TCP
 // Start udp2tcp (initialize + start thread)
 JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SshTunnelService_startUdp2Tcp(
     JNIEnv *env, jobject obj, jstring remote_host, jint remote_port, jint local_udp_port) {
@@ -1243,6 +1245,36 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_isUdp2Tcp
     (void)env; (void)obj;
     return udp2tcp_is_running() ? JNI_TRUE : JNI_FALSE;
 }
+#else
+// Stub implementations when udp2tcp is not compiled in (avoid missing JNI symbols)
+JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SshTunnelService_startUdp2Tcp(
+    JNIEnv *env, jobject obj, jstring remote_host, jint remote_port, jint local_udp_port) {
+    (void)env; (void)obj; (void)remote_host; (void)remote_port; (void)local_udp_port;
+    LOGW("udp2tcp not enabled in this build (startUdp2Tcp)");
+    return -1;
+}
+
+JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SshTunnelService_startUdp2TcpAdvanced(
+    JNIEnv *env, jobject obj, jstring remote_host, jint remote_port, jint local_udp_port, jstring dst_ip, jint dst_port) {
+    (void)env; (void)obj; (void)remote_host; (void)remote_port; (void)local_udp_port; (void)dst_ip; (void)dst_port;
+    LOGW("udp2tcp not enabled in this build (startUdp2TcpAdvanced)");
+    return -1;
+}
+
+JNIEXPORT void JNICALL Java_com_example_sshtunnel_SshTunnelService_stopUdp2Tcp(JNIEnv *env, jobject obj) {
+    (void)env; (void)obj;
+    LOGW("udp2tcp not enabled in this build (stopUdp2Tcp)");
+}
+
+JNIEXPORT jstring JNICALL Java_com_example_sshtunnel_SshTunnelService_getUdp2TcpStats(JNIEnv *env, jobject obj) {
+    (void)obj;
+    return (*env)->NewStringUTF(env, "udp2tcp disabled (build without USE_UDP2TCP)");
+}
+
+JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_isUdp2TcpRunning(JNIEnv *env, jobject obj) {
+    (void)env; (void)obj; return JNI_FALSE;
+}
+#endif // USE_UDP2TCP
 
 // Runtime TLS/OpenSSL self-test to verify that static OpenSSL is correctly linked.
 // Returns >0 (length of version string) on success, 0 on failure or if OpenSSL not in use.
