@@ -6,20 +6,19 @@
 extern "C" {
 #endif
 
-// Initialize udp2tcp adapter
-// remote_host: udp2tcp server host (may be 127.0.0.1 locally via SSH forward)
-// remote_port: udp2tcp server TCP port (forwarded inside SSH)
-// local_udp_port: local UDP listen port for applications
-int udp2tcp_init(const char* remote_host, int remote_port, int local_udp_port);
-
-// Advanced initialization: allows specifying the remote UDP destination endpoint
-// dst_ip (IPv4 string) and dst_port - where the server will send traffic.
-// If not specified, 127.0.0.1:local_udp_port is used.
-int udp2tcp_init_advanced(const char* remote_host, int remote_port, int local_udp_port,
-						  const char* dst_ip, int dst_port);
-
-// Start background handler
-int udp2tcp_start(void);
+// Start background handler with explicit parameters
+// tcp_connect.host: TCP host to connect to (e.g., 127.0.0.1 for SSH forward)
+// tcp_connect.port: TCP port to connect to
+// listen_addr: local UDP listen address (e.g., 0.0.0.0)
+// listen_port: local UDP listen port
+// remote_dst_ip: destination UDP IP on the server side
+// remote_dst_port: destination UDP port on the server side
+int udp2tcp_start(const char* tcp_connect_host,
+				  int tcp_connect_port,
+				  const char* listen_addr,
+				  int listen_port,
+				  const char* remote_dst_ip,
+				  int remote_dst_port);
 
 // Stop
 int udp2tcp_stop(void);

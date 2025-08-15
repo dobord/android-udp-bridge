@@ -22,11 +22,6 @@
 #define LOGE(...) do { fprintf(stderr, "[E] " __VA_ARGS__); fprintf(stderr, "\n"); } while (0)
 #endif
 
-static int g_local_udp_port = 0;          // local UDP listen port
-static std::string g_remote_host;         // udp2tcp server host (accessible via SSH forward)
-static int g_remote_port = 0;             // udp2tcp server TCP port
-static std::string g_dst_ip = "127.0.0.1"; // remote destination IP (default loopback on server)
-static int g_dst_port = 0;                // remote destination port (default same as local_udp_port)
 static std::atomic<int> g_running{0};     // running state flag
 static udp2tcp_client* g_client_handle = nullptr; // C API client handle
 
@@ -45,44 +40,32 @@ static void udp2tcp_log_cb(int level, const char* message, void* /*user*/) {
 // Provide C linkage for functions used by C file ssh_tunnel.c
 extern "C" {
 
-int udp2tcp_init(const char* remote_host, int remote_port, int local_udp_port)
-{
-    if (!remote_host) return -1;
-    g_remote_host = remote_host;
-    g_remote_port = remote_port;
-    g_local_udp_port = local_udp_port;
-    g_dst_ip = "127.0.0.1";
-    g_dst_port = local_udp_port;
-    return 0;
-}
-
-int udp2tcp_init_advanced(const char* remote_host, int remote_port, int local_udp_port,
-                          const char* dst_ip, int dst_port)
-{
-    if (udp2tcp_init(remote_host, remote_port, local_udp_port) != 0) return -1;
-    if (dst_ip && *dst_ip) g_dst_ip = dst_ip;
-    if (dst_port > 0) g_dst_port = dst_port; else g_dst_port = local_udp_port;
-    return 0;
-}
-
-int udp2tcp_start(void)
+int udp2tcp_start(const char* tcp_connect_host,
+                  int tcp_connect_port,
+                  const char* listen_addr,
+                  int listen_port,
+                  const char* remote_dst_ip,
+                  int remote_dst_port)
 {
     if (g_running.load()) return 0; // already running
+    if (!tcp_connect_host || !listen_addr || !remote_dst_ip) return -1;
+    if (tcp_connect_port <= 0 || listen_port <= 0 || remote_dst_port <= 0) return -1;
+
     udp2tcp_set_log_callback(udp2tcp_log_cb, nullptr);
 
-    // Forward one local port to remote (placeholder: echo the same port). Can be extended via JNI.
-    static udp2tcp_udp_forward_item fwd{}; // static lifetime
+    // Forward one local port to remote with provided parameters
+    static udp2tcp_udp_forward_item fwd{}; // static lifetime is OK while running
     fwd.name = "default";
-    fwd.listen_addr = "0.0.0.0";
-    fwd.listen_port = static_cast<uint16_t>(g_local_udp_port);
-    fwd.remote_dst_ip = g_dst_ip.c_str();
-    fwd.remote_dst_port = static_cast<uint16_t>(g_dst_port);
+    fwd.listen_addr = listen_addr;
+    fwd.listen_port = static_cast<uint16_t>(listen_port);
+    fwd.remote_dst_ip = remote_dst_ip;
+    fwd.remote_dst_port = static_cast<uint16_t>(remote_dst_port);
     fwd.recv_buffer_bytes = 0;
     fwd.send_buffer_bytes = 0;
 
     udp2tcp_client_cfg cfg{};
-    cfg.tcp_connect.host = g_remote_host.c_str();
-    cfg.tcp_connect.port = static_cast<uint16_t>(g_remote_port);
+    cfg.tcp_connect.host = tcp_connect_host;
+    cfg.tcp_connect.port = static_cast<uint16_t>(tcp_connect_port);
     cfg.tcp_connect.tls.enabled = 0;
     cfg.tcp_connect.tls.verify_peer = 0;
     cfg.tcp_connect.tls.certificate = nullptr;

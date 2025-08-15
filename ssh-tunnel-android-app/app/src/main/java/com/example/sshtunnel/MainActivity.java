@@ -233,8 +233,17 @@ public class MainActivity extends AppCompatActivity {
             remotePort = currentServerConfig.getRemoteUdpPort();
         }
         
-        // Provide pending forwarding to service (best-effort)
-        sshTunnelService.setPendingForwarding(localPort, remoteHost, remotePort);
+        // Provide pending forwarding to service (best-effort, 6-arg contract)
+        // Map: tcpConnectHost/tcpConnectPort = 127.0.0.1/remotePort (SSH local forward),
+        //       listenAddr/listenPort = 0.0.0.0/localPort (local UDP listener),
+        //       remoteDstIp/remoteDstPort = remoteHost/remotePort (remote UDP endpoint)
+        if (localPort != null && remotePort != null && remoteHost != null && !remoteHost.isEmpty()) {
+            sshTunnelService.setPendingForwarding(
+                "127.0.0.1", remotePort,
+                "0.0.0.0", localPort,
+                remoteHost, remotePort
+            );
+        }
 
         // Final copies for inner classes
         final Integer fLocalPort = localPort;
@@ -313,13 +322,12 @@ public class MainActivity extends AppCompatActivity {
         final int dstPort = currentServerConfig.getRemoteUdpPort();
 
         new Thread(() -> {
-            boolean success;
-            // Используем advanced API (оно внутри fallback не делает, поэтому предварительно проверяем)
-            success = sshTunnelService.startUdpForwardingAdvanced(localPort, remoteHost, remotePort, dstIp, dstPort);
-            if(!success) {
-                // fallback на старый путь для совместимости
-                success = sshTunnelService.startUdpForwarding(localPort, remoteHost, remotePort);
-            }
+            // Map to 6-arg API: tcpConnectHost/tcpConnectPort, listenAddr/listenPort, remoteDstIp/remoteDstPort
+            boolean success = sshTunnelService.startUdpForwarding(
+                "127.0.0.1", remotePort,
+                "0.0.0.0", localPort,
+                dstIp, dstPort
+            );
             final boolean finalSuccess = success;
             runOnUiThread(() -> {
                 if (finalSuccess) {

@@ -54,10 +54,12 @@ Approach A implemented (vendored sources under `third_party/udp2tcp/`).
 ### 3.3 Adapter (JNI layer)
 Interface (current active):
 ```c
-int udp2tcp_init(const char* remote_host, int remote_port, int local_udp_port);
-int udp2tcp_init(const char* remote_host, int remote_port, int local_udp_port);
-int udp2tcp_init_advanced(const char* remote_host, int remote_port, int local_udp_port, const char* dst_ip, int dst_port);
-int udp2tcp_start(void);
+int udp2tcp_start(const char* tcp_connect_host,
+				  int tcp_connect_port,
+				  const char* listen_addr,
+				  int listen_port,
+				  const char* remote_dst_ip,
+				  int remote_dst_port);
 int udp2tcp_stop(void);
 void udp2tcp_cleanup(void);
 int udp2tcp_get_library_stats(uint64_t* tx_frames, uint64_t* rx_frames, uint64_t* tx_bytes, uint64_t* rx_bytes);

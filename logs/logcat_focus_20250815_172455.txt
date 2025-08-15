@@ -1,0 +1,916 @@
+--------- beginning of main
+08-15 17:24:55.221  1454  1473 E BatteryDump: !@new_battery_dump : 4043,-310,100,100,77,285,293,283,285,0,290,370,0,Discharging,NO_CHARGING,None,Good,NONE,0,Normal,0,0,8640,0x40000000,0x10000,0x0,0,0,0000,0000,00000000,0,0,0,0,584,4047,7678,990,0,
+08-15 17:24:55.581 16449 30468 W adbd    : timed out while waiting for FUNCTIONFS_BIND, trying again
+--------- beginning of system
+08-15 17:24:55.879  2012  2419 E Watchdog: !@Sync: 5394 heap(MB): 169 / 180 FD: 1318 [2025-08-15 17:24:55.878]
+08-15 17:24:56.098  2012  3017 W DeviceStorageMonitorService: updateBroadcasts(/data) oldLevel:0, newLevel:0, seq:1
+08-15 17:24:56.104  2012  3017 W DeviceStorageMonitorService: updateBroadcasts_filenode(/data) fn_oldLevel:0, fn_newLevel:0, seq:1
+08-15 17:24:56.428  1503  1539 E ANDR-PERF-OPTSHANDLER: perf_lock_rel: failed for /proc/sys/walt/sched_busy_hyst_ns as previous value is not stored
+08-15 17:24:56.429  1503  1539 E ANDR-PERF-OPTSHANDLER: perf_lock_rel: failed for /proc/sys/walt/sched_busy_hysteresis_enable_cpus as previous value is not stored
+08-15 17:24:56.508  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:24:56.508  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:24:56.508  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:24:56.508  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:24:56.508  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:24:56.509  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:24:56.509  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:24:56.509  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:24:56.509  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:24:56.509  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:24:56.509  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:24:56.509  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:24:56.509  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:24:56.509  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:24:56.509  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:24:56.509  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:24:56.509  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:24:56.509  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:24:56.509  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:24:56.509  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:24:56.509  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:24:56.509  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:24:56.509  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:24:56.509  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:24:56.509  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:24:56.509  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:24:56.509  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:24:56.509  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:24:56.509  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:24:56.509  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:24:56.615 16449 30474 W adbd    : timed out while waiting for FUNCTIONFS_BIND, trying again
+08-15 17:25:00.281  1099  1140 E spcomlib: [spcom_ioctl] IOCTL failed: ret[-1], error [-4]
+08-15 17:25:00.281  1099  1140 E spcomlib: [spcom_check_link_up_state] SPCom check for link up interrupted - ioctl ret[-4], cmd ret[0], wait[1]
+08-15 17:25:00.282  1100  1133 E spcomlib: [spcom_ioctl] IOCTL failed: ret[-1], error [-4]
+08-15 17:25:00.282  1100  1133 E spcomlib: [spcom_check_link_up_state] SPCom check for link up interrupted - ioctl ret[-4], cmd ret[0], wait[1]
+08-15 17:25:00.288  1527  4142 E spcomlib: [spcom_ioctl] IOCTL failed: ret[-1], error [-4]
+08-15 17:25:00.288  1527  4142 E spcomlib: [spcom_check_link_up_state] SPCom check for link up interrupted - ioctl ret[-4], cmd ret[0], wait[1]
+08-15 17:25:00.303  2073  3198 E bauth_FPQCBAuthSensorControl: BAuthDeviceWaitIPC sys call failed : 4
+08-15 17:25:00.304  4145  4149 W CSSVC_USB: [CSSVC	][Connsvc_USB_NotificationRunLoopThread:344	] Device pre-BindStatus : 2, current-BindStatus : 2
+08-15 17:25:00.327  3211  3211 W KeyguardFingerprint: handleFingerprintAuth dispatchCount = 1 / elapsed time: 2ms
+08-15 17:25:00.331  1530  1530 E SehThermal-HAL: need_to_update: 17160
+08-15 17:25:00.339  1103  5282 W libc    : Access denied finding property "suspend.debug.wakestats_log.enabled"
+08-15 17:25:00.341  2012  4195 W LocationManagerService: onFreezeStateChanged, uid[10367]=true
+08-15 17:25:00.344  2012  4195 W LocationManagerService: onFreezeStateChanged, uid[10395]=true
+08-15 17:25:00.349  2012  4195 W LocationManagerService: onFreezeStateChanged, uid[10246]=true
+08-15 17:25:00.349  2012  4195 W LocationManagerService: onFreezeStateChanged, uid[10324]=true
+08-15 17:25:00.350  2012  3070 W SemFace : daemonPauseAuth : client is not Auth
+08-15 17:25:00.357  2012  3142 W LocalDisplayAdapter: !@display_state - 1946 : DOZE_SUSPEND -> DOZE (MAIN)
+08-15 17:25:00.358  3211  3211 W KeyguardSliceViewCtrl: Keyguard slice not bound yet?
+08-15 17:25:00.358  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.364  3211  3211 W CoverScreenManager: dozeTimeTick() no plugin
+08-15 17:25:00.367  3211  3211 W KeyguardFingerprint: handleFingerprintAuth dispatchCount = 1 / elapsed time: 0ms
+08-15 17:25:00.368  1446  2551 E AHAL: AudioDevice: SetParameters: 1645: Error in SecSetParameters -2
+08-15 17:25:00.375  2012  3142 W LocalDisplayAdapter: !@display_state - 1946 : DOZE (MAIN) took 18 ms
+08-15 17:25:00.377  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.378  1446  2551 E AHAL: AudioDevice: SetParameters: 1645: Error in SecSetParameters -2
+08-15 17:25:00.378  1580  1580 E Scheduler: trackPendingFrame: Invalid present fence
+08-15 17:25:00.401  3211  3211 W KeyguardFingerprint: handleFingerprintAuth dispatchCount = 1 / elapsed time: 0ms
+08-15 17:25:00.404  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.420  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.437  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.469  1454  1473 E BatteryDump: !@new_battery_dump : 4038,-310,100,100,77,285,293,283,285,0,290,370,0,Discharging,NO_CHARGING,None,Good,NONE,0,Normal,0,0,8640,0x40000000,0x10000,0x0,0,0,0000,0000,00000000,0,0,0,0,584,4047,7678,990,0,
+08-15 17:25:00.472  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.506  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.517  3211  3211 W KeyguardFingerprint: handleFingerprintAuth dispatchCount = 1 / elapsed time: 0ms
+08-15 17:25:00.526  2012  3070 W SemFace : daemonResumeAuth : client is not Auth
+08-15 17:25:00.526  2012  2962 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcast:1314 com.android.server.biometrics.SemBioAnalyticsManager.fpHandleData:249 com.android.server.biometrics.SemBioAnalyticsManager$$ExternalSyntheticLambda0.run:68 android.os.Handler.handleCallback:959 android.os.Handler.dispatchMessage:100 
+08-15 17:25:00.526  2012  2962 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcast:1314 com.android.server.biometrics.SemBioAnalyticsManager.fpHandleData:249 com.android.server.biometrics.SemBioAnalyticsManager$$ExternalSyntheticLambda0.run:68 android.os.Handler.handleCallback:959 android.os.Handler.dispatchMessage:100 
+08-15 17:25:00.529  5677  5677 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.startService:1993 android.content.ContextWrapper.startService:844 android.content.ContextWrapper.startService:844 com.sec.android.diagmonagent.sa.receiver.CFLogReceiver.onReceive:56 android.app.ActivityThread.handleReceiver:5381 
+08-15 17:25:00.530  2012  2962 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcast:1314 com.android.server.biometrics.SemBioAnalyticsManager.fpHandleData:249 com.android.server.biometrics.SemBioAnalyticsManager$$ExternalSyntheticLambda0.run:68 android.os.Handler.handleCallback:959 android.os.Handler.dispatchMessage:100 
+08-15 17:25:00.532  5677  5677 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.startService:1993 android.content.ContextWrapper.startService:844 android.content.ContextWrapper.startService:844 com.sec.android.diagmonagent.sa.receiver.CFLogReceiver.onReceive:56 android.app.ActivityThread.handleReceiver:5381 
+08-15 17:25:00.532  1433  1641 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5757 went down
+08-15 17:25:00.532  2012  2962 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcast:1314 com.android.server.biometrics.SemBioAnalyticsManager.fpHandleData:249 com.android.server.biometrics.SemBioAnalyticsManager$$ExternalSyntheticLambda0.run:68 android.os.Handler.handleCallback:959 android.os.Handler.dispatchMessage:100 
+08-15 17:25:00.534  2012  2962 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcast:1314 com.android.server.biometrics.SemBioAnalyticsManager.fpHandleData:249 com.android.server.biometrics.SemBioAnalyticsManager$$ExternalSyntheticLambda0.run:68 android.os.Handler.handleCallback:959 android.os.Handler.dispatchMessage:100 
+08-15 17:25:00.535  1433  1641 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5758 went down
+08-15 17:25:00.535  1433  1641 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5759 went down
+08-15 17:25:00.535  5677  5677 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.startService:1993 android.content.ContextWrapper.startService:844 android.content.ContextWrapper.startService:844 com.sec.android.diagmonagent.sa.receiver.CFLogReceiver.onReceive:56 android.app.ActivityThread.handleReceiver:5381 
+08-15 17:25:00.537  5677  5677 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.startService:1993 android.content.ContextWrapper.startService:844 android.content.ContextWrapper.startService:844 com.sec.android.diagmonagent.sa.receiver.CFLogReceiver.onReceive:56 android.app.ActivityThread.handleReceiver:5381 
+08-15 17:25:00.539  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.541  5677  5677 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.startService:1993 android.content.ContextWrapper.startService:844 android.content.ContextWrapper.startService:844 com.sec.android.diagmonagent.sa.receiver.CFLogReceiver.onReceive:56 android.app.ActivityThread.handleReceiver:5381 
+08-15 17:25:00.543  2012  3069 W Biometrics/AuthenticationClient: Allowing background authentication, this is allowed only for platform or test invocations
+08-15 17:25:00.544  1433  1641 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 575a went down
+08-15 17:25:00.545  2012  3069 W ActivityManager: ProcessListener no registered
+08-15 17:25:00.546  2012  3069 W ActivityManager: ProcessListener no registered
+08-15 17:25:00.548  2012  5644 W PowerManagerService: !@Screen__On  - 565 :  wakeUp:  (uid: 10038 pid: 3211) (biometric) (0ms) groupId=0
+08-15 17:25:00.550 16449 30475 W adbd    : timed out while waiting for FUNCTIONFS_BIND, trying again
+08-15 17:25:00.553  3211  3211 W BioUnlock: onWakeAndUnlocking / lap time: 7ms
+08-15 17:25:00.553  3211  3211 E KeyguardViewMediator: mHideAnimationFinishedRunnable#run
+08-15 17:25:00.554  2073  3198 E bauth_FPQCBAuthSensorControl: BAuthDeviceWaitIPC sys call failed : 4
+08-15 17:25:00.555  1433  1641 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 575c went down
+08-15 17:25:00.556  1433  1641 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 575d went down
+08-15 17:25:00.557  1433  1641 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 575e went down
+08-15 17:25:00.558  1433  1641 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 575f went down
+08-15 17:25:00.558  2012  5660 W BLASTSyncEngine: setSyncMethod, id=2860, method=0, caller=com.android.server.wm.TransitionController.moveToCollecting:90 com.android.server.wm.TransitionController.createTransition:47 com.android.server.wm.TransitionController.requestTransitionIfNeeded:48 
+08-15 17:25:00.560  1103  2519 W android.system.suspend-service: getWakeLockStats +
+08-15 17:25:00.564  2012  2012 W ProcessStats: Tracking association SourceState{55ee640 com.android.systemui/10038 BFgs #539661} whose proc state 4 is better than process ProcessState{1da5125 org.amnezia.awg/10324 pkg=org.amnezia.awg} proc state 5 (1 skipped)
+08-15 17:25:00.567  2012  4195 W LocationManagerService: onFreezeStateChanged, uid[10395]=false
+08-15 17:25:00.570  1433  1641 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5761 went down
+08-15 17:25:00.570  1433  1641 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5762 went down
+08-15 17:25:00.572  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.572  3211  3211 W BioUnlock: startWakeAndUnlock end / lap time: 27ms
+08-15 17:25:00.573  3211  3211 W BioUnlock: onFpAuthenticationSucceeded end / lap time: 27ms
+08-15 17:25:00.573  3211  3211 W KeyguardFingerprint: handleFingerprintAuth dispatchCount = 1 / elapsed time: 28ms
+08-15 17:25:00.576  1433  1641 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5763 went down
+08-15 17:25:00.577  1433  1641 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5764 went down
+08-15 17:25:00.584  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.584  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.584  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.584  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.584  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.584  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.584  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.584  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.584  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.584  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.584  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.584  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.584  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.584  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.584  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.584  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.584  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.584  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.584  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.584  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.585  2012  3142 W LocalDisplayAdapter: !@display_state - 1947 : DOZE -> ON (MAIN)
+08-15 17:25:00.585 24227 24440 W Bugle   : TextClassifierLibManagerImpl: Reclaiming memory at level: 40
+08-15 17:25:00.586  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.586  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.586  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.586  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.586  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.586  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.586  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.586  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.586  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.586  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.590  2012  3708 W UserManagerService: Requested status bar icon for non-badged user 0
+08-15 17:25:00.593  2012  2012 E PocketModeEvent: ACTION_SCREEN_ON(by 17)
+08-15 17:25:00.597  1433  1641 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5766 went down
+08-15 17:25:00.598  1433  1641 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5767 went down
+08-15 17:25:00.598  1433  1641 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5768 went down
+08-15 17:25:00.599  1433  1641 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5769 went down
+08-15 17:25:00.604  1446  2551 E AHAL: AudioDevice: SetParameters: 1645: Error in SecSetParameters -2
+08-15 17:25:00.610  2012  2984 W CAE     : registerCallback(ContextAwareService.java:188) - [regi 01] Mutex is locked for ACTIVITY_TRACKER
+08-15 17:25:00.610  2012  2984 W CAE     : registerCallback(ContextAwareService.java:195) - [regi 04]  com.samsung.android.contextaware.ContextAwareManager$CaListenerDelegate@5aa4ecc
+08-15 17:25:00.610  2012  2984 W CAE     : getListener(ListenerListManager.java:127) - [getListener1]  com.samsung.android.contextaware.ContextAwareManager$CaListenerDelegate@5aa4ecc
+08-15 17:25:00.610  2012  2984 W CAE     : getListener(ListenerListManager.java:128) - [getListener2]  com.samsung.android.contextaware.manager.ContextAwareService$Listener@86a00ff
+08-15 17:25:00.612  3422  4720 W BtGatt.ScanManager: handleRefreshScanParams() - scan queue emtpy, refresh scan params stopped
+08-15 17:25:00.614 30056 30056 W libc    : Access denied finding property "vendor.display.enable_optimal_refresh_rate"
+08-15 17:25:00.614 30056 30056 W libc    : Access denied finding property "vendor.gpp.create_frc_extension"
+08-15 17:25:00.618  1103  2519 W android.system.suspend-service: getWakeLockStats -
+08-15 17:25:00.619  1433  1641 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 576b went down
+08-15 17:25:00.619  2012  2494 W AutomaticBrightnessController: [api] updateAutoBrightness :  84(0.33)     50 <    320.0 <    945 (adj:+0.0) (1st)
+08-15 17:25:00.619  1103  2519 W android.system.suspend-service: getWakeLockStats +
+08-15 17:25:00.619  1103  2519 W android.system.suspend-service: getWakeLockStats -
+08-15 17:25:00.620  1433  1641 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 576c went down
+08-15 17:25:00.626  1433  1641 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 576d went down
+08-15 17:25:00.626  1433  1641 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 576e went down
+08-15 17:25:00.644  3211  3211 W Settings: Setting accessibility_reduce_transparency has moved from android.provider.Settings.System to android.provider.Settings.Global, returning read-only value.
+08-15 17:25:00.644  3211  3211 W Settings: Setting accessibility_reduce_transparency has moved from android.provider.Settings.System to android.provider.Settings.Global, returning read-only value.
+08-15 17:25:00.645  3211  3211 E AbsSettings: refreshInner: refreshedSettingsDBItem key SELECTED_CLOCK_TYPE val = 2
+08-15 17:25:00.645  3211  3211 E AbsSettings: refreshInner: refreshedSettingsDBItem key clock_gravity val = 0
+08-15 17:25:00.645  3211  3211 E AbsSettings: refreshInner: refreshedSettingsDBItem key clock_horizontal_margin_ratio val = 0.0
+08-15 17:25:00.646  3211  3211 E AbsSettings: refreshInner: refreshedSettingsDBItem key clock_bottom_margin_ratio val = 0.0
+08-15 17:25:00.646  3211  3211 E AbsSettings: refreshInner: refreshedSettingsDBItem key clock_movable_area_ratio_rect val = {"bottom":0.60470086,"left":0.06759259,"right":0.9324074,"top":0.104700856}
+08-15 17:25:00.646  3211  3211 E AbsSettings: refreshInner: refreshedSettingsDBItem key clock_position_based_on_movable_area val = 1
+08-15 17:25:00.647  1433  1641 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 574c went down
+08-15 17:25:00.660  3211  3211 W AODAlarmTimer_HIDE_CHARGING_INFO_TIMER: stop : not yet started 
+08-15 17:25:00.661  3211  3211 W AODAlarmTimer_AOD_CHARGING_INFO_TICK: stop : not yet started 
+08-15 17:25:00.662  3211  3211 E AbsSettings: refreshInner: refreshedSettingsDBItem key SELECTED_THEME_CLOCK_TYPE val = 0
+08-15 17:25:00.662  1458  1458 E sensors-hal: is_restrict_mode:137, fread fail
+08-15 17:25:00.666  2012  2984 W CAE     : registerCallback(ContextAwareService.java:209) - [regi 02] Mutex is unlocked for ACTIVITY_TRACKER
+08-15 17:25:00.666  2012  2984 E SemContext.CaeProvider: setAttribute() : attribute is null!
+08-15 17:25:00.666  2012  2984 E PocketMotionManager: register activity tracker
+08-15 17:25:00.669  3211  3211 W SensorController: unregister - already unregistered sensor type=1
+08-15 17:25:00.669  2012  2494 W DisplayPowerController2[0]: Animating brightness: target=84(0.33), rate=0,000, reason=automatic[84] -> 0x0[84]
+08-15 17:25:00.672  1433  1641 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 575b went down
+08-15 17:25:00.674  1433  1641 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5770 went down
+08-15 17:25:00.677  1433  1641 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5771 went down
+08-15 17:25:00.677  1433  1641 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5772 went down
+08-15 17:25:00.677  1433  1641 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5773 went down
+08-15 17:25:00.682  2012  2984 E PocketModeEvent: MSG_TYPE_START_SENSING
+08-15 17:25:00.693  2012  4195 W LocationManagerService: onFreezeStateChanged, uid[10303]=false
+08-15 17:25:00.694  2012  4195 W LocationManagerService: onFreezeStateChanged, uid[10206]=false
+08-15 17:25:00.696  2012  4195 W LocationManagerService: onFreezeStateChanged, uid[10286]=false
+08-15 17:25:00.709  2012  4195 W LocationManagerService: onFreezeStateChanged, uid[10387]=false
+08-15 17:25:00.714  2012  2012 W System.err: java.lang.NullPointerException: Attempt to invoke interface method 'android.os.IBinder android.os.IBinder.getExtension()' on a null object reference
+08-15 17:25:00.714  2012  2012 W System.err: 	at com.android.server.HermesHalAdapter.getExtAidlService(qb/98421269 05b962f3e1607b2b3d7f887defdeb262f6062f1e7accdc240eb32aa311734623:12)
+08-15 17:25:00.714  2012  2012 W System.err: 	at com.android.server.HermesHalAdapter.SecnvmPowerOn(qb/98421269 05b962f3e1607b2b3d7f887defdeb262f6062f1e7accdc240eb32aa311734623:14)
+08-15 17:25:00.714  2012  2012 W System.err: 	at com.android.server.HermesService$3.onReceive(qb/98421269 05b962f3e1607b2b3d7f887defdeb262f6062f1e7accdc240eb32aa311734623:54)
+08-15 17:25:00.714  2012  2012 W System.err: 	at android.app.LoadedApk$ReceiverDispatcher$Args.lambda$getRunnable$0(LoadedApk.java:1888)
+08-15 17:25:00.714  2012  2012 W System.err: 	at android.app.LoadedApk$ReceiverDispatcher$Args.$r8$lambda$mcNAAl1SQ4MyJPyDg8TJ2x2h0Rk(Unknown Source:0)
+08-15 17:25:00.714  2012  2012 W System.err: 	at android.app.LoadedApk$ReceiverDispatcher$Args$$ExternalSyntheticLambda0.run(D8$$SyntheticClass:0)
+08-15 17:25:00.714  2012  2012 W System.err: 	at android.os.Handler.handleCallback(Handler.java:959)
+08-15 17:25:00.714  2012  2012 W System.err: 	at android.os.Handler.dispatchMessage(Handler.java:100)
+08-15 17:25:00.714  2012  2012 W System.err: 	at android.os.Looper.loopOnce(Looper.java:257)
+08-15 17:25:00.714  2012  2012 W System.err: 	at android.os.Looper.loop(Looper.java:342)
+08-15 17:25:00.714  2012  2012 W System.err: 	at com.android.server.SystemServer.main(qb/98421269 05b962f3e1607b2b3d7f887defdeb262f6062f1e7accdc240eb32aa311734623:796)
+08-15 17:25:00.714  2012  2012 W System.err: 	at java.lang.reflect.Method.invoke(Native Method)
+08-15 17:25:00.714  2012  2012 W System.err: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:619)
+08-15 17:25:00.714  2012  2012 W System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:907)
+08-15 17:25:00.716  2012  4195 W LocationManagerService: onFreezeStateChanged, uid[10324]=false
+08-15 17:25:00.719  3211  3211 E AbsSettings: refreshInner: refreshedSettingsDBItem key SELECTED_THEME_CLOCK_TYPE val = 0
+08-15 17:25:00.721  3211  3211 W AODAlarmTimer_AOD_CHARGING_INFO_TICK: stop : not yet started 
+08-15 17:25:00.721  1465  1465 W hwvault_tee: [WRN] (nwd_hv_common.cpp:217) TA: hwvault [INF] (tz_module_open:527) caller ta: securefp(8)
+08-15 17:25:00.722  1465  1465 W hwvault_tee: [WRN] (nwd_hv_common.cpp:217) TA: hwvault [INF] (tz_module_open:532) used for cred
+08-15 17:25:00.722  1465  1465 W hwvault_tee: [WRN] (nwd_hv_common.cpp:217) TA: hwvault [INF] (get_cached_cred:69) get_cached_cred requested idx=11
+08-15 17:25:00.722  1465  1465 W hwvault_tee: [WRN] (nwd_hv_common.cpp:217) TA: hwvault [INF] (get_cached_cred:77) get_cached_cred read from updated_cred_during_lock
+08-15 17:25:00.722  1465  1465 W hwvault_tee: [WRN] (nwd_hv_common.cpp:217) TA: hwvault [INF] (tz_module_open:527) caller ta: securefp(8)
+08-15 17:25:00.722  1465  1465 W hwvault_tee: [WRN] (nwd_hv_common.cpp:217) TA: hwvault [INF] (tz_module_open:532) used for cred
+08-15 17:25:00.722  1465  1465 W hwvault_tee: [WRN] (nwd_hv_common.cpp:217) TA: hwvault [INF] (get_cached_cred:69) get_cached_cred requested idx=11
+08-15 17:25:00.722  1465  1465 W hwvault_tee: [WRN] (nwd_hv_common.cpp:217) TA: hwvault [INF] (get_cached_cred:77) get_cached_cred read from updated_cred_during_lock
+08-15 17:25:00.722  1465  1465 W hwvault_tee: [WRN] (nwd_hv_common.cpp:217) TA: hwvault [INF] (tz_module_open:527) caller ta: securefp(8)
+08-15 17:25:00.722  1465  1465 W hwvault_tee: [WRN] (nwd_hv_common.cpp:217) TA: hwvault [INF] (tz_module_open:532) used for cred
+08-15 17:25:00.722  1465  1465 W hwvault_tee: [WRN] (nwd_hv_common.cpp:217) TA: hwvault [INF] (get_cached_cred:69) get_cached_cred requested idx=11
+08-15 17:25:00.722  1465  1465 W hwvault_tee: [WRN] (nwd_hv_common.cpp:217) TA: hwvault [INF] (get_cached_cred:77) get_cached_cred read from updated_cred_during_lock
+08-15 17:25:00.722  1465  1465 W hwvault_tee: [WRN] (nwd_hv_common.cpp:217) TA: hwvault [INF] (tz_module_open:527) caller ta: securefp(8)
+08-15 17:25:00.722  1465  1465 W hwvault_tee: [WRN] (nwd_hv_common.cpp:217) TA: hwvault [INF] (tz_module_open:532) used for cred
+08-15 17:25:00.722  1465  1465 W hwvault_tee: [WRN] (nwd_hv_common.cpp:217) TA: hwvault [INF] (get_cached_cred:69) get_cached_cred requested idx=11
+08-15 17:25:00.722  1465  1465 W hwvault_tee: [WRN] (nwd_hv_common.cpp:217) TA: hwvault [INF] (get_cached_cred:77) get_cached_cred read from updated_cred_during_lock
+08-15 17:25:00.722  1465  1465 W hwvault_tee: [WRN] (nwd_hv_common.cpp:217) TA: hwvault [WRN] (swd_hv_clear_cached_kdm:473) last time(0x0000000000000000), curtime(0x000000001b37ff8e)
+08-15 17:25:00.722  1465  1465 W hwvault_tee: [WRN] (nwd_hv_common.cpp:217) TA: hwvault [INF] (tz_process_command:148) HV_TZ_CMD_CLEAR_CACHED_KDM ret 0, cmd ret 18
+08-15 17:25:00.722  2012  2012 E DEVROOT#CIF:  Response buffer size is 0
+08-15 17:25:00.725  3211  3211 E AOD_CONFIG@AODConfigurationController: Skipping unregisterMonitor MONITOR_BROADCAST_WALLPAPER - no registered monitor
+08-15 17:25:00.725  3211  3211 E AOD_CONFIG@AODConfigurationController: Skipping unregisterMonitor MONITOR_FOLD_STATE - no registered monitor
+08-15 17:25:00.726  2012  2308 W CAE     : unregisterCallback(ContextAwareService.java:230) - [unregi 01] Mutex is locked for DEVICE_PHYSICAL_CONTEXT_MONITOR
+08-15 17:25:00.726  2012  2308 W CAE     : getListener(ListenerListManager.java:127) - [getListener1]  com.samsung.android.contextaware.ContextAwareManager$CaListenerDelegate@5aa4ecc
+08-15 17:25:00.726  2012  2308 W CAE     : getListener(ListenerListManager.java:128) - [getListener2]  com.samsung.android.contextaware.manager.ContextAwareService$Listener@86a00ff
+08-15 17:25:00.729  3211  3211 W AODAlarmTimer_HIDE_CHARGING_INFO_TIMER: stop : not yet started 
+08-15 17:25:00.729 19277 29933 E LoadedApk: Exception : java.lang.NullPointerException: Attempt to invoke virtual method 'boolean android.os.Looper.isPerfLogEnable()' on a null object reference
+08-15 17:25:00.730  3211  3211 E MODManager: hideSubUIChargingInfo skip because mAODChargingInfoSubUiPresenter is null
+08-15 17:25:00.730  3211  3211 E SQLiteLog: (10) POSIX Error : 11 SQLite Error : 3850
+08-15 17:25:00.730  3211  3211 E SQLiteLog: (10) LOCK : Getting lock (4) failed due to (11). The current owner is (8874).
+08-15 17:25:00.731  1433  1641 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5756 went down
+08-15 17:25:00.732  3211  3211 W AODAlarmTimer_HIDE_CHARGING_INFO_TIMER: stop : not yet started 
+08-15 17:25:00.732  3422 11360 E BluetoothUtils: Permission denial: Location is off.
+08-15 17:25:00.735  2012  2308 W CAE     : unregisterCallback(ContextAwareService.java:251) - [unregi 02] Mutex is unlocked for DEVICE_PHYSICAL_CONTEXT_MONITOR
+08-15 17:25:00.741  1458  4289 E libprotobuf-native: [libprotobuf ERROR external/protobuf/src/google/protobuf/message_lite.cc:123] Can't parse message of type "sns_std_sensor_event" because it is missing required fields: (cannot determine missing fields for lite message)
+08-15 17:25:00.745  5677  5677 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.startService:1993 android.content.ContextWrapper.startService:844 android.content.ContextWrapper.startService:844 com.sec.android.diagmonagent.sa.receiver.CFLogReceiver.onReceive:56 android.app.ActivityThread.handleReceiver:5381 
+08-15 17:25:00.748  3211  3211 W View    : requestLayout() improperly called by com.android.systemui.qs.SecQSGradationDrawableView{b8fc1c5 V.E...... ......ID 0,0-1080,332 #7f0a0977 app:id/qs_gradation_view} during layout: running second layout pass
+08-15 17:25:00.748  3211  3211 W View    : requestLayout() improperly called by android.widget.FrameLayout{c9db71a V.E...... ......ID 0,142-1080,2205 #7f0a0975 app:id/qs_frame} during layout: running second layout pass
+08-15 17:25:00.755  2012  3142 W LocalDisplayAdapter: !@display_state - 1947 : ON (MAIN) took 170 ms
+08-15 17:25:00.756  1580  1580 E SurfaceFlinger: alpha changed 1.000 -> 0.000 - Surface(name=Task=1204)/@0x6ea937d_transition-leash#42733
+08-15 17:25:00.756  3211  3340 E FromLockscreenTransitionInteractor: Ignoring startTransition: This interactor asked to transition from LOCKSCREEN -> GONE, but we last transitioned to GONE, not LOCKSCREEN. This should never happen - check currentTransitionInfoInternal or use filterRelevantKeyguardState before starting transitions.
+08-15 17:25:00.759  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.759  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.759  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.759  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.759  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.760  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.760  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.761  3211  3211 E AbsSettings: refreshInner: refreshedSettingsDBItem key SELECTED_THEME_CLOCK_TYPE val = 0
+08-15 17:25:00.763  3422  4725 E BtGatt.GattService: [GSIM LOG]: gsimLogHandler, msg: MESSAGE_SCAN_START, appName: com.samsung.android.beaconmanager, scannerId: 1, reportDelayMillis=0
+08-15 17:25:00.768  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.768  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.768  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.768  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.770  2012  2494 W PowerManagerService: Screen on took 221 ms
+08-15 17:25:00.776  1446  2551 E AHAL: AudioDevice: SetParameters: 1645: Error in SecSetParameters -2
+08-15 17:25:00.779  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.788  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.796  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.797  1458  4289 E sensors-hal: handle_sns_client_event:73, num_items=17 exceeds SENSORS_HAL_MAX_DATA_LEN=16
+08-15 17:25:00.797  1458  4289 E sensors-hal: handle_sns_client_event:73, num_items=17 exceeds SENSORS_HAL_MAX_DATA_LEN=16
+08-15 17:25:00.805  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.806  1446 12436 E AHAL: AudioDevice: SetParameters: 1645: Error in SecSetParameters -2
+08-15 17:25:00.809  2012  2012 E PocketProximityCluster: data duplication
+08-15 17:25:00.811  3211  3211 E CentralSurfaces: Keyguard is done going away, but someone left the light reveal scrim at reveal amount: 0.0
+08-15 17:25:00.813  1580  1580 E SurfaceFlinger: alpha changed 0.000 -> 1.000 - Surface(name=Task=1204)/@0x6ea937d_transition-leash#42733
+08-15 17:25:00.813  1580  1580 E SurfaceFlinger: alpha changed 0.000 -> 1.000 - Surface(name=WallpaperWindowToken{9f744da token=android.os.Binder@4c3ee85})/@0x47b7cb1_transition-leash#42685
+08-15 17:25:00.813  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.819  3211  3540 E engmode_client_list: Cannot find client
+08-15 17:25:00.819  3211  3540 E engmode_hidl_client_service: Client error
+08-15 17:25:00.822  3211  3211 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=com.android.systemui.back.domain.interactor.BackActionInteractor$callback$2@b6da405
+08-15 17:25:00.828  1350  1350 E engmode_world: Unknown token(00/00/00)
+08-15 17:25:00.828  1115  1115 E engmode_hidl_service: error to server(0xd0060012)
+08-15 17:25:00.830  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.832  2012  4268 W UserManagerService: Requested status bar icon for non-badged user 0
+08-15 17:25:00.842  3422  4503 E bluetooth: system/gd/hci/le_scanning_manager.cc:999 scan_filter_add: Add passive filterScan. filter_index=63, uuid=0000fd59-0000-1000-8000-00805f9b34fb
+08-15 17:25:00.847  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.848  2012  2012 E PocketMotionManager: activity tracker 1, 1
+08-15 17:25:00.849  3422  4720 W bt_shim_scanner: system/main/shim/le_scanning_manager.cc:407 SetScanParameters: Set scan params scan_int : 3120, scan_win : 55, Duty : 1.76%
+08-15 17:25:00.855  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.863  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.865  1968  1968 W wificond: Failed to get NL80211_ATTR_MAX_NUM_AKM_SUITES
+08-15 17:25:00.867  2012  4195 W LocationManagerService: onFreezeStateChanged, uid[10246]=false
+08-15 17:25:00.867  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.867  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.867  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.867  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.867  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.867  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.867  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.867  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.868  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.868  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.868  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.868  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.868  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.868  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.868  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.868  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.869  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.869  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.869  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.869  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.872  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.877  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.877  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.877  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.877  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.878  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.878  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.878  1968  1968 W wificond: Failed to get NL80211_ATTR_MAX_NUM_AKM_SUITES
+08-15 17:25:00.879 25676 25676 W [WEATHER]: {[EEE61FC8C74A5D201A5C6A46FCF19F1E76536C98399C4E95D865F3C847C2D9976242EE7C99943BB6005E9272A05DCFFF]}
+08-15 17:25:00.881  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.881  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.881  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.881  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.881  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.881  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.881  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.881  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.881  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.882  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.885  3211  3356 W Adreno-AppProfiles: Could not find QSPM HAL service. Skipping adreno profile processing.
+08-15 17:25:00.887 19277  3227 E LoadedApk: Exception : java.lang.NullPointerException: Attempt to invoke virtual method 'boolean android.os.Looper.isPerfLogEnable()' on a null object reference
+08-15 17:25:00.889  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.891 19277  3227 E LoadedApk: Exception : java.lang.NullPointerException: Attempt to invoke virtual method 'boolean android.os.Looper.isPerfLogEnable()' on a null object reference
+08-15 17:25:00.892  2012  2981 E MotionRecognitionService: Receiver: ACTION_USER_PRESENT - UNLOCK SCREEN
+08-15 17:25:00.897  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.903  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.903  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.903  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.903  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.903  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.903  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.903  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.903  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.903  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.903  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.903  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.903  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.903  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.903  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.903  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.903  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.903  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.903  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.903  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.903  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.903  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.903  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:00.905  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.914  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.914  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.923  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.923  3211  3211 W View    : requestLayout() improperly called by com.android.systemui.qs.SecQSGradationDrawableView{b8fc1c5 V.E...... ......ID 0,0-1080,332 #7f0a0977 app:id/qs_gradation_view} during layout: running second layout pass
+08-15 17:25:00.924  3211  3211 W View    : requestLayout() improperly called by android.widget.FrameLayout{c9db71a V.E...... ......ID 0,142-1080,2205 #7f0a0975 app:id/qs_frame} during layout: running second layout pass
+08-15 17:25:00.929  1968  1968 W wificond: Failed to get NL80211_ATTR_MAX_NUM_AKM_SUITES
+08-15 17:25:00.932  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.932  2012  3350 W CocktailBarStatePolicyController: updateWindowType: current window type is requested window type(1)
+08-15 17:25:00.940  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.943  3211  3211 W KeyguardSecurityViewFlipper: onMeasure: widthSpec MeasureSpec: EXACTLY 0 should be AT_MOST
+08-15 17:25:00.943  3211  3211 W KeyguardSecurityViewFlipper: onMeasure: heightSpec MeasureSpec: EXACTLY 0 should be AT_MOST
+08-15 17:25:00.944  3656  3656 W libc    : Access denied finding property "vendor.display.enable_optimal_refresh_rate"
+08-15 17:25:00.944  3656  3656 W libc    : Access denied finding property "vendor.gpp.create_frc_extension"
+08-15 17:25:00.949  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.957  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.957  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.971  1968  1968 W wificond: Failed to get NL80211_ATTR_MAX_NUM_AKM_SUITES
+08-15 17:25:00.972  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.973  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.981  3211  3211 E NowBarCardStackView: getTopCard topCard is null view size = 0
+08-15 17:25:00.981  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:00.984  2012  2012 E PocketModeEvent: Acc, AT is unregister by condition 2, 319
+08-15 17:25:00.985  2012  2984 E PocketModeEvent: MSG_TYPE_STOP_SENSING
+08-15 17:25:00.985  2012  2984 E PocketModeEvent: unregisterSensor L : -1 P : 0
+08-15 17:25:00.985  2012  3069 E AidlResponseHandler: Client monitor is not an instance of com.android.server.biometrics.sensors.AcquisitionClient
+08-15 17:25:00.987  1433  1641 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 576a went down
+08-15 17:25:00.988  1433  1641 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5774 went down
+08-15 17:25:00.990  2012  2012 W CAE     : unregisterCallback(ContextAwareService.java:230) - [unregi 01] Mutex is locked for ACTIVITY_TRACKER
+08-15 17:25:00.990  2012  2012 W CAE     : getListener(ListenerListManager.java:127) - [getListener1]  com.samsung.android.contextaware.ContextAwareManager$CaListenerDelegate@5aa4ecc
+08-15 17:25:00.990  2012  2012 W CAE     : getListener(ListenerListManager.java:128) - [getListener2]  com.samsung.android.contextaware.manager.ContextAwareService$Listener@86a00ff
+08-15 17:25:01.007  2012  2012 W CAE     : unregisterCallback(ContextAwareService.java:251) - [unregi 02] Mutex is unlocked for ACTIVITY_TRACKER
+08-15 17:25:01.008  1968  1968 W wificond: Failed to get NL80211_ATTR_MAX_NUM_AKM_SUITES
+08-15 17:25:01.008  2012  3046 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:01.008  2012  3046 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:01.008  2012  3046 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:01.008  2012  3046 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:01.008  2012  3046 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:01.008  2012  3046 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:01.008  2012  2012 E PocketMotionManager: unregister activity tracker
+08-15 17:25:01.009  2012  2984 E SemContextService:     .unregisterCallback() : This listener was not registered 
+08-15 17:25:01.010  2012  2984 E PocketMotionManager: unregister activity tracker
+08-15 17:25:01.010  2012  2984 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcast:1314 com.samsung.android.gesture.PocketModeEvent$1.handleMessage:464 android.os.Handler.dispatchMessage:107 android.os.Looper.loopOnce:257 android.os.Looper.loop:342 
+08-15 17:25:01.010  2012  6406 E WindowManager: win=Window{b53020 u0 NotificationShade} destroySurfaces: appStopped=true cleanupOnResume=false win.mWindowRemovalAllowed=false win.mRemoveOnExit=false win.mViewVisibility=4 caller=com.android.server.wm.WindowManagerService.tryStartExitingAnimation:147 com.android.server.wm.WindowManagerService.relayoutWindowInner:112 com.android.server.wm.WindowManagerService.relayoutWindow:6 com.android.server.wm.Session.relayout:27 android.view.IWindowSession$Stub.onTransact:861 com.android.server.wm.Session.onTransact:1 android.os.Binder.execTransactInternal:1536 
+08-15 17:25:01.015  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.023  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.024  2012  3070 W SemFace : sehCloseTaSession FINISH (251ms) RESULT: 0
+08-15 17:25:01.029  7631  7635 W sung.android.ce: Reducing the number of considered missed Gc histogram windows from 220 to 100
+08-15 17:25:01.030  2012  2415 E WindowManager: win=Window{91515d5 u0 SnapshotStartingWindow for taskId=1204 EXITING} destroySurfaces: appStopped=false cleanupOnResume=false win.mWindowRemovalAllowed=true win.mRemoveOnExit=true win.mViewVisibility=0 caller=com.android.server.wm.WindowState.onExitAnimationDone:222 com.android.server.wm.WindowState.onAnimationFinished:161 com.android.server.wm.WindowContainer$$ExternalSyntheticLambda5.onAnimationFinished:26 com.android.server.wm.SurfaceAnimator$$ExternalSyntheticLambda1.run:28 com.android.server.wm.SurfaceAnimator$$ExternalSyntheticLambda0.onAnimationFinished:65 com.android.server.wm.LocalAnimationAdapter$$ExternalSyntheticLambda0.run:10 android.os.Handler.handleCallback:959 
+08-15 17:25:01.038  1580  1580 E SurfaceFlinger: alpha changed 0.053 -> 0.000 - Surface(name=91515d5 SnapshotStartingWindow for taskId=1204)/@0x897e838 - animation-leash of window_animation#42735
+08-15 17:25:01.040  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.040  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.040  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.049  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.049  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.057  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.064  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.064  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.068  3211  3211 W AODAlarmTimer_HIDE_CHARGING_INFO_TIMER: stop : not yet started 
+08-15 17:25:01.068  3211  3211 E NowBarCardStackView: getTopCard topCard is null view size = 0
+08-15 17:25:01.068  3211  3211 E NowBarCardViewModel: updateExpandedClickPanelVisibility screen on = true expanded falseisTopCardSettingViewOpened = false
+08-15 17:25:01.068  3211  3211 E NowBarCardStackView: getTopCard topCard is null view size = 0
+08-15 17:25:01.073  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.081  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.081  3211  3211 W PowerUI : Skip charging animation - by Plug reason
+08-15 17:25:01.081  3211  3211 W PowerUI : Skip charging sound & vibrate - by Plug reason
+08-15 17:25:01.089  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.089  2012  3708 W UserManagerService: Requested status bar icon for non-badged user 0
+08-15 17:25:01.094  3211  3211 W View    : requestLayout() improperly called by com.android.systemui.qs.SecQSGradationDrawableView{b8fc1c5 V.E...... ......ID 0,0-1080,332 #7f0a0977 app:id/qs_gradation_view} during layout: running second layout pass
+08-15 17:25:01.094  3211  3211 W View    : requestLayout() improperly called by android.widget.FrameLayout{c9db71a V.E...... ......ID 0,142-1080,2205 #7f0a0975 app:id/qs_frame} during layout: running second layout pass
+08-15 17:25:01.098  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.098  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.102  1454  1473 E BatteryDump: !@new_battery_dump : 3956,-1985,100,100,77,286,293,284,286,0,290,370,0,Discharging,NO_CHARGING,None,Good,NONE,0,Normal,0,0,8640,0x40000000,0x10000,0x0,0,0,0000,0000,00000000,0,0,0,0,584,4047,7678,990,0,
+08-15 17:25:01.106  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.106  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.114  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.122  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.127  1968  1968 W wificond: Failed to get NL80211_ATTR_MAX_NUM_AKM_SUITES
+08-15 17:25:01.131  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.131  5677  5677 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.startService:1993 android.content.ContextWrapper.startService:844 android.content.ContextWrapper.startService:844 com.sec.android.diagmonagent.sa.receiver.CFLogReceiver.onReceive:56 android.app.ActivityThread.handleReceiver:5381 
+08-15 17:25:01.133  3422  4725 E BtGatt.GattService: [GSIM LOG]: gsimLogHandler, msg: MESSAGE_SCAN_START, appName: com.samsung.android.mcfserver, scannerId: 2, reportDelayMillis=0
+08-15 17:25:01.133  3422  4720 W bt_shim_scanner: system/main/shim/le_scanning_manager.cc:407 SetScanParameters: Set scan params scan_int : 3120, scan_win : 160, Duty : 5.13%
+08-15 17:25:01.139  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.140  1968  1968 W wificond: Failed to get NL80211_ATTR_MAX_NUM_AKM_SUITES
+08-15 17:25:01.143  1968  1968 W wificond: Failed to get NL80211_ATTR_MAX_NUM_AKM_SUITES
+08-15 17:25:01.148  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.156  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.164  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.172  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.181  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.189  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.197  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.206  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.214  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.222  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.231  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.239  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.248  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.256  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.264  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.273  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.281  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.290  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.298  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.306  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.315  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.323  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.331  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.340  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.342  2012  5658 E WindowManager: win=Window{2c0bb39 u0 FP Iconview} destroySurfaces: appStopped=true cleanupOnResume=false win.mWindowRemovalAllowed=false win.mRemoveOnExit=false win.mViewVisibility=8 caller=com.android.server.wm.WindowManagerService.tryStartExitingAnimation:147 com.android.server.wm.WindowManagerService.relayoutWindowInner:112 com.android.server.wm.WindowManagerService.relayoutWindow:6 com.android.server.wm.Session.relayout:27 android.view.IWindowSession$Stub.onTransact:861 com.android.server.wm.Session.onTransact:1 android.os.Binder.execTransactInternal:1536 
+08-15 17:25:01.349  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:01.410  2012  2301 W System  : A resource failed to call HardwareBuffer.close. 
+08-15 17:25:01.616 16449 30497 W adbd    : timed out while waiting for FUNCTIONFS_BIND, trying again
+08-15 17:25:02.648 16449 30542 W adbd    : timed out while waiting for FUNCTIONFS_BIND, trying again
+08-15 17:25:02.937  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:02.953  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:02.960  1446 12436 E AHAL: AudioDevice: SetParameters: 1645: Error in SecSetParameters -2
+08-15 17:25:02.962  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:03.354  2012  2892 E JobScheduler.Background: Couldn't determine stopped state for unknown package: com.samsung.android.sm.policy
+08-15 17:25:03.356  2012  2892 E JobScheduler.Background: Couldn't determine stopped state for unknown package: com.samsung.android.tadownloader
+08-15 17:25:03.669 16449 30543 W adbd    : timed out while waiting for FUNCTIONFS_BIND, trying again
+08-15 17:25:03.900  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:03.901  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:03.901  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:03.902  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:03.902  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:03.902  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:03.903  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:03.903  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:03.912  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:03.912  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:03.912  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:03.918  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:03.918  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:03.918  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:03.918  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:03.918  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:03.918  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:03.918  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:03.923  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:03.923  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:03.923  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:03.924  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:03.924  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:03.924  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:03.925  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:03.925  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:03.925  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:03.925  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:03.925  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:03.925  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:04.101  2012  3046 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:04.101  2012  3046 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:04.101  2012  3046 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:04.101  2012  3046 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:04.101  2012  3046 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:04.101  2012  3046 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:04.177  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:04.570 23597 23597 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda15@c15333b
+08-15 17:25:04.574  2012  5658 W InputManager-JNI: Input channel object '2c0bb39 FP Iconview (client)' was disposed without first being removed with the input manager!
+08-15 17:25:04.704 16449 30546 W adbd    : timed out while waiting for FUNCTIONFS_BIND, trying again
+08-15 17:25:05.084  2012  2892 E JobScheduler.Background: Couldn't determine stopped state for unknown package: com.samsung.android.sm.policy
+08-15 17:25:05.087  2012  2892 E JobScheduler.Background: Couldn't determine stopped state for unknown package: com.samsung.android.tadownloader
+08-15 17:25:05.723 16449 30553 W adbd    : timed out while waiting for FUNCTIONFS_BIND, trying again
+08-15 17:25:06.726  2012  4195 W Binder  : Outgoing transactions from this process must be FLAG_ONEWAY
+08-15 17:25:06.726  2012  4195 W Binder  : java.lang.Throwable
+08-15 17:25:06.726  2012  4195 W Binder  : 	at android.os.BinderProxy.transact(BinderProxy.java:560)
+08-15 17:25:06.726  2012  4195 W Binder  : 	at android.bluetooth.IBluetoothGatt$Stub$Proxy.getAdvertisingSetUids(IBluetoothGatt.java:2863)
+08-15 17:25:06.726  2012  4195 W Binder  : 	at android.bluetooth.BluetoothAdapter.getAdvertisingSetUids(BluetoothAdapter.java:8196)
+08-15 17:25:06.726  2012  4195 W Binder  : 	at android.bluetooth.BluetoothAdapter.getHWUsingApps(BluetoothAdapter.java:1437)
+08-15 17:25:06.726  2012  4195 W Binder  : 	at com.android.server.am.mars.filter.filter.BlueToothConnectedFilter.updateBTUsingPackages(qb/98421269 05b962f3e1607b2b3d7f887defdeb262f6062f1e7accdc240eb32aa311734623:22)
+08-15 17:25:06.726  2012  4195 W Binder  : 	at com.android.server.am.FreecessController.triggerLcdOnFreeze(qb/98421269 05b962f3e1607b2b3d7f887defdeb262f6062f1e7accdc240eb32aa311734623:29)
+08-15 17:25:06.726  2012  4195 W Binder  : 	at com.android.server.am.FreecessHandler$MainHandler.handleMessage(qb/98421269 05b962f3e1607b2b3d7f887defdeb262f6062f1e7accdc240eb32aa311734623:1442)
+08-15 17:25:06.726  2012  4195 W Binder  : 	at android.os.Handler.dispatchMessage(Handler.java:107)
+08-15 17:25:06.726  2012  4195 W Binder  : 	at android.os.Looper.loopOnce(Looper.java:257)
+08-15 17:25:06.726  2012  4195 W Binder  : 	at android.os.Looper.loop(Looper.java:342)
+08-15 17:25:06.726  2012  4195 W Binder  : 	at android.os.HandlerThread.run(HandlerThread.java:85)
+08-15 17:25:06.744  2012  4195 W LocationManagerService: onFreezeStateChanged, uid[10324]=true
+08-15 17:25:06.761 16449 30555 W adbd    : timed out while waiting for FUNCTIONFS_BIND, trying again
+08-15 17:25:06.892  2012  4195 W LocationManagerService: onFreezeStateChanged, uid[10246]=true
+08-15 17:25:07.227  2012  3046 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:07.227  2012  3046 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:07.228  2012  3046 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:07.228  2012  3046 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:07.228  2012  3046 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:07.228  2012  3046 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:07.793 16449 30556 W adbd    : timed out while waiting for FUNCTIONFS_BIND, trying again
+08-15 17:25:08.084  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:08.824 16449 30558 W adbd    : timed out while waiting for FUNCTIONFS_BIND, trying again
+08-15 17:25:09.858 16449 30563 W adbd    : timed out while waiting for FUNCTIONFS_BIND, trying again
+08-15 17:25:10.648  1446 12436 E AHAL: AudioDevice: SetParameters: 1645: Error in SecSetParameters -2
+08-15 17:25:10.738 30056 30056 I SSHTunnelApp: Stopping udp2tcp adapter
+08-15 17:25:10.738 30056 30056 I SSHTunnelApp: Disconnecting SSH session
+08-15 17:25:10.738 30056 30056 I SSHTunnelApp: stop_tcp_port_forwarding: initiating shutdown (state=WAITING_ACCEPT)
+08-15 17:25:10.738 30056 30056 I SSHTunnelApp: PortForwardState -> SHUTTING_DOWN
+08-15 17:25:10.738 30056 30056 I SSHTunnelApp: stop_tcp_port_forwarding: closing listen socket 141
+08-15 17:25:10.739 30056 30128 I SSHTunnelApp: PortForwardState -> EXIT
+08-15 17:25:10.739 30056 30128 I SSHTunnelApp: TCP port forwarding thread exiting
+08-15 17:25:10.752  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:10.838 30056 30056 I SSHTunnelApp: stop_tcp_port_forwarding: waiting join... elapsed=100ms state=EXIT
+08-15 17:25:10.839 30056 30056 I SSHTunnelApp: stop_tcp_port_forwarding: performing final blocking join (state=EXIT)
+08-15 17:25:10.839 30056 30056 I SSHTunnelApp: stop_tcp_port_forwarding: completed in 100ms final_state=EXIT
+08-15 17:25:10.839 30056 30056 I SSHTunnelApp: TCP port forwarding stopped
+08-15 17:25:10.839 30056 30056 I SSHTunnelApp: libssh[3] ssh_packet_need_rekey: ssh_packet_need_rekey: rekey: [data_rekey_needed=0, out_blocks=8, in_blocks=58]
+08-15 17:25:10.839 30056 30056 I SSHTunnelApp: libssh[3] ssh_socket_unbuffered_write: ssh_socket_unbuffered_write: Enabling POLLOUT for socket
+08-15 17:25:10.839 30056 30056 I SSHTunnelApp: libssh[4] ssh_socket_unbuffered_write: ssh_socket_unbuffered_write: wrote -1
+08-15 17:25:10.839 30056 30056 I SSHTunnelApp: libssh[1] ssh_socket_exception_callback: ssh_socket_exception_callback: Socket exception callback: 2 (103)
+08-15 17:25:10.839 30056 30056 I SSHTunnelApp: libssh[4] ssh_socket_exception_callback: ssh_socket_exception_callback: Socket error: Software caused connection abort
+08-15 17:25:10.839 30056 30056 I SSHTunnelApp: libssh[3] ssh_client_connection_callback: ssh_client_connection_callback: session_state=9
+08-15 17:25:10.839 30056 30056 I SSHTunnelApp: libssh[1] ssh_client_connection_callback: ssh_client_connection_callback: Socket error: Software caused connection abort
+08-15 17:25:10.839 30056 30056 I SSHTunnelApp: libssh[3] packet_send2: packet_send2: packet: wrote [type=1, len=28, padding_size=11, comp=20, payload=20]
+08-15 17:25:10.839 30056 30056 I SSHTunnelApp: SSH session disconnected and freed
+08-15 17:25:10.839 30056 30056 I SSHTunnelApp: Disconnect sequence finished in 101ms
+08-15 17:25:10.853  2012  3350 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcast:1314 com.android.server.notification.NotificationManagerService$17.enqueueToastForDex:63 com.android.server.notification.NotificationManagerService$17.enqueueTextToastForDex:17 android.app.INotificationManager$Stub.onTransact:4294 android.os.Binder.execTransactInternal:1536 
+08-15 17:25:10.878  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:10.880  3211  3211 W libc    : Access denied finding property "vendor.display.enable_optimal_refresh_rate"
+08-15 17:25:10.880  3211  3211 W libc    : Access denied finding property "vendor.gpp.create_frc_extension"
+08-15 17:25:10.886  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:10.897 16449 30564 W adbd    : timed out while waiting for FUNCTIONFS_BIND, trying again
+08-15 17:25:10.903  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:10.917  1580  1580 E SurfaceFlinger: alpha changed 1.000 -> 0.000 - Surface(name=f5c306c Toast)/@0x80ee996 - animation-leash of window_animation#42743
+08-15 17:25:10.917  1580  1580 E SurfaceFlinger: alpha changed 0.000 -> 0.000 - Surface(name=f5c306c Toast)/@0x80ee996 - animation-leash of window_animation#42743
+08-15 17:25:10.926  1580  1580 E SurfaceFlinger: alpha changed 0.000 -> 0.032 - Surface(name=f5c306c Toast)/@0x80ee996 - animation-leash of window_animation#42743
+08-15 17:25:11.931 16449 30568 W adbd    : timed out while waiting for FUNCTIONFS_BIND, trying again
+08-15 17:25:12.761 30056 30056 I SSHTunnelApp: Bridge config set remote=127.0.0.1:57000 local_tcp=57000
+08-15 17:25:12.763 30056 30573 I SSHTunnelApp: Starting SSH connection to 192.168.1.12:13222 as sshuser
+08-15 17:25:12.763 30056 30573 I SSHTunnelApp: Forcing entropy initialization before ssh_connect
+08-15 17:25:12.763 30056 30573 I SSHTunnelApp: Generated 64 bytes of entropy from /dev/urandom
+08-15 17:25:12.763 30056 30573 I SSHTunnelApp: Pre-connect entropy generation successful: 64 bytes
+08-15 17:25:12.763 30056 30573 I SSHTunnelApp: Generated 32 bytes of entropy from /dev/urandom
+08-15 17:25:12.763 30056 30573 I SSHTunnelApp: Additional entropy round 1: 32 bytes
+08-15 17:25:12.763 30056 30573 I SSHTunnelApp: Generated 32 bytes of entropy from /dev/urandom
+08-15 17:25:12.763 30056 30573 I SSHTunnelApp: Additional entropy round 2: 32 bytes
+08-15 17:25:12.763 30056 30573 I SSHTunnelApp: Generated 32 bytes of entropy from /dev/urandom
+08-15 17:25:12.763 30056 30573 I SSHTunnelApp: Additional entropy round 3: 32 bytes
+08-15 17:25:12.763 30056 30573 I SSHTunnelApp: Attempting SSH connection to 192.168.1.12:13222 with enhanced crypto options
+08-15 17:25:12.774  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:12.781  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:12.859 30056 30573 I SSHTunnelApp: SSH connection established successfully
+08-15 17:25:12.970 16449 30570 W adbd    : timed out while waiting for FUNCTIONFS_BIND, trying again
+08-15 17:25:12.985 30056 30573 I SSHTunnelApp: SSH authentication successful
+08-15 17:25:12.985 30056 30573 I SSHTunnelApp: TCP port forwarding thread spawn requested
+08-15 17:25:12.985 30056 30573 I SSHTunnelApp: Starting udp2tcp: tcp_connect=127.0.0.1:57000 (SSH forward -> 127.0.0.1:57000) local_udp_listen=57000
+08-15 17:25:12.986 30056 30574 I SSHTunnelApp: TCP port forwarding thread started
+08-15 17:25:12.986 30056 30574 I SSHTunnelApp: PortForwardState -> STARTING
+08-15 17:25:12.986 30056 30574 I SSHTunnelApp: Port forward configuration: local=57000 -> remote 127.0.0.1:57000
+08-15 17:25:12.986 30056 30574 I SSHTunnelApp: TCP port forwarding listening on 127.0.0.1:57000
+08-15 17:25:12.986 30056 30574 I SSHTunnelApp: PortForwardState -> LISTEN_READY
+08-15 17:25:12.986 30056 30574 I SSHTunnelApp: PortForwardState -> WAITING_ACCEPT
+08-15 17:25:12.988 30056 30574 I SSHTunnelApp: Accepted TCP connection for forwarding to remote 127.0.0.1:57000
+08-15 17:25:12.988 30056 30574 I SSHTunnelApp: PortForwardState -> CLIENT_ACCEPTED
+08-15 17:25:12.995  2012  3708 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcast:1314 com.android.server.notification.NotificationManagerService$17.enqueueToastForDex:63 com.android.server.notification.NotificationManagerService$17.enqueueTextToastForDex:17 android.app.INotificationManager$Stub.onTransact:4294 android.os.Binder.execTransactInternal:1536 
+08-15 17:25:13.003  2012  3708 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcast:1314 com.android.server.notification.NotificationManagerService$17.enqueueToastForDex:63 com.android.server.notification.NotificationManagerService$17.enqueueTextToastForDex:17 android.app.INotificationManager$Stub.onTransact:4294 android.os.Binder.execTransactInternal:1536 
+08-15 17:25:13.004 30056 30574 W SSHTunnelApp: open_forward attempt 1/10 failed: Channel opening failure: channel 43 error (2) Connection refused
+08-15 17:25:13.024  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:13.032  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:13.192  3211  3211 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda15@15a4cf3
+08-15 17:25:13.197  2012  3708 W InputManager-JNI: Input channel object 'f5c306c Toast (client)' was disposed without first being removed with the input manager!
+08-15 17:25:13.204  2012  3708 W NotificationService: Toast already killed. pkg=com.example.sshtunnel token=android.os.BinderProxy@e6c8a59
+08-15 17:25:13.204 30056 30574 W SSHTunnelApp: open_forward attempt 2/10 failed: Channel opening failure: channel 43 error (2) Connection refused
+08-15 17:25:13.230  3211  3211 W libc    : Access denied finding property "vendor.display.enable_optimal_refresh_rate"
+08-15 17:25:13.230  3211  3211 W libc    : Access denied finding property "vendor.gpp.create_frc_extension"
+08-15 17:25:13.251  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:13.257  1580  1580 E SurfaceFlinger: alpha changed 1.000 -> 0.000 - Surface(name=527315 Toast)/@0xb742b91 - animation-leash of window_animation#42749
+08-15 17:25:13.257  1580  1580 E SurfaceFlinger: alpha changed 0.000 -> 0.000 - Surface(name=527315 Toast)/@0xb742b91 - animation-leash of window_animation#42749
+08-15 17:25:13.265  1580  1580 E SurfaceFlinger: alpha changed 0.000 -> 0.032 - Surface(name=527315 Toast)/@0xb742b91 - animation-leash of window_animation#42749
+08-15 17:25:13.406 30056 30574 W SSHTunnelApp: open_forward attempt 3/10 failed: Channel opening failure: channel 43 error (2) Connection refused
+08-15 17:25:13.608 30056 30574 W SSHTunnelApp: open_forward attempt 4/10 failed: Channel opening failure: channel 43 error (2) Connection refused
+08-15 17:25:13.717  1580  1580 E SurfaceFlinger: alpha changed 0.028 -> 0.000 - Surface(name=f5c306c Toast)/@0x80ee996 - animation-leash of window_animation#42746
+08-15 17:25:13.728  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:13.809 30056 30574 W SSHTunnelApp: open_forward attempt 5/10 failed: Channel opening failure: channel 43 error (2) Connection refused
+08-15 17:25:14.011 30056 30574 W SSHTunnelApp: open_forward attempt 6/10 failed: Channel opening failure: channel 43 error (2) Connection refused
+08-15 17:25:14.013 16449 30576 W adbd    : timed out while waiting for FUNCTIONFS_BIND, trying again
+08-15 17:25:14.212 30056 30574 W SSHTunnelApp: open_forward attempt 7/10 failed: Channel opening failure: channel 43 error (2) Connection refused
+08-15 17:25:14.413 30056 30574 W SSHTunnelApp: open_forward attempt 8/10 failed: Channel opening failure: channel 43 error (2) Connection refused
+08-15 17:25:14.614 30056 30574 W SSHTunnelApp: open_forward attempt 9/10 failed: Channel opening failure: channel 43 error (2) Connection refused
+08-15 17:25:14.819 30056 30574 W SSHTunnelApp: open_forward attempt 10/10 failed: Channel opening failure: channel 43 error (2) Connection refused
+08-15 17:25:14.819 30056 30574 E SSHTunnelApp: Failed to open SSH forward channel to 127.0.0.1:57000 after retries: Channel opening failure: channel 43 error (2) Connection refused
+08-15 17:25:14.820 30056 30574 I SSHTunnelApp: PortForwardState -> WAITING_ACCEPT
+08-15 17:25:14.870  2012  2414 W WindowManager: Unable to start animation, surface is null or no children.
+08-15 17:25:15.042 16449 30579 W adbd    : timed out while waiting for FUNCTIONFS_BIND, trying again
+08-15 17:25:15.727  1446 12436 E AHAL: AudioDevice: SetParameters: 1645: Error in SecSetParameters -2
+08-15 17:25:15.753  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:15.777  3211  3211 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda15@3d15837
+08-15 17:25:15.784  2012  5658 W InputManager-JNI: Input channel object '527315 Toast (client)' was disposed without first being removed with the input manager!
+08-15 17:25:15.795  2012  5658 W NotificationService: Toast already killed. pkg=com.example.sshtunnel token=android.os.BinderProxy@379fda6
+08-15 17:25:15.803  1446 12436 E AHAL: AudioDevice: SetParameters: 1645: Error in SecSetParameters -2
+08-15 17:25:15.832  1446 12436 E AHAL: AudioDevice: SetParameters: 1645: Error in SecSetParameters -2
+08-15 17:25:15.840  3211  3211 W libc    : Access denied finding property "vendor.display.enable_optimal_refresh_rate"
+08-15 17:25:15.841  3211  3211 W libc    : Access denied finding property "vendor.gpp.create_frc_extension"
+08-15 17:25:15.863  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:15.878  1580  1580 E SurfaceFlinger: alpha changed 1.000 -> 0.000 - Surface(name=c98663d Toast)/@0x6e292c - animation-leash of window_animation#42753
+08-15 17:25:15.878  1580  1580 E SurfaceFlinger: alpha changed 0.000 -> 0.000 - Surface(name=c98663d Toast)/@0x6e292c - animation-leash of window_animation#42753
+08-15 17:25:15.886  1580  1580 E SurfaceFlinger: alpha changed 0.000 -> 0.032 - Surface(name=c98663d Toast)/@0x6e292c - animation-leash of window_animation#42753
+08-15 17:25:16.077 16449 30581 W adbd    : timed out while waiting for FUNCTIONFS_BIND, trying again
+08-15 17:25:16.303  1580  1580 E SurfaceFlinger: alpha changed 0.024 -> 0.000 - Surface(name=527315 Toast)/@0xb742b91 - animation-leash of window_animation#42750
+08-15 17:25:16.313  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:17.119 16449 30584 W adbd    : timed out while waiting for FUNCTIONFS_BIND, trying again
+08-15 17:25:17.225  2012  2414 W WindowManager: Unable to start animation, surface is null or no children.
+08-15 17:25:18.135 16449 30586 W adbd    : timed out while waiting for FUNCTIONFS_BIND, trying again
+08-15 17:25:18.363  3211  3211 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda15@2845858
+08-15 17:25:18.373  2012  3350 W InputManager-JNI: Input channel object 'c98663d Toast (client)' was disposed without first being removed with the input manager!
+08-15 17:25:18.380  1446 12436 E AHAL: AudioDevice: SetParameters: 1645: Error in SecSetParameters -2
+08-15 17:25:18.392  2012  3350 W NotificationService: Toast already killed. pkg=com.example.sshtunnel token=android.os.BinderProxy@e7971eb
+08-15 17:25:18.514  1446 12436 E AHAL: AudioDevice: SetParameters: 1645: Error in SecSetParameters -2
+08-15 17:25:18.932  1580  1580 E SurfaceFlinger: alpha changed 0.012 -> 0.000 - Surface(name=c98663d Toast)/@0x6e292c - animation-leash of window_animation#42754
+08-15 17:25:18.942  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:18.951 30056 30056 I SSHTunnelApp: Stopping udp2tcp adapter
+08-15 17:25:18.951 30056 30056 I SSHTunnelApp: Disconnecting SSH session
+08-15 17:25:18.952 30056 30056 I SSHTunnelApp: stop_tcp_port_forwarding: initiating shutdown (state=WAITING_ACCEPT)
+08-15 17:25:18.952 30056 30056 I SSHTunnelApp: PortForwardState -> SHUTTING_DOWN
+08-15 17:25:18.952 30056 30056 I SSHTunnelApp: stop_tcp_port_forwarding: closing listen socket 130
+08-15 17:25:18.953 30056 30574 I SSHTunnelApp: PortForwardState -> EXIT
+08-15 17:25:18.953 30056 30574 I SSHTunnelApp: TCP port forwarding thread exiting
+08-15 17:25:18.957  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:19.054 30056 30056 I SSHTunnelApp: stop_tcp_port_forwarding: waiting join... elapsed=102ms state=EXIT
+08-15 17:25:19.054 30056 30056 I SSHTunnelApp: stop_tcp_port_forwarding: performing final blocking join (state=EXIT)
+08-15 17:25:19.055 30056 30056 I SSHTunnelApp: stop_tcp_port_forwarding: completed in 103ms final_state=EXIT
+08-15 17:25:19.055 30056 30056 I SSHTunnelApp: TCP port forwarding stopped
+08-15 17:25:19.055 30056 30056 I SSHTunnelApp: libssh[3] ssh_packet_need_rekey: ssh_packet_need_rekey: rekey: [data_rekey_needed=0, out_blocks=8, in_blocks=58]
+08-15 17:25:19.056 30056 30056 I SSHTunnelApp: libssh[3] ssh_socket_unbuffered_write: ssh_socket_unbuffered_write: Enabling POLLOUT for socket
+08-15 17:25:19.056 30056 30056 I SSHTunnelApp: libssh[4] ssh_socket_unbuffered_write: ssh_socket_unbuffered_write: wrote 68
+08-15 17:25:19.056 30056 30056 I SSHTunnelApp: libssh[3] packet_send2: packet_send2: packet: wrote [type=1, len=28, padding_size=11, comp=20, payload=20]
+08-15 17:25:19.057 30056 30056 I SSHTunnelApp: SSH session disconnected and freed
+08-15 17:25:19.057 30056 30056 I SSHTunnelApp: Disconnect sequence finished in 105ms
+08-15 17:25:19.069  2012  5658 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcast:1314 com.android.server.notification.NotificationManagerService$17.enqueueToastForDex:63 com.android.server.notification.NotificationManagerService$17.enqueueTextToastForDex:17 android.app.INotificationManager$Stub.onTransact:4294 android.os.Binder.execTransactInternal:1536 
+08-15 17:25:19.089  3211  3211 W libc    : Access denied finding property "vendor.display.enable_optimal_refresh_rate"
+08-15 17:25:19.089  3211  3211 W libc    : Access denied finding property "vendor.gpp.create_frc_extension"
+08-15 17:25:19.094  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:19.099  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:19.110  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:19.124  1580  1580 E SurfaceFlinger: alpha changed 1.000 -> 0.000 - Surface(name=db03b60 Toast)/@0xd367cea - animation-leash of window_animation#42758
+08-15 17:25:19.124  1580  1580 E SurfaceFlinger: alpha changed 0.000 -> 0.000 - Surface(name=db03b60 Toast)/@0xd367cea - animation-leash of window_animation#42758
+08-15 17:25:19.132  1580  1580 E SurfaceFlinger: alpha changed 0.000 -> 0.032 - Surface(name=db03b60 Toast)/@0xd367cea - animation-leash of window_animation#42758
+08-15 17:25:19.150 16449 30590 W adbd    : timed out while waiting for FUNCTIONFS_BIND, trying again
+08-15 17:25:19.771  1532  1532 E SecVibrator-HAL-AIDL-EXT: V_5_0: performPrebakedHapticPattern 14 : 3000 : 0
+08-15 17:25:19.773  1532  1532 E SecVibrator-HAL-AIDL-CORE: HW_API: [setForceFeedbackAmplitude]amplitude: 3000
+08-15 17:25:19.776  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:19.784  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:19.793  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:19.795  1532  1532 E SecVibrator-HAL-AIDL-CORE: HW_API: [uploadForceFeedbackeffect]ioctl success ,uploaded effect with ID: 0
+08-15 17:25:19.795  1532  1532 E SecVibrator-HAL-AIDL-CORE: HW_API: do_on for timeoutMs: 1000
+08-15 17:25:19.795  1532  1532 E SecVibrator-HAL-AIDL-CORE: HW_API: [triggerForceFeedbackVibration]on: 1
+08-15 17:25:19.801  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:19.809  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:19.816  2012  2414 W WindowManager: Unable to start animation, surface is null or no children.
+08-15 17:25:19.818  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:19.826  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:19.835  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:19.842  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:19.851  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:19.860  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:19.868  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:19.876  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:19.903  1532  1532 E SecVibrator-HAL-AIDL-CORE: V_2_0: Vibrator off
+08-15 17:25:19.903  1532  1532 E SecVibrator-HAL-AIDL-CORE: HW_API: do_off
+08-15 17:25:19.903  1532  1532 E SecVibrator-HAL-AIDL-CORE: HW_API: [triggerForceFeedbackVibration]on: 0
+08-15 17:25:19.918  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:19.926  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:19.926  2012  2412 W ActivityTaskManager: callingPackage for (uid=-1, pid=0) has no WPC
+08-15 17:25:19.927  2012  2412 W OptProp : Cannot read opt property android.window.PROPERTY_COMPAT_ALLOW_ORIENTATION_OVERRIDE
+08-15 17:25:19.928  2012  2412 W OptProp : Cannot read opt property android.window.PROPERTY_COMPAT_ALLOW_RESIZEABLE_ACTIVITY_OVERRIDES
+08-15 17:25:19.928  2012  2412 W OptProp : Cannot read opt property android.window.PROPERTY_COMPAT_ALLOW_MIN_ASPECT_RATIO_OVERRIDE
+08-15 17:25:19.929  2012  2412 W BLASTSyncEngine: setSyncMethod, id=2861, method=0, caller=com.android.server.wm.TransitionController.moveToCollecting:90 com.android.server.wm.ActivityStarter.startActivityUnchecked:333 com.android.server.wm.ActivityStarter.executeRequest:3361 
+08-15 17:25:19.934  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:19.941  4188  4188 E pageboostd: Received HALT command code 2
+08-15 17:25:19.942  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:19.951  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:19.959  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:19.968  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:19.968  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:19.969  3656  3656 W libc    : Access denied finding property "vendor.display.enable_optimal_refresh_rate"
+08-15 17:25:19.969  3656  3656 W libc    : Access denied finding property "vendor.gpp.create_frc_extension"
+08-15 17:25:19.972  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:19.973  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:19.973  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:19.973  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:19.973  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:19.973  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:19.973  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:19.973  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:19.973  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:19.973  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:19.973  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:19.973  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:19.973  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:19.973  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:19.973  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:19.973  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:19.973  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:19.973  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:19.973  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:19.973  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:19.974  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:19.974  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:19.976  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:19.976  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:19.979  2012  3708 W UserManagerService: Requested status bar icon for non-badged user 0
+08-15 17:25:19.985  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:19.986  3656 22507 E AppIconSolution: Couldn't get theme package resources, package is null
+08-15 17:25:19.991  2012  2414 W ProcessStats: Tracking association SourceState{55ee640 com.android.systemui/10038 BFgs #539742} whose proc state 4 is better than process ProcessState{1da5125 org.amnezia.awg/10324 pkg=org.amnezia.awg} proc state 5 (7 skipped)
+08-15 17:25:19.993  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.001  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.001  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.010  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.010  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.018  1580  1580 E SurfaceFlinger: alpha changed 1.000 -> 0.000 - Surface(name=Task=1)/@0x2b980de_transition-leash#42763
+08-15 17:25:20.018  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.026  1580  1580 E SurfaceFlinger: alpha changed 0.000 -> 1.000 - Surface(name=Task=1)/@0x2b980de_transition-leash#42763
+08-15 17:25:20.027  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.027  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.030  1580  4109 E NativeCustomFrequencyManager: [NativeCFMS] BpCustomFrequencyManager::acquire()
+08-15 17:25:20.035  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.035  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.043  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.043  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.051  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.051  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.055  7040 30609 E AtomicFile: Failed to rename /data/user_de/0/com.samsung.android.honeyboard/files/selected.json.new to /data/user_de/0/com.samsung.android.honeyboard/files/selected.json
+08-15 17:25:20.059  1580  1580 E SurfaceFlinger: alpha changed 1.000 -> 0.000 - Surface(name=4e27921 InputMethod)/@0xa7f9f07 - animation-leash of insets_animation#42766
+08-15 17:25:20.060  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.060  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.068  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.068  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.069  7040 30611 E AtomicFile: Failed to rename /data/user_de/0/com.samsung.android.honeyboard/files/selected.json.new to /data/user_de/0/com.samsung.android.honeyboard/files/selected.json
+08-15 17:25:20.077  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.077  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.085  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.085  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.093  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.093  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.101  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.102  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.110  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.110  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.118  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.118  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.127  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.127  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.135  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.135  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.143  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.143  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.152  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.152  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.161  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.161  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.170  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.170  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.177  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.177  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.185  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.185  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.193  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.194  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.199 16449 30593 W adbd    : timed out while waiting for FUNCTIONFS_BIND, trying again
+08-15 17:25:20.202  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.202  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.210  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.210  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.219  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.219  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.227  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.227  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.236  3656  3656 E SurfaceComposerClient: SurfaceComposerClient::Transaction::setAlpha: invalid alpha -0.000375, clamping
+08-15 17:25:20.236  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.236  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.243  1580  1580 E SurfaceFlinger: alpha changed 0.022 -> 0.000 - Surface(name=Task=1204)/@0x1f37d8c_transition-leash#42764
+08-15 17:25:20.243  3656  3656 E SurfaceComposerClient: SurfaceComposerClient::Transaction::setAlpha: invalid alpha -0.016384, clamping
+08-15 17:25:20.244  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.244  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.252  3656  3656 E SurfaceComposerClient: SurfaceComposerClient::Transaction::setAlpha: invalid alpha -0.028603, clamping
+08-15 17:25:20.252  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.252  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.261  3656  3656 E SurfaceComposerClient: SurfaceComposerClient::Transaction::setAlpha: invalid alpha -0.037181, clamping
+08-15 17:25:20.261  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.261  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.269  3656  3656 E SurfaceComposerClient: SurfaceComposerClient::Transaction::setAlpha: invalid alpha -0.042785, clamping
+08-15 17:25:20.269  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.269  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.277  3656  3656 E SurfaceComposerClient: SurfaceComposerClient::Transaction::setAlpha: invalid alpha -0.047709, clamping
+08-15 17:25:20.278  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.278  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.286  3656  3656 E SurfaceComposerClient: SurfaceComposerClient::Transaction::setAlpha: invalid alpha -0.049074, clamping
+08-15 17:25:20.286  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.294  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.297  3656  3656 E SurfaceComposerClient: SurfaceComposerClient::Transaction::setAlpha: invalid alpha -0.050438, clamping
+08-15 17:25:20.303  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.305  3656  3656 E SurfaceComposerClient: SurfaceComposerClient::Transaction::setAlpha: invalid alpha -0.048970, clamping
+08-15 17:25:20.310  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.312  3656  3656 E SurfaceComposerClient: SurfaceComposerClient::Transaction::setAlpha: invalid alpha -0.046872, clamping
+08-15 17:25:20.319  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.321  3656  3656 E SurfaceComposerClient: SurfaceComposerClient::Transaction::setAlpha: invalid alpha -0.044773, clamping
+08-15 17:25:20.327  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.329  3656  3656 E SurfaceComposerClient: SurfaceComposerClient::Transaction::setAlpha: invalid alpha -0.039456, clamping
+08-15 17:25:20.336  3656  3656 E SurfaceComposerClient: SurfaceComposerClient::Transaction::setAlpha: invalid alpha -0.034496, clamping
+08-15 17:25:20.336  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.344  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.347  3656  3656 E SurfaceComposerClient: SurfaceComposerClient::Transaction::setAlpha: invalid alpha -0.029535, clamping
+08-15 17:25:20.352  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.354  3656  3656 E SurfaceComposerClient: SurfaceComposerClient::Transaction::setAlpha: invalid alpha -0.022055, clamping
+08-15 17:25:20.360  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.362  3656  3656 E SurfaceComposerClient: SurfaceComposerClient::Transaction::setAlpha: invalid alpha -0.014703, clamping
+08-15 17:25:20.369  3656  3656 E SurfaceComposerClient: SurfaceComposerClient::Transaction::setAlpha: invalid alpha -0.007352, clamping
+08-15 17:25:20.369  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.378  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.381  2012  3350 W UserManagerService: Requested status bar icon for non-badged user 0
+08-15 17:25:20.383  2012  3350 W UserManagerService: Requested status bar icon for non-badged user 0
+08-15 17:25:20.386  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.390  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:20.390  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:20.390  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:20.390  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:20.390  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:20.390  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:20.390  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:20.390  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:20.390  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:20.390  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:20.390  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:20.390  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:20.390  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:20.390  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:20.390  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:20.390  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:20.390  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:20.390  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:20.390  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:20.391  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:20.391  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:20.391  2012  2892 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:20.417  2012  6406 E WindowManager: win=Window{f142086 u0 com.example.sshtunnel/com.example.sshtunnel.MainActivity} destroySurfaces: appStopped=true cleanupOnResume=false win.mWindowRemovalAllowed=false win.mRemoveOnExit=false win.mViewVisibility=8 caller=com.android.server.wm.ActivityRecord.destroySurfaces:25 com.android.server.wm.ActivityRecord.activityStopped:204 com.android.server.wm.ActivityClientController.activityStopped:95 android.app.IActivityClientController$Stub.onTransact:722 com.android.server.wm.ActivityClientController.onTransact:1 android.os.Binder.execTransactInternal:1541 android.os.Binder.execTransact:1480 
+08-15 17:25:20.419  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:20.423  2012  6406 W UserManagerService: Requested status bar icon for non-badged user 0
+08-15 17:25:21.236 16449 30616 W adbd    : timed out while waiting for FUNCTIONFS_BIND, trying again
+08-15 17:25:21.409  3211  3211 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda15@49235cc
+08-15 17:25:21.417  2012  6406 W InputManager-JNI: Input channel object 'db03b60 Toast (client)' was disposed without first being removed with the input manager!
+08-15 17:25:21.428  2012  6406 W NotificationService: Toast already killed. pkg=com.example.sshtunnel token=android.os.BinderProxy@e31c64c
+08-15 17:25:21.936  1580  1580 E SurfaceFlinger: alpha changed 0.024 -> 0.000 - Surface(name=db03b60 Toast)/@0xd367cea - animation-leash of window_animation#42767
+08-15 17:25:21.954  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:22.120  1580  1580 W Layer   : gatherBufferInfo: Received unknown dataspace from gralloc
+08-15 17:25:22.262 16449 30619 W adbd    : timed out while waiting for FUNCTIONFS_BIND, trying again
+08-15 17:25:22.666  2012  3046 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:22.666  2012  3046 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:22.666  2012  3046 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:22.666  2012  3046 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:22.666  2012  3046 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:22.666  2012  3046 W JobScheduler.JobStatus: Exempted app com.android.vending considered buggy
+08-15 17:25:23.082  2012  2414 W WindowManager: Unable to start animation, surface is null or no children.
+08-15 17:25:23.173  1446 12436 E AHAL: AudioDevice: SetParameters: 1645: Error in SecSetParameters -2
+08-15 17:25:23.297 16449 30620 W adbd    : timed out while waiting for FUNCTIONFS_BIND, trying again
+08-15 17:25:24.241  1446 12436 E AHAL: AudioDevice: SetParameters: 1645: Error in SecSetParameters -2
+08-15 17:25:24.332 16449 30624 W adbd    : timed out while waiting for FUNCTIONFS_BIND, trying again

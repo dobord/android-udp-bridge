@@ -241,13 +241,12 @@ JNIEXPORT void JNICALL JNI_OnUnload(JavaVM* vm, void* reserved) {
 }
 #endif
 
-// Forwarding hint (shared between JNI hint setter and port forwarding thread)
-#ifdef USE_UDP2TCP
-// Bridge (TCP) configuration for SSH direct-tcpip forwarding
-static char g_bridge_remote_host[128] = {0};
-static int  g_bridge_remote_port = 0;        // remote bridge TCP port (server side, accessed via SSH)
-static int  g_bridge_local_tcp_port = 0;     // local TCP listen port (127.0.0.1:<port>) that we expose & forward
-#endif
+// Port forward configuration passed to thread at start (no globals)
+struct pf_config {
+    char remote_host[128]; // SSH remote host for direct-tcpip (typically 127.0.0.1 on server)
+    int  remote_port;      // server-side TCP destination port
+    int  listen_port;      // local 127.0.0.1:<port> we expose
+};
 
 // Global variable to track port forwarding thread
 static pthread_t port_forward_thread = 0;
@@ -365,32 +364,16 @@ static void fb_flush_to_client(struct forward_buffer *fb, int client_sock, int *
 
 // TCP Port forwarding thread function
 void* tcp_port_forward_thread(void* arg) {
-    (void)arg; // Suppress unused parameter warning
+    struct pf_config* cfg = (struct pf_config*)arg;
     
     LOGI("TCP port forwarding thread started");
     pf_set_state(PF_STATE_STARTING);
     
-    int listen_port = 0;
-    const char* remote_host = "127.0.0.1";
-    int remote_port = 0;
-#ifdef USE_UDP2TCP
-    if (g_bridge_remote_port > 0) {
-        remote_port = g_bridge_remote_port;
-    } else {
-        remote_port = 8080;
-    }
-    if (g_bridge_local_tcp_port > 0) {
-        listen_port = g_bridge_local_tcp_port;
-    } else {
-        listen_port = 8080;
-    }
-    if (g_bridge_remote_host[0] != '\0') {
-        remote_host = g_bridge_remote_host;
-    }
-#else
-    listen_port = 8080;
-    remote_port = 8080;
-#endif
+    int listen_port = cfg ? cfg->listen_port : 8080;
+    int remote_port = cfg ? cfg->remote_port : 8080;
+    const char* remote_host = (cfg && cfg->remote_host[0] != '\0') ? cfg->remote_host : "127.0.0.1";
+    // Free cfg early; values are copied above
+    if (cfg) { free(cfg); cfg = NULL; }
 
     LOGI("Port forward configuration: local=%d -> remote %s:%d", listen_port, remote_host, remote_port);
 
@@ -449,7 +432,32 @@ void* tcp_port_forward_thread(void* arg) {
         if (session != NULL) {
             ssh_channel channel = ssh_channel_new(session);
             if (channel != NULL) {
-                int rc = ssh_channel_open_forward(channel, remote_host, remote_port, "127.0.0.1", listen_port);
+                int rc = SSH_ERROR;
+                const int MAX_OPEN_ATTEMPTS = 10;
+                const int RETRY_SLEEP_MS = 200;
+                for (int attempt = 1; attempt <= MAX_OPEN_ATTEMPTS; ++attempt) {
+                    rc = ssh_channel_open_forward(channel, remote_host, remote_port, "127.0.0.1", listen_port);
+                    if (rc == SSH_OK) {
+                        if (attempt > 1) {
+                            LOGI("SSH forward channel opened after %d attempts", attempt);
+                        }
+                        break;
+                    }
+                    const char *err = ssh_get_error(session);
+                    if (err) {
+                        LOGW("open_forward attempt %d/%d failed: %s", attempt, MAX_OPEN_ATTEMPTS, err);
+                        if (strstr(err, "Connection refused") != NULL || strstr(err, "connection refused") != NULL) {
+                            if (attempt < MAX_OPEN_ATTEMPTS) {
+                                struct timespec ts; ts.tv_sec = RETRY_SLEEP_MS / 1000; ts.tv_nsec = (RETRY_SLEEP_MS % 1000) * 1000000L; nanosleep(&ts, NULL);
+                                continue; // retry
+                            }
+                        }
+                    } else {
+                        LOGW("open_forward attempt %d/%d failed (no error string)", attempt, MAX_OPEN_ATTEMPTS);
+                    }
+                    // For non-refused errors or last attempt, break
+                    if (attempt == MAX_OPEN_ATTEMPTS) break;
+                }
                 if (rc == SSH_OK) {
                     LOGI("SSH channel opened for TCP forwarding %d -> %s:%d", listen_port, remote_host, remote_port);
                     
@@ -572,7 +580,7 @@ void* tcp_port_forward_thread(void* arg) {
                     
                     ssh_channel_close(channel);
                 } else {
-                    LOGE("Failed to open SSH forward channel to %s:%d via direct-tcpip: %s", remote_host, remote_port, ssh_get_error(session));
+                    LOGE("Failed to open SSH forward channel to %s:%d after retries: %s", remote_host, remote_port, ssh_get_error(session));
                 }
                 ssh_channel_free(channel);
             }
@@ -590,16 +598,30 @@ void* tcp_port_forward_thread(void* arg) {
 }
 
 // Setup TCP port forwarding
-int setup_tcp_port_forwarding() {
+int setup_tcp_port_forwarding(const char* remote_host, int remote_port, int listen_port) {
     if (port_forward_thread != 0) {
         LOGI("TCP port forwarding already running");
         return 0;
     }
     
     port_forward_running = 0;
-    
-    if (pthread_create(&port_forward_thread, NULL, tcp_port_forward_thread, NULL) != 0) {
+
+    // Allocate and populate config for the thread
+    struct pf_config* cfg = (struct pf_config*)calloc(1, sizeof(struct pf_config));
+    if (!cfg) { LOGE("Failed to allocate pf_config"); return -1; }
+    if (remote_host && *remote_host) {
+        strncpy(cfg->remote_host, remote_host, sizeof(cfg->remote_host)-1);
+        cfg->remote_host[sizeof(cfg->remote_host)-1] = '\0';
+    } else {
+        strncpy(cfg->remote_host, "127.0.0.1", sizeof(cfg->remote_host)-1);
+        cfg->remote_host[sizeof(cfg->remote_host)-1] = '\0';
+    }
+    cfg->remote_port = remote_port > 0 ? remote_port : 8080;
+    cfg->listen_port = listen_port > 0 ? listen_port : cfg->remote_port;
+
+    if (pthread_create(&port_forward_thread, NULL, tcp_port_forward_thread, cfg) != 0) {
         LOGE("Failed to create TCP port forwarding thread");
+        free(cfg);
         return -1;
     }
     // Avoid duplicate 'started' log (actual start logged inside thread)
@@ -756,10 +778,7 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_connectTo
     
     LOGI("SSH authentication successful");
     
-    // Set up TCP port forwarding (used for both legacy bridge or udp2tcp transport)
-    if (setup_tcp_port_forwarding() != 0) {
-        LOGW("Failed to setup TCP port forwarding, but SSH connection established");
-    }
+    // Port forwarding will be started later from udp2tcp start with the desired ports
     
     pthread_mutex_unlock(&session_mutex);
     
@@ -861,10 +880,7 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_connectWi
     
     LOGI("SSH key authentication successful");
     
-    // Set up TCP port forwarding for UDP Bridge (8080)
-    if (setup_tcp_port_forwarding() != 0) {
-        LOGW("Failed to setup TCP port forwarding, but SSH connection established");
-    }
+    // Port forwarding will be started later from udp2tcp start with the desired ports
     
     pthread_mutex_unlock(&session_mutex);
     
@@ -965,62 +981,50 @@ JNIEXPORT jstring JNICALL Java_com_example_sshtunnel_SshTunnelService_nativeDebu
 // Legacy TCP manager JNI removed
 
 // udp2tcp JNI section (real implementation only when USE_UDP2TCP defined)
-JNIEXPORT void JNICALL Java_com_example_sshtunnel_SshTunnelService_nativeSetForwardingHint(
-    JNIEnv* env, jobject obj, jstring remote_host, jint remote_port, jint local_tcp_port) {
-    (void)obj;
 #ifdef USE_UDP2TCP
-    const char* h = (*env)->GetStringUTFChars(env, remote_host, 0);
-    strncpy(g_bridge_remote_host, h ? h : "", sizeof(g_bridge_remote_host)-1);
-    g_bridge_remote_host[sizeof(g_bridge_remote_host)-1] = '\0';
-    g_bridge_remote_port = remote_port;
-    g_bridge_local_tcp_port = local_tcp_port;
-    LOGI("Bridge config set remote=%s:%d local_tcp=%d", g_bridge_remote_host, g_bridge_remote_port, g_bridge_local_tcp_port);
-    if (h) (*env)->ReleaseStringUTFChars(env, remote_host, h);
-#else
-    (void)env; (void)remote_host; (void)remote_port; (void)local_tcp_port;
-    LOGW("udp2tcp not enabled: nativeSetForwardingHint ignored");
-#endif
-}
-#ifdef USE_UDP2TCP
-// Start udp2tcp (initialize + start thread)
+// Start udp2tcp (initialize + start thread) with explicit 6-parameter contract
 JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SshTunnelService_startUdp2Tcp(
-    JNIEnv *env, jobject obj, jstring remote_host, jint remote_port, jint local_udp_port) {
+    JNIEnv *env, jobject obj,
+    jstring j_tcp_connect_host, jint tcp_connect_port,
+    jstring j_listen_addr,     jint listen_port,
+    jstring j_remote_dst_ip,   jint remote_dst_port) {
     (void)obj;
-    const char* host = (*env)->GetStringUTFChars(env, remote_host, 0);
-    // We accept remote_host/remote_port as actual bridge endpoint (for SSH forward) but we connect udp2tcp to local forwarded port.
-    // Use g_forward_local (TCP listen port) as connect target via 127.0.0.1.
-    int bridge_local_tcp = (g_bridge_local_tcp_port > 0) ? g_bridge_local_tcp_port : remote_port; // fallback
-    LOGI("Starting udp2tcp: tcp_connect=127.0.0.1:%d (SSH forward -> %s:%d) local_udp_listen=%d", bridge_local_tcp, host, remote_port, local_udp_port);
-    if (udp2tcp_init("127.0.0.1", bridge_local_tcp, local_udp_port) != 0) {
-        LOGE("udp2tcp_init failed");
-        (*env)->ReleaseStringUTFChars(env, remote_host, host);
-        return -1;
+    const char* tcp_connect_host = j_tcp_connect_host ? (*env)->GetStringUTFChars(env, j_tcp_connect_host, 0) : NULL;
+    const char* listen_addr      = j_listen_addr     ? (*env)->GetStringUTFChars(env, j_listen_addr, 0)      : NULL;
+    const char* remote_dst_ip    = j_remote_dst_ip   ? (*env)->GetStringUTFChars(env, j_remote_dst_ip, 0)   : NULL;
+
+#ifdef USE_UDP2TCP
+    // Configure SSH port forward: local 127.0.0.1:tcp_connect_port -> remote 127.0.0.1:tcp_connect_port
+    if (port_forward_thread == 0) {
+        if (setup_tcp_port_forwarding("127.0.0.1", tcp_connect_port, tcp_connect_port) != 0) {
+            LOGW("Failed to setup TCP port forwarding prior to udp2tcp start");
+        }
     }
-    int rc = udp2tcp_start();
-    (*env)->ReleaseStringUTFChars(env, remote_host, host);
+#endif
+
+    const char* eff_tcp_host = (tcp_connect_host && *tcp_connect_host) ? tcp_connect_host : "127.0.0.1";
+    const char* eff_listen    = (listen_addr && *listen_addr) ? listen_addr : "0.0.0.0";
+    const char* eff_dst_ip    = (remote_dst_ip && *remote_dst_ip) ? remote_dst_ip : "127.0.0.1";
+
+    LOGI("Starting udp2tcp with params:\n tcp_connect=%s:%d\n listen=%s:%d\n dst_udp=%s:%d",
+         eff_tcp_host, tcp_connect_port, eff_listen, listen_port, eff_dst_ip, remote_dst_port);
+
+    int rc = udp2tcp_start(
+        eff_tcp_host,                // tcp_connect.host (via SSH forward typically 127.0.0.1)
+        tcp_connect_port,            // tcp_connect.port
+        eff_listen,                  // listen_addr
+        listen_port,                 // listen_port
+        eff_dst_ip,                  // remote_dst_ip
+        remote_dst_port              // remote_dst_port
+    );
+
+    if (j_remote_dst_ip) (*env)->ReleaseStringUTFChars(env, j_remote_dst_ip, remote_dst_ip);
+    if (j_listen_addr)   (*env)->ReleaseStringUTFChars(env, j_listen_addr, listen_addr);
+    if (j_tcp_connect_host) (*env)->ReleaseStringUTFChars(env, j_tcp_connect_host, tcp_connect_host);
     return rc;
 }
 
-// Start udp2tcp advanced (with dst ip/port)
-JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SshTunnelService_startUdp2TcpAdvanced(
-    JNIEnv *env, jobject obj, jstring remote_host, jint remote_port, jint local_udp_port,
-    jstring dst_ip, jint dst_port) {
-    (void)obj;
-    const char* host = (*env)->GetStringUTFChars(env, remote_host, 0);
-    const char* dip = dst_ip ? (*env)->GetStringUTFChars(env, dst_ip, 0) : NULL;
-    int bridge_local_tcp = (g_bridge_local_tcp_port > 0) ? g_bridge_local_tcp_port : remote_port;
-    LOGI("Starting udp2tcp (advanced): tcp_connect=127.0.0.1:%d (SSH forward -> %s:%d) local_udp_listen=%d dst_udp=%s:%d", bridge_local_tcp, host, remote_port, local_udp_port, dip?dip:"(null)", dst_port);
-    if (udp2tcp_init_advanced("127.0.0.1", bridge_local_tcp, local_udp_port, dip, dst_port) != 0) {
-        LOGE("udp2tcp_init_advanced failed");
-        if (dst_ip) (*env)->ReleaseStringUTFChars(env, dst_ip, dip);
-        (*env)->ReleaseStringUTFChars(env, remote_host, host);
-        return -1;
-    }
-    int rc = udp2tcp_start();
-    if (dst_ip) (*env)->ReleaseStringUTFChars(env, dst_ip, dip);
-    (*env)->ReleaseStringUTFChars(env, remote_host, host);
-    return rc;
-}
+// Advanced udp2tcp start (removed)
 
 // Stop udp2tcp (graceful)
 JNIEXPORT void JNICALL Java_com_example_sshtunnel_SshTunnelService_stopUdp2Tcp(JNIEnv *env, jobject obj) {
@@ -1060,12 +1064,7 @@ JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SshTunnelService_startUdp2Tcp(
     return -1;
 }
 
-JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SshTunnelService_startUdp2TcpAdvanced(
-    JNIEnv *env, jobject obj, jstring remote_host, jint remote_port, jint local_udp_port, jstring dst_ip, jint dst_port) {
-    (void)env; (void)obj; (void)remote_host; (void)remote_port; (void)local_udp_port; (void)dst_ip; (void)dst_port;
-    LOGW("udp2tcp not enabled in this build (startUdp2TcpAdvanced)");
-    return -1;
-}
+// Advanced udp2tcp start stub (removed)
 
 JNIEXPORT void JNICALL Java_com_example_sshtunnel_SshTunnelService_stopUdp2Tcp(JNIEnv *env, jobject obj) {
     (void)env; (void)obj;
