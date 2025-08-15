@@ -19,8 +19,9 @@ android {
         
         externalNativeBuild {
             cmake {
-                cppFlags "-std=c++14"
-                arguments "-DANDROID_STL=c++_shared"
+                // Требуется C++20 для библиотеки udp2tcp
+                cppFlags "-std=c++20"
+                arguments "-DANDROID_STL=c++_shared", "-DUSE_UDP2TCP=ON", "-DUDP2TCP_ENABLE_C_API=ON", "-DBUILD_TESTING=OFF"
             }
         }
     }
@@ -38,7 +39,7 @@ android {
         }
     }
     
-    ndkVersion "26.3.11579264"
+    ndkVersion "29.0.13846066"
     
     packaging {
         pickFirst '**/libc++_shared.so'

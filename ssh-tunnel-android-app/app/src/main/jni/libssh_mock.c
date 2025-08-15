@@ -147,3 +147,20 @@ void ssh_set_blocking(ssh_session session, int blocking) {
 void ssh_channel_set_blocking(ssh_channel channel, int blocking) {
 	if (channel) channel->blocking = blocking;
 }
+
+// Mock: no real socket, return -1 so select() logic in caller ignores session fd
+int ssh_get_fd(ssh_session session) {
+	(void)session;
+	return -1;
+}
+
+int ssh_channel_is_eof(ssh_channel channel) {
+	// In mock we never signal EOF unless channel pointer invalid
+	return channel ? 0 : 1;
+}
+
+int ssh_channel_read_nonblocking(ssh_channel channel, void* dest, unsigned int count, int is_stderr) {
+	(void)channel; (void)dest; (void)count; (void)is_stderr;
+	// No data available in mock
+	return 0;
+}

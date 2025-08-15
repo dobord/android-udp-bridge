@@ -4,9 +4,9 @@ echo "🧪 Testing mock build setup..."
 
 cd ssh-tunnel-android-app
 
-# Clean build cache
-echo "🧹 Cleaning build cache..."
-rm -rf app/.cxx/ app/build/intermediates/cxx/ app/src/main/prebuilt/
+# Clean only Gradle/Native intermediates (keep prebuilt third_party libraries to avoid expensive re-build)
+echo "🧹 Cleaning build cache (keeping prebuilt libs)..."
+rm -rf app/.cxx/ app/build/intermediates/cxx/
 ./gradlew clean --no-daemon
 
 # Check mock files

@@ -1,100 +1,100 @@
 # UDP Forwarder Implementation
 
-## Обзор
+## Overview
 
-UDP Forwarder - это компонент сервера UDP Bridge, который отвечает за пересылку UDP пакетов от клиентов к целевому серверу и обратно.
+UDP Forwarder is a component of the UDP Bridge server responsible for forwarding UDP packets from clients to the target server and back.
 
-## Архитектура
+## Architecture
 
-### Основные компоненты
+### Core components
 
-1. **udp_forwarder_t** - основная структура форвардера
-2. **Receiver Thread** - поток для получения ответов от целевого сервера
-3. **Send Mutex** - мьютекс для потокобезопасной отправки
-4. **Statistics** - сбор статистики работы
+1. **udp_forwarder_t** - main forwarder structure
+2. **Receiver Thread** - thread receiving responses from target server
+3. **Send Mutex** - mutex for thread-safe send
+4. **Statistics** - runtime statistics collection
 
-### Файлы
+### Files
 
-- `src/udp_forwarder.h` - заголовочный файл с определениями
-- `src/udp_forwarder.c` - реализация функций
-- `test_udp_forwarder.c` - тестовая программа
+- `src/udp_forwarder.h` - header with definitions
+- `src/udp_forwarder.c` - function implementation
+- `test_udp_forwarder.c` - test program
 
-## Основные функции
+## Main functions
 
 ### udp_forwarder_create()
-Создает новый экземпляр UDP forwarder.
+Creates a new UDP forwarder instance.
 
-**Параметры:**
-- `target_host` - хост целевого UDP сервера
-- `target_port` - порт целевого UDP сервера  
-- `clients` - таблица клиентов
+**Parameters:**
+- `target_host` - target UDP server host
+- `target_port` - target UDP server port  
+- `clients` - client table
 
 ### udp_forwarder_start()
-Запускает потоки форвардера.
+Starts forwarder threads.
 
 ### udp_forwarder_send()
-Отправляет UDP пакет на целевой сервер от имени клиента.
+Sends a UDP packet to the target server on behalf of a client.
 
 ### udp_forwarder_receiver_thread()
-Поток для получения ответов от целевого сервера и их пересылки клиентам.
+Thread that receives responses from the target server and relays them to clients.
 
-## Особенности реализации
+## Implementation details
 
-### Обработка ошибок
-- Retry механизм для отправки пакетов
-- Graceful handling сетевых ошибок
-- Автоматическое переподключение при необходимости
+### Error handling
+- Retry mechanism for sends
+- Graceful handling of network errors
+- Automatic reconnect when needed
 
-### Потокобезопасность
-- Мьютекс для критических секций
-- Безопасная работа с таблицей клиентов
-- Правильное завершение потоков
+### Thread safety
+- Mutex for critical sections
+- Safe access to client table
+- Proper thread shutdown
 
-### Статистика
-- Подсчет отправленных/полученных пакетов
-- Подсчет переданных байтов
-- Время работы (uptime)
+### Statistics
+- Count of sent/received packets
+- Count of transferred bytes
+- Uptime
 
-## Ограничения текущей реализации
+## Current limitations
 
-1. **Broadcast responses** - в текущей версии ответы от целевого сервера отправляются всем активным клиентам. В будущем нужно добавить mapping UDP request -> client.
+1. **Broadcast responses** - currently responses from the target server are sent to all active clients. Future: map UDP request -> client.
 
-2. **Simple retry logic** - простая логика повторов, можно улучшить с экспоненциальным backoff.
+2. **Simple retry logic** - basic retry, could be improved with exponential backoff.
 
-3. **No connection pooling** - каждый форвардер использует один UDP сокет.
+3. **No connection pooling** - each forwarder uses a single UDP socket.
 
-## Тестирование
+## Testing
 
-### Компиляция
+### Build
 ```bash
 make udp-forwarder-test
 ```
 
-### Запуск тестов
+### Run tests
 ```bash
 ./run_udp_forwarder_test.sh
 ```
 
-### Ручное тестирование
+### Manual testing
 ```bash
-# Запустить UDP echo server
+# Start UDP echo server
 ./test_udp_echo_server.sh &
 
-# Запустить тест форвардера
+# Run forwarder test
 ./test_udp_forwarder localhost 5060
 ```
 
-## Интеграция
+## Integration
 
-UDP Forwarder интегрируется с:
-- **Client Table** - для управления клиентами
-- **Protocol** - для создания протокольных сообщений
-- **Main Server** - как часть основного сервера
+UDP Forwarder integrates with:
+- **Client Table** - client management
+- **Protocol** - building protocol messages
+- **Main Server** - part of main server
 
-## Следующие шаги
+## Next steps
 
-1. Реализовать mapping UDP requests к конкретным клиентам
-2. Добавить connection pooling для множественных целевых серверов
-3. Улучшить retry логику
-4. Добавить метрики производительности
-5. Интегрировать в основной сервер (задача 1.5)
+1. Implement mapping from UDP requests to specific clients
+2. Add connection pooling for multiple target servers
+3. Improve retry logic
+4. Add performance metrics
+5. Integrate into main server (task 1.5)

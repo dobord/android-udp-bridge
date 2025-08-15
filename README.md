@@ -1,159 +1,212 @@
 # android-udp-bridge
 
-Android приложение для создания UDP туннеля через SSH соединение. Приложение использует встроенную библиотеку libssh для подключения к серверу и проброса UDP портов, что позволяет безопасно передавать UDP трафик через зашифрованное SSH соединение.
+Android application for secure UDP tunneling over SSH using `udp2tcp` encapsulation.
 
-## Описание
+> Documentation restructured: current files in `docs/`, historical reports in `docs_legacy/`.
 
-Данное приложение предоставляет возможность создания SSH туннеля для UDP трафика на Android устройствах. Основные возможности:
+## Quick Overview
 
-- Подключение к SSH серверу с использованием библиотеки libssh
-- Поддержка двух методов аутентификации: пароль и приватный ключ
-- Создание туннеля для проброса UDP портов
-- Безопасная передача UDP данных через зашифрованное SSH соединение
-- Простой пользовательский интерфейс для настройки соединения
+| Component | Status | Description |
+|-----------|--------|----------|
+| SSH (libssh + extended stub) | Stable | Password / key auth, port forwarding |
+| udp2tcp integration | In progress | Replaces custom UDP Bridge protocol |
+| Legacy UDP Bridge | Deprecated | Moved to `docs_legacy/`, pending removal after migration |
 
-## Технические особенности
+## Documentation Structure
 
-- Использование расширенной SSH библиотеки через JNI с реальными TCP соединениями
-- Поддержка различных методов аутентификации SSH (пароль, приватный ключ)
-- Поддержка ключей с парольными фразами и без них
-- Определение типов SSH ключей (RSA, DSA, ECDSA, Ed25519)
-- Настраиваемые таймауты и расширенная обработка ошибок
-- Автоматическое переподключение при разрыве соединения
-- Фоновая работа сервиса для поддержания туннеля
+Current (`docs/`):
+- Architecture: [`docs/TECH_SPEC_NEW_ARCHITECTURE.md`](docs/TECH_SPEC_NEW_ARCHITECTURE.md)
+- Migration: [`docs/MIGRATION_UDP2TCP.md`](docs/MIGRATION_UDP2TCP.md)
+- Implementation / migration plan: [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md)
+- CI/CD: [`docs/CI_CD_SUMMARY.md`](docs/CI_CD_SUMMARY.md)
+- SSH implementation: [`docs/SSH_IMPLEMENTATION.md`](docs/SSH_IMPLEMENTATION.md)
+- Advanced SSH library: [`docs/ADVANCED_SSH_LIBRARY.md`](docs/ADVANCED_SSH_LIBRARY.md)
+- Key authentication: [`docs/SSH_KEY_AUTHENTICATION.md`](docs/SSH_KEY_AUTHENTICATION.md)
 
-## Использование
+Legacy / reports (`docs_legacy/` examples):
+- Protocol / schema: `docs_legacy/UDP_BRIDGE_SCHEMA.md`
+- PHASE / TASK reports
+- Fixes: `ARCH_FLAGS_FIX*.md`, `ARCHITECTURE_FIX_REPORT.md`
 
-### Аутентификация по паролю
-1. Введите данные SSH сервера (хост, порт, имя пользователя)
-2. Выберите "Password" в разделе Authentication Method
-3. Введите пароль
-4. Нажмите "Connect"
+## Migration Status
+- JNI simplification: removing internal listener / client manager in favor of `udp2tcp` client
+- Port forwarding remains the secure transport basis
+- After stabilization: purge legacy sources and update CI
 
-### Аутентификация по приватному ключу
-1. Введите данные SSH сервера (хост, порт, имя пользователя)
-2. Выберите "Private Key" в разделе Authentication Method
-3. Укажите путь к файлу приватного ключа на устройстве
-4. При необходимости введите парольную фразу для ключа
-5. Нажмите "Connect"
+`udp2tcp` repository: git@github.com:dobord/udp2tcp.git
 
-### Настройка UDP туннеля
-1. После успешного подключения к SSH серверу
-2. Введите локальный порт для прослушивания
-3. Укажите удалённый хост и порт назначения
-4. Нажмите "Start Forwarding"
+## Description
 
-## Документация
+This application establishes an SSH tunnel for UDP traffic on Android. Key capabilities (udp2tcp architecture):
 
-- [SSH Key Authentication Guide](SSH_KEY_AUTHENTICATION.md) - подробное руководство по аутентификации с ключами
-- [Advanced SSH Library](ADVANCED_SSH_LIBRARY.md) - техническая документация расширенной SSH библиотеки
-- [SSH Implementation Details](SSH_IMPLEMENTATION.md) - технические детали реализации SSH
+- Connect to SSH server using libssh
+- Two authentication methods: password and private key
+- UDP port tunneling via TCP encapsulation (`udp2tcp`)
+- Secure transfer of UDP data over encrypted SSH forwarding
+- Simple UI for configuring the connection
 
-## CI/CD и Автоматизация
+## Technical Notes
 
-Проект включает полную настройку CI/CD с помощью GitHub Actions:
+### Current (udp2tcp)
+- Encapsulation of UDP over a single reliable TCP stream via `udp2tcp` client
+- SSH port forwarding (local or dynamic) retained to encrypt transport
+- Simplified logic: no custom binary header or client tables in Android layer
+- Reduced JNI code (removal of `udp_listener.*`, `udp_bridge_protocol.*`, client manager — phased out)
+- Reuse of proven `udp2tcp` code instead of maintaining a custom protocol
 
-### 🚀 Автоматические сборки
-- **Pull Request Check** - автоматическая проверка кода и быстрая сборка при создании PR
-- **Main Build** - полная сборка при push в основные ветки
-- **Nightly Build** - ежедневные сборки для тестирования последних изменений
-- **Release Build** - автоматическое создание релизов при создании тегов
+### Legacy (custom UDP Bridge protocol)
+- Custom header (magic, version, crc32)
+- Client table and multiplexing MSG_DATA / MSG_PING / MSG_PONG
+- Moved to legacy section and slated for removal after migration (see `MIGRATION_UDP2TCP.md`)
 
-### 📦 Релизы
-Для создания нового релиза:
+## Usage
+
+### Password authentication
+1. Enter SSH server (host, port, username)
+2. Select "Password" as Authentication Method
+3. Enter password
+4. Click "Connect"
+
+### Private key authentication
+1. Enter SSH server (host, port, username)
+2. Select "Private Key" as Authentication Method
+3. Provide path to private key file
+4. Enter passphrase if required
+5. Click "Connect"
+
+### Configure UDP tunnel (udp2tcp)
+1. After successful SSH connection
+2. Enter local UDP port (clients will send to it)
+3. Specify remote (target) UDP host/port (or use saved config)
+4. App sets/reuses SSH TCP port forwarding to the `udp2tcp` server port
+5. Click "Start Forwarding" — local udp2tcp client connects to remote server through SSH tunnel
+
+### Legacy mode (if enabled in developer settings)
+Old protocol starts internal UDP listener + TCP connection manager. Scheduled for removal after udp2tcp stabilization.
+
+## Documentation (short index)
+See "Documentation Structure" above. New material goes only into `docs/`.
+
+## CI/CD and Automation
+
+Project includes a full CI/CD setup via GitHub Actions:
+
+### 🚀 Automated builds
+- **Pull Request Check** - code validation and fast build on PR
+- **Main Build** - full build on push to main branches
+- **Nightly Build** - daily builds for latest changes
+- **Release Build** - automatic release on tag creation
+
+### 📦 Releases
+To create a new release:
 ```bash
-# Создать и отправить тег
+# Create and push tag
 git tag -a v1.0.0 -m "Release version 1.0.0"
 git push origin v1.0.0
 ```
 
-Это автоматически запустит:
-- Сборку для всех архитектур (ARM64, ARMv7, x86, x86_64)
-- Создание подписанных APK файлов
-- Публикацию релиза на GitHub с changelog
-- Генерацию SHA256 чексумм
+This triggers automatically:
+- Build for all architectures (ARM64, ARMv7, x86, x86_64)
+- Signed APK generation
+- Release publication on GitHub with changelog
+- SHA256 checksum generation
 
-### 🔧 Локальное тестирование
+### 🔧 Local workflow testing
 ```bash
-# Тестирование workflows локально (требует act)
-./test-workflows.sh validate      # Проверка синтаксиса
-./test-workflows.sh test-pr       # Тест PR workflow
-./test-workflows.sh setup         # Настройка тестового окружения
+# Local workflow testing (requires act)
+./test-workflows.sh validate      # Syntax validation
+./test-workflows.sh test-pr       # Pull Request workflow test
+./test-workflows.sh setup         # Test environment setup
 ```
 
-Подробная документация: [.github/README.md](.github/README.md)
+Detailed documentation: [.github/README.md](.github/README.md)
 
-## Сборка и тестирование
+## Build and Test
 
-### Требования
+### Requirements
 - Android NDK 25.1.8937393+
 - CMake 3.18.1+
 - Gradle 8.4+
 - Java 21
 
-### Prebuilt библиотеки
+### Prebuilt libraries (libssh + TLS backend)
 
-Проект использует предварительно скомпилированные статические библиотеки (prebuilt) для ускорения сборки:
+Static prebuilt libraries accelerate local builds:
 
-**Доступные библиотеки:**
+**Available libraries:**
 - OpenSSL 3.5.0 + libssh 0.11.2
 - mbedTLS 2.28.7 + libssh 0.11.2
 
-**Архитектуры:** arm64-v8a, armeabi-v7a, x86_64, x86
+**Architectures:** arm64-v8a, armeabi-v7a, x86_64, x86
 
-**Команды сборки prebuilt:**
+**Prebuilt build commands:**
 ```bash
-# Сборка всех архитектур (по умолчанию)
+# Build all architectures (default)
 ./build_openssl.sh                    # OpenSSL + libssh
 ./build_mbedtls.sh                    # mbedTLS + libssh
 
-# Сборка конкретной архитектуры (для CI/CD)
+# Build specific architecture (for CI/CD)
 ANDROID_ABI=arm64-v8a ./build_openssl.sh
 ANDROID_ABI=x86_64 ./build_mbedtls.sh
 
-# Пустая переменная = все архитектуры
+# Empty variable = all architectures
 ANDROID_ABI= ./build_openssl.sh
 ```
 
-**Логика выбора архитектур:**
-- Без `ANDROID_ABI` или `ANDROID_ABI=""` → собираются **все ABI**
-- `ANDROID_ABI=конкретная_ABI` → собирается **только указанная ABI**
+**Architecture selection logic:**
+- Without `ANDROID_ABI` or empty → build **all ABIs**
+- `ANDROID_ABI=<specific>` → build **only specified ABI**
 
-### Команды сборки
+### Build commands
 ```bash
-# Сборка проекта
+# Build project
 cd ssh-tunnel-android-app
 ./gradlew build
 
-# Запуск тестов
+# Run tests
 ./test_advanced_ssh.sh
 ```
 
 #### Windows (PowerShell)
 ```powershell
-# 1) (Опционально) Убедитесь, что Android SDK доступен
-# Если переменная ANDROID_HOME не задана, пропишите путь в local.properties:
+# 1) (Optional) Ensure Android SDK is available
+# If ANDROID_HOME not set, define in local.properties:
 #   ssh-tunnel-android-app\local.properties -> sdk.dir=E:\Android\Sdk
 
-# 2) Собрать и установить prebuilt-библиотеки (mbedTLS + libssh)
+# 2) Build and install prebuilt libraries (mbedTLS + libssh)
 cd E:\projects\android-udp-bridge
 ./build_mbedtls.bat
 
-# 3) Собрать APK
+# 3) Build APK
 ./build_app.bat
 
-# 4) (Опционально) Установить APK на устройство
+# 4) (Optional) Install APK on device
 adb install -r .\ssh-tunnel-android-app\app\build\outputs\apk\debug\app-debug.apk
 
-# 5) (Опционально) Смотреть логи
+# 5) (Optional) View logs
 adb logcat | Select-String -Pattern "(SSHTunnel|LibSSH_Advanced)"
 ```
 
-### Установка на устройство
+### Install on device
 ```bash
-# Установка APK
+# Install APK
 adb install -r $PWD/ssh-tunnel-android-app/app/build/outputs/apk/debug/app-debug.apk
 
-# Мониторинг логов
-adb logcat | grep -E "(SSHTunnel|LibSSH_Advanced)"
+# Monitor logs
+adb logcat | grep -E "(SSHTunnel|LibSSH_Advanced|udp2tcp)"
+
+```
+
+## FAQ (short)
+Q: Where are historical PHASE / TASK reports?  
+A: In `docs_legacy/`.
+
+Q: When will legacy code be removed?  
+A: After successful udp2tcp e2e tests and CI updates (see migration doc).
+
+Q: Any build changes needed during transition?  
+A: No; scripts remain, udp2tcp client inclusion is added.
+
+## License
+MIT (unless specified otherwise in individual third_party folders).
 ```

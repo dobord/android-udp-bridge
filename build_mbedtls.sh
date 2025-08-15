@@ -1,49 +1,49 @@
 #!/bin/bash
 
-# Скрипт для сборки libssh с mbedTLS для Android
-# Требует Android NDK и CMake
+# Script to build libssh with mbedTLS for Android
+# Requires Android NDK and CMake
 
 set -e
 
-# Проверяем переменные окружения
+# Validate environment variables
 if [ -z "$ANDROID_NDK_HOME" ] && [ -z "$ANDROID_NDK_ROOT" ]; then
-    # Пытаемся найти NDK автоматически
+    # Try to locate NDK automatically
     if [ -d "$HOME/Android/Sdk/ndk" ]; then
         export ANDROID_NDK_HOME="$HOME/Android/Sdk/ndk/$(ls $HOME/Android/Sdk/ndk/ | sort -V | tail -1)"
     elif [ -d "/opt/android-sdk/ndk" ]; then
         export ANDROID_NDK_HOME="/opt/android-sdk/ndk/$(ls /opt/android-sdk/ndk/ | sort -V | tail -1)"
     else
-        echo "Ошибка: ANDROID_NDK_HOME не установлен и NDK не найден автоматически"
+    echo "Error: ANDROID_NDK_HOME not set and NDK was not auto-detected"
         exit 1
     fi
 fi
 
 NDK_PATH="${ANDROID_NDK_HOME:-$ANDROID_NDK_ROOT}"
-echo "Используем Android NDK: $NDK_PATH"
+echo "Using Android NDK: $NDK_PATH"
 
-# Параметры сборки
+# Build parameters
 LIBSSH_VERSION="0.11.2"
 MBEDTLS_VERSION="2.28.7"
 MIN_API_LEVEL=24
-# Флаги для 16K страниц (Android 15)
+# Linker flags for 16K page size (Android 15 compatibility)
 MAX_PAGE_LDFLAGS="-Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384"
 
-# Определяем архитектуры для сборки
+# Determine ABIs to build
 if [ -n "$ANDROID_ABI" ] && [ "$ANDROID_ABI" != "" ]; then
-    # Если задана переменная ANDROID_ABI (например, в CI), используем только её
+    # If ANDROID_ABI is set (e.g. in CI) build only that one
     ABIS=("$ANDROID_ABI")
-    echo "🎯 Сборка для архитектуры из ANDROID_ABI: $ANDROID_ABI"
+    echo "🎯 Building only for ANDROID_ABI: $ANDROID_ABI"
 else
-    # По умолчанию собираем все основные архитектуры
+    # Otherwise build all primary ABIs
     ABIS=("arm64-v8a" "armeabi-v7a" "x86_64" "x86")
-    echo "🔄 Сборка для всех архитектур: ${ABIS[*]}"
+    echo "🔄 Building for all ABIs: ${ABIS[*]}"
 fi
 
-# Рабочие директории
+# Working directories
 WORK_DIR="$(pwd)/libssh_build"
 SOURCE_DIR="$WORK_DIR/libssh-$LIBSSH_VERSION"
 BUILD_BASE_DIR="$WORK_DIR/build"
-# Устанавливаем прямо в пребиилды Android модуля
+# Install directly into Android module prebuilt directory
 INSTALL_BASE_DIR="$(pwd)/ssh-tunnel-android-app/app/src/main/prebuilt"
 
 # Директории для mbedTLS
@@ -51,32 +51,32 @@ MBEDTLS_WORK_DIR="$WORK_DIR/mbedtls"
 MBEDTLS_SOURCE_DIR="$MBEDTLS_WORK_DIR/mbedtls-$MBEDTLS_VERSION"
 MBEDTLS_BUILD_BASE_DIR="$MBEDTLS_WORK_DIR/build"
 
-echo "Создаём рабочие директории..."
+echo "Creating work directories..."
 mkdir -p "$WORK_DIR"
 mkdir -p "$INSTALL_BASE_DIR"
 
-# Скачиваем mbedTLS, если ещё не скачан
+# Download mbedTLS if not already present
 if [ ! -f "$MBEDTLS_WORK_DIR/mbedtls-$MBEDTLS_VERSION.tar.gz" ]; then
-    echo "Скачиваем mbedTLS $MBEDTLS_VERSION..."
+    echo "Downloading mbedTLS $MBEDTLS_VERSION..."
     mkdir -p "$MBEDTLS_WORK_DIR"
     cd "$MBEDTLS_WORK_DIR"
     wget -O "mbedtls-$MBEDTLS_VERSION.tar.gz" "https://github.com/Mbed-TLS/mbedtls/archive/refs/tags/v$MBEDTLS_VERSION.tar.gz"
     tar -xf "mbedtls-$MBEDTLS_VERSION.tar.gz"
 fi
 
-# Скачиваем libssh, если ещё не скачан
+# Download libssh if not already present
 if [ ! -f "$WORK_DIR/libssh-$LIBSSH_VERSION.tar.xz" ]; then
-    echo "Скачиваем libssh $LIBSSH_VERSION..."
+    echo "Downloading libssh $LIBSSH_VERSION..."
     cd "$WORK_DIR"
     # Начиная с 0.11 используется каталог 0.11
     wget "https://www.libssh.org/files/0.11/libssh-$LIBSSH_VERSION.tar.xz"
     tar -xf "libssh-$LIBSSH_VERSION.tar.xz"
 fi
 
-# Функция для сборки под конкретную архитектуру
+# Build function per ABI
 build_for_abi() {
     local ABI=$1
-    echo "Сборка libssh для архитектуры: $ABI"
+    echo "Building libssh for ABI: $ABI"
     
     # Настройка переменных для архитектуры
     case $ABI in
@@ -97,7 +97,7 @@ build_for_abi() {
             ARCH="x86_64"
             ;;
         *)
-            echo "Неподдерживаемая архитектура: $ABI"
+            echo "Unsupported ABI: $ABI"
             return 1
             ;;
     esac
@@ -107,12 +107,12 @@ build_for_abi() {
     MBEDTLS_BUILD_DIR="$MBEDTLS_BUILD_BASE_DIR/$ABI"
     MBEDTLS_INSTALL_DIR="$INSTALL_BASE_DIR/mbedtls/$ABI"
 
-    # Чистим каталоги сборки для предотвращения конфликтов CMakeCache
+    # Clean build directories to avoid stale CMakeCache conflicts
     rm -rf "$BUILD_DIR" "$MBEDTLS_BUILD_DIR"
     mkdir -p "$BUILD_DIR" "$INSTALL_DIR" "$MBEDTLS_BUILD_DIR" "$MBEDTLS_INSTALL_DIR"
 
-    # 1) Сборка mbedTLS (статические библиотеки)
-    echo "Сборка mbedTLS для архитектуры: $ABI"
+    # 1) Build mbedTLS (static libraries)
+    echo "Building mbedTLS for ABI: $ABI"
     cd "$MBEDTLS_BUILD_DIR"
     cmake "$MBEDTLS_SOURCE_DIR" \
         -DCMAKE_SYSTEM_NAME=Android \
@@ -133,12 +133,12 @@ build_for_abi() {
         -DBUILD_SHARED_LIBS=OFF
     cmake --build . --config Release -- -j$(nproc)
     cmake --install .
-    echo "✅ mbedTLS для $ABI установлена в $MBEDTLS_INSTALL_DIR"
+    echo "✅ mbedTLS for $ABI installed into $MBEDTLS_INSTALL_DIR"
 
-    # 2) Сборка libssh со связкой на mbedTLS
+    # 2) Build libssh linked against mbedTLS
     cd "$BUILD_DIR"
     
-    # Конфигурация CMake для Android
+    # Android CMake configuration
     cmake "$SOURCE_DIR" \
         -DCMAKE_SYSTEM_NAME=Android \
         -DCMAKE_ANDROID_ARCH_ABI=$ANDROID_ABI \
@@ -167,27 +167,27 @@ build_for_abi() {
         -DMBEDTLS_X509_LIBRARY="$MBEDTLS_INSTALL_DIR/lib/libmbedx509.a" \
         -DMBEDTLS_SSL_LIBRARY="$MBEDTLS_INSTALL_DIR/lib/libmbedtls.a"
     
-    # Сборка и установка
+    # Build and install
     cmake --build . --config Release -- -j$(nproc)
     cmake --install .
     
-    echo "✅ Сборка для $ABI завершена"
+    echo "✅ Build for $ABI completed"
 }
 
-# Сборка для всех архитектур
+# Build for all ABIs
 for ABI in "${ABIS[@]}"; do
     build_for_abi "$ABI"
 done
 
 echo ""
-echo "🎉 Сборка libssh с mbedTLS для всех архитектур завершена!"
+echo "🎉 libssh + mbedTLS build completed for all ABIs!"
 echo ""
-echo "Библиотеки установлены в: $INSTALL_BASE_DIR/libssh/"
+echo "Libraries installed under: $INSTALL_BASE_DIR/libssh/"
 echo ""
-echo "Структура файлов:"
+echo "File structure (first 20 libs):"
 find "$INSTALL_BASE_DIR/libssh" -name "*.a" -o -name "*.so" | head -20
 
 echo ""
-echo "📁 Для интеграции обновите CMakeLists.txt чтобы использовать:"
-echo "   - Заголовочные файлы: \$INSTALL_DIR/include"
-echo "   - Библиотеки: \$INSTALL_DIR/lib/libssh.a"
+echo "📁 Integration notes:"
+echo "   - Include headers from: $INSTALL_DIR/include"
+echo "   - Link static library:  $INSTALL_DIR/lib/libssh.a"

@@ -1,18 +1,18 @@
 #!/bin/bash
 
-# Скрипт для локального тестирования GitHub Actions workflows
-# Требует установки act: https://github.com/nektos/act
+# Script for local testing of GitHub Actions workflows
+# Requires act installed: https://github.com/nektos/act
 
 set -e
 
-# Цвета для вывода
+# Output colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Функция для вывода цветного текста
+# Function to print colored text
 print_color() {
     echo -e "${1}${2}${NC}"
 }
@@ -23,39 +23,39 @@ print_header() {
     echo "================================"
 }
 
-# Проверка наличия act
+# Check presence of act
 if ! command -v act &> /dev/null; then
-    print_color $RED "❌ act не установлен!"
-    echo "Установите act: https://github.com/nektos/act#installation"
-    echo "Например: brew install act"
+    print_color $RED "❌ act is not installed!"
+    echo "Install act: https://github.com/nektos/act#installation"
+    echo "Example: brew install act"
     exit 1
 fi
 
-# Проверка наличия Docker
+# Check presence of Docker
 if ! command -v docker &> /dev/null; then
-    print_color $RED "❌ Docker не установлен!"
-    echo "Установите Docker для запуска act"
+    print_color $RED "❌ Docker is not installed!"
+    echo "Install Docker to run act"
     exit 1
 fi
 
-print_header "🚀 Локальное тестирование GitHub Actions"
+print_header "🚀 Local testing of GitHub Actions"
 
-echo "Доступные команды:"
-echo "1. test-pr       - Тестировать PR check workflow"
-echo "2. test-build    - Тестировать build workflow"
-echo "3. test-release  - Тестировать release workflow (с fake tag)"
-echo "4. list          - Показать все доступные workflows"
-echo "5. validate      - Проверить синтаксис всех workflows"
+echo "Available commands:"
+echo "1. test-pr       - Test PR check workflow"
+echo "2. test-build    - Test build workflow"
+echo "3. test-release  - Test release workflow (with fake tag)"
+echo "4. list          - Show all available workflows"
+echo "5. validate      - Validate syntax of all workflows"
 
 if [ $# -eq 0 ]; then
     echo ""
-    print_color $YELLOW "Использование: $0 [команда]"
+    print_color $YELLOW "Usage: $0 [command]"
     exit 1
 fi
 
 case $1 in
     "test-pr")
-        print_header "🔍 Тестирование PR Check"
+    print_header "🔍 Testing PR Check"
         act pull_request -W .github/workflows/pr-check.yml \
             --container-architecture linux/amd64 \
             --artifact-server-path /tmp/artifacts \
@@ -63,7 +63,7 @@ case $1 in
         ;;
         
     "test-build")
-        print_header "🏗️ Тестирование Build and Release"
+    print_header "🏗️ Testing Build and Release"
         act push -W .github/workflows/build-and-release.yml \
             --container-architecture linux/amd64 \
             --artifact-server-path /tmp/artifacts \
@@ -71,8 +71,8 @@ case $1 in
         ;;
         
     "test-release")
-        print_header "📦 Тестирование Release"
-        # Создаем временный тег для тестирования
+    print_header "📦 Testing Release"
+    # Create temporary tag for testing
         git tag -f v99.99.99-test 2>/dev/null || true
         
         act push -W .github/workflows/release.yml \
@@ -81,49 +81,49 @@ case $1 in
             -e .github/test-events/tag-push.json \
             -v
             
-        # Удаляем тестовый тег
+    # Delete test tag
         git tag -d v99.99.99-test 2>/dev/null || true
         ;;
         
     "list")
-        print_header "📋 Доступные Workflows"
+    print_header "📋 Available Workflows"
         act -l
         ;;
         
     "validate")
-        print_header "✅ Валидация Workflows"
+    print_header "✅ Workflows Validation"
         
-        # Проверяем синтаксис YAML файлов
+    # Check YAML syntax
         for file in .github/workflows/*.yml; do
             if [ -f "$file" ]; then
-                echo "Проверка $file..."
+                echo "Checking $file..."
                 
-                # Простая проверка YAML синтаксиса
+                # Simple YAML syntax validation
                 if python3 -c "import yaml; yaml.safe_load(open('$file'))" 2>/dev/null; then
                     print_color $GREEN "✅ $file - OK"
                 else
-                    print_color $RED "❌ $file - ОШИБКА СИНТАКСИСА"
+                    print_color $RED "❌ $file - SYNTAX ERROR"
                 fi
             fi
         done
         
-        # Проверяем с помощью act
+        # Validate with act
         echo ""
-        echo "Проверка с помощью act..."
+        echo "Validating with act..."
         if act -l >/dev/null 2>&1; then
-            print_color $GREEN "✅ Все workflows валидны"
+            print_color $GREEN "✅ All workflows valid"
         else
-            print_color $RED "❌ Обнаружены ошибки в workflows"
+            print_color $RED "❌ Errors found in workflows"
         fi
         ;;
         
     "setup")
-        print_header "⚙️ Настройка окружения для тестирования"
+        print_header "⚙️ Environment setup for testing"
         
-        # Создаем директории для тестовых событий
+        # Create directories for test events
         mkdir -p .github/test-events
         
-        # Создаем файл события для тестирования тегов
+        # Create tag push test event file
         cat > .github/test-events/tag-push.json << 'EOF'
 {
   "ref": "refs/tags/v99.99.99-test",
@@ -135,44 +135,44 @@ case $1 in
 }
 EOF
 
-        # Создаем .actrc для настроек по умолчанию
+    # Create .actrc for default settings
         cat > .actrc << 'EOF'
 --container-architecture linux/amd64
 --artifact-server-path /tmp/artifacts
 --env-file .github/.env.test
 EOF
 
-        # Создаем тестовый файл переменных окружения
+    # Create test env file
         cat > .github/.env.test << 'EOF'
 ANDROID_HOME=/opt/android-sdk
 ANDROID_ABI=arm64-v8a
 GITHUB_TOKEN=fake-token-for-testing
 EOF
 
-        print_color $GREEN "✅ Настройка завершена!"
-        echo "Файлы созданы:"
+    print_color $GREEN "✅ Setup complete!"
+    echo "Files created:"
         echo "  - .github/test-events/tag-push.json"
         echo "  - .actrc"
         echo "  - .github/.env.test"
         ;;
         
     "clean")
-        print_header "🧹 Очистка тестовых файлов"
+    print_header "🧹 Cleaning test files"
         
         rm -rf /tmp/artifacts
         rm -f .github/test-events/tag-push.json
         rm -f .actrc
         rm -f .github/.env.test
         
-        print_color $GREEN "✅ Очистка завершена"
+    print_color $GREEN "✅ Cleanup finished"
         ;;
         
     *)
-        print_color $RED "❌ Неизвестная команда: $1"
+    print_color $RED "❌ Unknown command: $1"
         echo ""
-        echo "Доступные команды: test-pr, test-build, test-release, list, validate, setup, clean"
+    echo "Available commands: test-pr, test-build, test-release, list, validate, setup, clean"
         exit 1
         ;;
 esac
 
-print_color $GREEN "✅ Команда '$1' выполнена"
+print_color $GREEN "✅ Command '$1' completed"

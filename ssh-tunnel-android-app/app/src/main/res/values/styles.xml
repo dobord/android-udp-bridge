@@ -15,7 +15,6 @@
         <item name="android:statusBarColor">@color/midnight_black</item>
         <item name="android:navigationBarColor">@color/midnight_black</item>
         <item name="android:windowLightStatusBar">false</item>
-        <item name="android:windowLightNavigationBar">false</item>
         <item name="materialAlertDialogTheme">@style/AlertDialogTheme</item>
     </style>
 
@@ -101,34 +100,29 @@
         <item name="android:textColor">@color/pale_gray</item>
         <item name="android:textSize">32sp</item>
         <item name="android:fontFamily">sans-serif-black</item>
-        <item name="android:lineHeight">40sp</item>
     </style>
 
     <style name="HeadingTextStyle">
         <item name="android:textColor">@color/pale_gray</item>
         <item name="android:textSize">20sp</item>
         <item name="android:fontFamily">sans-serif-medium</item>
-        <item name="android:lineHeight">28sp</item>
     </style>
 
     <style name="BodyTextStyle">
         <item name="android:textColor">@color/pale_gray</item>
         <item name="android:textSize">16sp</item>
         <item name="android:fontFamily">sans-serif</item>
-        <item name="android:lineHeight">24sp</item>
     </style>
 
     <style name="CaptionTextStyle">
         <item name="android:textColor">@color/muted_gray</item>
         <item name="android:textSize">14sp</item>
         <item name="android:fontFamily">sans-serif</item>
-        <item name="android:lineHeight">20sp</item>
     </style>
 
     <style name="StatusTextStyle">
         <item name="android:textSize">16sp</item>
         <item name="android:fontFamily">sans-serif-medium</item>
-        <item name="android:lineHeight">24sp</item>
         <item name="android:padding">16dp</item>
         <item name="android:background">@drawable/status_background</item>
     </style>

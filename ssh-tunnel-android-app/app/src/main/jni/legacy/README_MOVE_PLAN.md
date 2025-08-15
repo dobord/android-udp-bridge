@@ -1,0 +1,1 @@
+Temporary wrapper sources include original files via relative include. Final step: physically move originals here and replace wrappers with real content, then delete originals to shrink compilation scope.

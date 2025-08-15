@@ -2,26 +2,26 @@ cmake_minimum_required(VERSION 3.18.1)
 
 project("sshtunnel")
 
-# Устанавливаем пути для поиска библиотек
+# Configure search path modes for libraries and includes
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
 
-# Путь к установленной реальной libssh (заполняется build_openssl.sh)
+# Paths to installed real libssh/crypto builds (populated by build_openssl.sh or build_mbedtls.sh)
 set(LIBSSH_PREBUILT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../prebuilt/libssh)
 set(OPENSSL_PREBUILT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../prebuilt/openssl)
 set(MBEDTLS_PREBUILT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../prebuilt/mbedtls)
 
-# Создаем нашу основную библиотеку
+# Create primary shared library (JNI)
 add_library(ssh_tunnel SHARED
     ../jni/ssh_tunnel.c
 )
 
-# Импортируем реальную или моковую libssh в зависимости от наличия пребиилдов
+# Import real or mock libssh depending on presence of prebuilts
 set(LIBSSH_STATIC_LIB ${LIBSSH_PREBUILT_DIR}/${ANDROID_ABI}/lib/libssh.a)
 set(OPENSSL_CRYPTO_LIB ${OPENSSL_PREBUILT_DIR}/${ANDROID_ABI}/lib/libcrypto.a)
 set(OPENSSL_SSL_LIB ${OPENSSL_PREBUILT_DIR}/${ANDROID_ABI}/lib/libssl.a)
 
-# Проверяем наличие OpenSSL сборки (новый способ)
+# Check for OpenSSL build (preferred)
 if (EXISTS ${LIBSSH_STATIC_LIB} AND EXISTS ${OPENSSL_CRYPTO_LIB} AND EXISTS ${OPENSSL_SSL_LIB})
     message(STATUS "Using prebuilt libssh with OpenSSL: ${LIBSSH_STATIC_LIB}")
     message(STATUS "OpenSSL crypto: ${OPENSSL_CRYPTO_LIB}")
@@ -35,7 +35,7 @@ if (EXISTS ${LIBSSH_STATIC_LIB} AND EXISTS ${OPENSSL_CRYPTO_LIB} AND EXISTS ${OP
     add_library(ssh STATIC IMPORTED)
     set_target_properties(ssh PROPERTIES IMPORTED_LOCATION ${LIBSSH_STATIC_LIB})
 
-    # Импортируем статические библиотеки OpenSSL
+    # Import static OpenSSL libraries
     add_library(crypto STATIC IMPORTED)
     add_library(ssl STATIC IMPORTED)
     set_target_properties(crypto PROPERTIES IMPORTED_LOCATION ${OPENSSL_CRYPTO_LIB})
@@ -43,7 +43,7 @@ if (EXISTS ${LIBSSH_STATIC_LIB} AND EXISTS ${OPENSSL_CRYPTO_LIB} AND EXISTS ${OP
     
     target_compile_definitions(ssh_tunnel PRIVATE USE_OPENSSL=1)
     
-# Проверяем наличие mbedTLS сборки (старый способ для обратной совместимости)
+# Check for mbedTLS build (fallback / backward compatibility)
 elseif (EXISTS ${LIBSSH_STATIC_LIB})
     set(MBEDTLS_CRYPTO_LIB ${MBEDTLS_PREBUILT_DIR}/${ANDROID_ABI}/lib/libmbedcrypto.a)
     set(MBEDTLS_X509_LIB   ${MBEDTLS_PREBUILT_DIR}/${ANDROID_ABI}/lib/libmbedx509.a)
@@ -59,7 +59,7 @@ elseif (EXISTS ${LIBSSH_STATIC_LIB})
         add_library(ssh STATIC IMPORTED)
         set_target_properties(ssh PROPERTIES IMPORTED_LOCATION ${LIBSSH_STATIC_LIB})
 
-        # Импортируем статические библиотеки mbedTLS
+    # Import static mbedTLS libraries
         add_library(mbedcrypto STATIC IMPORTED)
         add_library(mbedx509   STATIC IMPORTED)
         add_library(mbedtls    STATIC IMPORTED)
@@ -81,12 +81,12 @@ else()
     target_compile_definitions(ssh_tunnel PRIVATE USE_LIBSSH_MOCK=1)
 endif()
 
-# Находим системные библиотеки
+# Locate system libraries
 find_library(log-lib log)
 
-# Связываем библиотеки в зависимости от того, что доступно
+# Link libraries depending on available crypto backend
 if (TARGET ssl AND TARGET crypto)
-    # OpenSSL сборка
+    # OpenSSL build
     target_link_libraries(ssh_tunnel
         ssh
         ssl
@@ -94,7 +94,7 @@ if (TARGET ssl AND TARGET crypto)
         ${log-lib}
     )
 elseif (TARGET mbedtls AND TARGET mbedx509 AND TARGET mbedcrypto)
-    # mbedTLS сборка
+    # mbedTLS build
     target_link_libraries(ssh_tunnel
         ssh
         mbedtls
@@ -103,15 +103,15 @@ elseif (TARGET mbedtls AND TARGET mbedx509 AND TARGET mbedcrypto)
         ${log-lib}
     )
 else()
-    # Mock сборка
+    # Mock build
     target_link_libraries(ssh_tunnel
         ssh
         ${log-lib}
     )
 endif()
 
-# Общие флаги компиляции
+# Common compile flags
 target_compile_options(ssh_tunnel PRIVATE -Wall -Wextra)
 
-# Для совместимости с устройствами Android 15 с размером страницы 16K
+# Ensure compatibility with Android 15 devices (16K page size)
 target_link_options(ssh_tunnel PRIVATE -Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384)

@@ -2,7 +2,7 @@ name: Nightly Build
 
 on:
   schedule:
-    # Запуск каждый день в 2:00 UTC
+    # Run every day at 02:00 UTC
     - cron: '0 2 * * *'
   workflow_dispatch:
     inputs:
@@ -24,27 +24,27 @@ jobs:
       should_build: ${{ steps.check.outputs.should_build }}
       
     steps:
-    - name: Checkout code
+    - name: Checkout code (full history for change scan)
       uses: actions/checkout@v4
       with:
-        fetch-depth: 2
-        
-    - name: Check for changes
+        fetch-depth: 0
+
+    - name: Determine change window & scan
       id: check
       run: |
-        if [ "${{ github.event.inputs.force_build }}" == "true" ]; then
+        FORCE="${{ github.event.inputs.force_build }}"
+        if [ "${FORCE}" = "true" ]; then
+          echo "Force build requested via workflow_dispatch input"
           echo "should_build=true" >> $GITHUB_OUTPUT
-          echo "Force build requested"
+          exit 0
+        fi
+        CHANGED_COUNT=$(git log --since="24 hours ago" --name-only --pretty=format: | \
+          grep -E '\\.(c|cpp|cxx|h|hpp|java|kt|gradle|sh)$' | grep -v '^$' | sort -u | wc -l || true)
+        echo "Detected ${CHANGED_COUNT} changed source files in last 24h"
+        if [ "${CHANGED_COUNT}" -gt 0 ]; then
+          echo "should_build=true" >> $GITHUB_OUTPUT
         else
-          # Проверить изменения за последние 24 часа
-          CHANGES=$(git diff --name-only HEAD~1 HEAD | grep -E "\.(c|cpp|h|hpp|java|kt|gradle|sh)$" | wc -l)
-          if [ $CHANGES -gt 0 ]; then
-            echo "should_build=true" >> $GITHUB_OUTPUT
-            echo "Found $CHANGES code changes"
-          else
-            echo "should_build=false" >> $GITHUB_OUTPUT
-            echo "No significant changes found"
-          fi
+          echo "should_build=false" >> $GITHUB_OUTPUT
         fi
 
   nightly-build:
@@ -54,11 +54,23 @@ jobs:
     strategy:
       matrix:
         build_type: [debug, release]
-        arch: [arm64-v8a, armeabi-v7a]
+        arch: [arm64-v8a, armeabi-v7a, x86, x86_64]
     
     steps:
-    - name: Checkout code
+    - name: Checkout code (full)
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Fetch udp2tcp submodule (required)
+      run: |
+        echo "Fetching udp2tcp submodule (required)..."
+        git submodule update --init --recursive third_party/udp2tcp
+        if [ ! -d third_party/udp2tcp/include ]; then
+          echo "❌ Required udp2tcp headers missing (third_party/udp2tcp/include)." >&2
+          exit 1
+        fi
+        echo "✅ udp2tcp present: $(git -C third_party/udp2tcp log --oneline -1 | head -1 || true)"
       
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
@@ -72,7 +84,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y build-essential cmake ninja-build pkg-config
-        sudo apt-get install -y autotools-dev autoconf automake libtool
+        sudo apt-get install -y autotools-dev autoconf automake libtool util-linux gh jq
         
     - name: Setup Android environment
       run: |
@@ -92,61 +104,61 @@ jobs:
           
     - name: Pre-download sources with mirrors
       run: |
-        echo "📥 Скачиваем исходники с использованием зеркал..."
+        echo "📥 Downloading sources using mirrors..."
         
-        # Создаём директорию для кеша исходников
+        # Create directory for source cache
         mkdir -p ~/source_cache
         cd ~/source_cache
         
-        # Функция для скачивания с зеркалами
+        # Function to download with mirrors
         download_with_mirrors() {
           local filename=$1
           local primary_url=$2
           local mirror_urls=("${@:3}")
           
           if [ -f "$filename" ]; then
-            echo "✅ $filename уже скачан"
+            echo "✅ $filename already downloaded"
             return 0
           fi
           
-          echo "⬇️ Скачиваем $filename..."
+          echo "⬇️ Downloading $filename..."
           
-          # Пробуем основной URL
+          # Try primary URL
           if wget -O "$filename.tmp" "$primary_url" 2>/dev/null; then
             mv "$filename.tmp" "$filename"
-            echo "✅ Скачано с основного источника: $primary_url"
+            echo "✅ Downloaded from primary: $primary_url"
             return 0
           fi
           
-          # Пробуем зеркала
+          # Try mirrors
           for mirror_url in "${mirror_urls[@]}"; do
-            echo "🔄 Пробуем зеркало: $mirror_url"
+            echo "🔄 Trying mirror: $mirror_url"
             if wget -O "$filename.tmp" "$mirror_url" 2>/dev/null; then
               mv "$filename.tmp" "$filename"
-              echo "✅ Скачано с зеркала: $mirror_url"
+              echo "✅ Downloaded from mirror: $mirror_url"
               return 0
             fi
           done
           
-          echo "❌ Не удалось скачать $filename"
+          echo "❌ Failed to download $filename"
           rm -f "$filename.tmp"
           return 1
         }
         
-        # Скачиваем OpenSSL с зеркалами
+        # Download OpenSSL with mirrors
         download_with_mirrors "openssl-3.5.0.tar.gz" \
           "https://github.com/openssl/openssl/releases/download/openssl-3.5.0/openssl-3.5.0.tar.gz" \
           "https://www.openssl.org/source/openssl-3.5.0.tar.gz" \
           "https://ftp.openssl.org/source/openssl-3.5.0.tar.gz" \
           "https://mirror.yandex.ru/pub/OpenSSL/openssl-3.5.0.tar.gz"
         
-        # Скачиваем libssh с зеркалами
+        # Download libssh with mirrors
         download_with_mirrors "libssh-0.11.2.tar.xz" \
           "https://www.libssh.org/files/0.11/libssh-0.11.2.tar.xz" \
           "https://git.libssh.org/projects/libssh.git/snapshot/libssh-0.11.2.tar.xz" \
           "https://mirror.yandex.ru/debian/pool/main/libs/libssh/libssh_0.11.2.orig.tar.xz"
         
-        echo "✅ Исходники загружены в кеш"
+        echo "✅ Sources cached"
         ls -la ~/source_cache/
         
     - name: Build OpenSSL and libssh for ${{ matrix.arch }}
@@ -168,14 +180,14 @@ jobs:
         key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
         restore-keys: |
           ${{ runner.os }}-gradle-
-          
+
     - name: Build ${{ matrix.build_type }} APK for ${{ matrix.arch }}
       working-directory: ssh-tunnel-android-app
       run: |
-        if [ "${{ matrix.build_type }}" == "debug" ]; then
-          ./gradlew assembleDebug --no-daemon --stacktrace
+        if [ "${{ matrix.build_type }}" = "debug" ]; then
+          ./gradlew assembleDebug --no-daemon --stacktrace -PcmakeArgs=-DANDROID_ABI=${{ matrix.arch }}
         else
-          ./gradlew assembleRelease --no-daemon --stacktrace
+          ./gradlew assembleRelease --no-daemon --stacktrace -PcmakeArgs=-DANDROID_ABI=${{ matrix.arch }}
         fi
         
     - name: Run tests
@@ -210,7 +222,7 @@ jobs:
         pattern: nightly-*
         merge-multiple: false
         
-    - name: Create nightly tag
+    - name: Create nightly tag env var (not pushing tag)
       run: |
         DATE=$(date +'%Y%m%d')
         echo "NIGHTLY_TAG=nightly-$DATE" >> $GITHUB_ENV
@@ -226,20 +238,22 @@ jobs:
     - name: Create nightly release
       run: |
         DATE=$(date +'%Y-%m-%d %H:%M UTC')
-        
+        NOTES_FILE=nightly_notes.md
+        {
+          echo 'Nightly Build';
+          echo;
+          echo 'Automated nightly build containing the latest changes (potentially unstable).';
+          echo;
+          echo 'Included builds:';
+          echo ' - Debug + Release APKs for arm64-v8a, armeabi-v7a, x86, x86_64';
+          echo;
+          echo 'Installation:';
+          echo " 1. Enable 'Unknown sources'";
+          echo ' 2. Install matching APK for your device architecture';
+        } > "$NOTES_FILE"
         gh release create nightly-latest \
           --title "Nightly Build - $DATE" \
-          --notes "🌙 **Nightly Build** - $DATE
-        
-        This is an automated nightly build containing the latest changes.
-        
-        **⚠️ Warning**: Nightly builds are unstable and for testing purposes only.
-        
-        **Included builds**:
-        - Debug APKs for arm64-v8a and armeabi-v7a
-        - Release APKs for arm64-v8a and armeabi-v7a
-        
-        **Installation**: Enable 'Unknown sources' and install the appropriate APK for your device architecture." \
+          --notes-file "$NOTES_FILE" \
           --prerelease \
           nightly-*/app-*.apk
       env:
@@ -263,7 +277,7 @@ jobs:
           
           const oldArtifacts = artifacts.artifacts.filter(artifact => {
             const ageInDays = (Date.now() - new Date(artifact.created_at)) / (1000 * 60 * 60 * 24);
-            return ageInDays > 7; // Удаляем артефакты старше 7 дней
+            return ageInDays > 7; // Remove artifacts older than 7 days
           });
           
           for (const artifact of oldArtifacts) {

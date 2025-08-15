@@ -1,19 +1,19 @@
 #!/bin/bash
 
-# Тестовое окружение для End-to-End тестирования UDP Bridge
-# Этот скрипт настраивает полное тестовое окружение
+# Test environment for end-to-end testing of UDP Bridge
+# This script sets up the full test environment
 
 set -e
 
-echo "=== Настройка тестового окружения UDP Bridge ==="
+echo "=== Setting up UDP Bridge test environment ==="
 
-# Цвета для вывода
+# Output colors
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Функция для логирования
+# Logging functions
 log_info() {
     echo -e "${GREEN}[INFO]${NC} $1"
 }
@@ -26,71 +26,71 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Проверка зависимостей
+# Dependency check
 check_dependencies() {
-    log_info "Проверка зависимостей..."
+    log_info "Checking dependencies..."
     
     if ! command -v docker &> /dev/null; then
-        log_error "Docker не установлен"
+    log_error "Docker not installed"
         exit 1
     fi
     
     if ! command -v docker-compose &> /dev/null; then
-        log_error "Docker Compose не установлен"
+    log_error "Docker Compose not installed"
         exit 1
     fi
     
     if ! command -v adb &> /dev/null; then
-        log_warn "ADB не найден. Android тестирование будет недоступно"
+    log_warn "ADB not found. Android testing will be unavailable"
     fi
     
-    log_info "Зависимости проверены"
+    log_info "Dependencies verified"
 }
 
-# Остановка существующих контейнеров
+# Stop existing containers
 cleanup_existing() {
-    log_info "Остановка существующих контейнеров..."
+    log_info "Stopping existing containers..."
     cd server-udp-bridge
     docker-compose down --remove-orphans || true
     cd ..
 }
 
-# Сборка сервера
+# Build server
 build_server() {
-    log_info "Сборка UDP Bridge сервера..."
+    log_info "Building UDP Bridge server..."
     cd server-udp-bridge
     
-    # Проверяем, что сервер собран
+    # Ensure server binary exists
     if [ ! -f "udp-bridge-server" ]; then
-        log_info "Сборка сервера из исходников..."
+    log_info "Building server from sources..."
         make clean && make
     fi
     
-    # Сборка Docker образа
-    log_info "Сборка Docker образа..."
+    # Build Docker image
+    log_info "Building Docker image..."
     docker-compose build
     
     cd ..
-    log_info "Сервер собран успешно"
+    log_info "Server built successfully"
 }
 
-# Запуск сервера
+# Start server
 start_server() {
-    log_info "Запуск UDP Bridge сервера..."
+    log_info "Starting UDP Bridge server..."
     cd server-udp-bridge
     
-    # Запуск в фоновом режиме
+    # Start in background
     docker-compose up -d
     
-    # Ожидание готовности
-    log_info "Ожидание готовности сервера..."
+    # Wait for readiness
+    log_info "Waiting for server readiness..."
     sleep 10
     
-    # Проверка статуса
+    # Check status
     if docker-compose ps | grep -q "Up"; then
-        log_info "Сервер запущен успешно"
+    log_info "Server started successfully"
     else
-        log_error "Не удалось запустить сервер"
+    log_error "Failed to start server"
         docker-compose logs
         exit 1
     fi
@@ -98,68 +98,68 @@ start_server() {
     cd ..
 }
 
-# Проверка Android SDK
+# Check Android SDK
 check_android_sdk() {
-    log_info "Проверка Android SDK..."
+    log_info "Checking Android SDK..."
     
     if [ -z "$ANDROID_HOME" ]; then
-        log_warn "ANDROID_HOME не установлен"
-        # Попытка найти SDK автоматически
+    log_warn "ANDROID_HOME not set"
+    # Try to auto-detect SDK
         if [ -d "$HOME/Android/Sdk" ]; then
             export ANDROID_HOME="$HOME/Android/Sdk"
-            log_info "Найден Android SDK: $ANDROID_HOME"
+            log_info "Found Android SDK: $ANDROID_HOME"
         else
-            log_error "Android SDK не найден. Установите Android SDK и настройте ANDROID_HOME"
+            log_error "Android SDK not found. Install SDK and set ANDROID_HOME"
             return 1
         fi
     fi
     
     if [ ! -d "$ANDROID_HOME" ]; then
-        log_error "Android SDK не найден по пути: $ANDROID_HOME"
+    log_error "Android SDK not found at path: $ANDROID_HOME"
         return 1
     fi
     
-    log_info "Android SDK готов"
+    log_info "Android SDK ready"
     return 0
 }
 
-# Сборка Android APK
+# Build Android APK
 build_android_apk() {
-    log_info "Сборка Android APK..."
+    log_info "Building Android APK..."
     cd ssh-tunnel-android-app
     
-    # Проверка Gradle wrapper
+    # Check Gradle wrapper
     if [ ! -f "gradlew" ]; then
-        log_error "Gradle wrapper не найден"
+    log_error "Gradle wrapper not found"
         cd ..
         return 1
     fi
     
-    # Очистка и сборка
+    # Clean and build
     ./gradlew clean
     ./gradlew assembleDebug
     
-    # Проверка результата
+    # Check result
     APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
     if [ -f "$APK_PATH" ]; then
-        log_info "APK собран успешно: $APK_PATH"
+    log_info "APK built successfully: $APK_PATH"
         cd ..
         return 0
     else
-        log_error "Не удалось собрать APK"
+    log_error "Failed to build APK"
         cd ..
         return 1
     fi
 }
 
-# Создание тестовых данных
+# Create test data
 create_test_data() {
-    log_info "Создание тестовых данных..."
+    log_info "Creating test data..."
     
-    # Создание директории для тестов
+    # Create test directory
     mkdir -p test_results
     
-    # Создание конфигурации тестов
+    # Create test configuration
     cat > test_results/test_config.json << EOF
 {
     "server": {
@@ -182,41 +182,41 @@ create_test_data() {
 }
 EOF
 
-    log_info "Тестовые данные созданы"
+    log_info "Test data created"
 }
 
-# Показать статус окружения
+# Show environment status
 show_environment_status() {
-    log_info "=== Статус тестового окружения ==="
+    log_info "=== Test environment status ==="
     
-    echo "Docker контейнеры:"
+    echo "Docker containers:"
     cd server-udp-bridge
     docker-compose ps
     cd ..
     
     echo ""
-    echo "Порты:"
-    echo "  SSH сервер: localhost:2222"
+    echo "Ports:"
+    echo "  SSH server: localhost:2222"
     echo "  UDP Bridge: localhost:8080"
     echo "  UDP Target: localhost:5060"
     
     echo ""
-    echo "Тестовые учетные данные:"
-    echo "  SSH пользователь: sshuser"
-    echo "  SSH пароль: sshpassword"
+    echo "Test credentials:"
+    echo "  SSH user: sshuser"
+    echo "  SSH password: sshpassword"
     
     if [ -f "ssh-tunnel-android-app/app/build/outputs/apk/debug/app-debug.apk" ]; then
         echo ""
-        echo "Android APK: готов"
+    echo "Android APK: ready"
     else
         echo ""
-        echo "Android APK: не собран"
+    echo "Android APK: not built"
     fi
 }
 
-# Основная функция
+# Main function
 main() {
-    log_info "Начинаем настройку тестового окружения..."
+    log_info "Starting test environment setup..."
     
     check_dependencies
     cleanup_existing
@@ -226,21 +226,21 @@ main() {
     
     if check_android_sdk; then
         if build_android_apk; then
-            log_info "Android APK собран успешно"
+            log_info "Android APK built successfully"
         else
-            log_warn "Не удалось собрать Android APK. End-to-end тестирование будет ограничено"
+            log_warn "Failed to build Android APK. End-to-end testing will be limited"
         fi
     else
-        log_warn "Android SDK недоступен. Пропускаем сборку APK"
+    log_warn "Android SDK unavailable. Skipping APK build"
     fi
     
     show_environment_status
     
-    log_info "=== Тестовое окружение готово! ==="
-    log_info "Для запуска тестов используйте: ./run_e2e_tests.sh"
+    log_info "=== Test environment is ready! ==="
+    log_info "Run tests with: ./run_e2e_tests.sh"
 }
 
-# Обработка аргументов командной строки
+# Command-line arguments handling
 case "${1:-}" in
     "cleanup")
         cleanup_existing

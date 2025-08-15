@@ -28,14 +28,12 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-        
+
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
-        
     - name: Setup Android NDK and Build Tools
       run: |
         yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;26.3.11579264" || true
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0" || true
         
     - name: Make gradlew executable
       run: chmod +x ssh-tunnel-android-app/gradlew
@@ -134,188 +132,26 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-gradle-
           
-    - name: Build with mock libraries (quick check)
+    - name: Build (udp2tcp quick check)
       working-directory: ssh-tunnel-android-app
+      shell: bash
       run: |
-        # Remove prebuilt libs to force mock build
-        echo "🗑️ Removing prebuilt libraries to force mock build..."
-        rm -rf app/src/main/prebuilt/
-        
-        # Clean CMake cache to avoid stale references
-        echo "🧹 Cleaning CMake cache and build directories..."
-        rm -rf app/.cxx/
-        rm -rf app/build/intermediates/cxx/
-        
-        # Clean gradle build cache
-        echo "🧹 Cleaning Gradle build cache..."
-        ./gradlew clean --no-daemon
-        
-        # Verify mock files exist
-        echo "🔍 Checking mock implementation files..."
-        ls -la app/src/main/jni/libssh_mock.*
-        
-        # Verify main source file exists
-        echo "🔍 Checking main source files..."
-        ls -la app/src/main/jni/ssh_tunnel.c
-        ls -la app/src/main/cpp/CMakeLists.txt
-        
-        # Verify all required source files for mock build exist
-        echo "🔍 Checking all required source files for mock build..."
-        required_files=(
-          "app/src/main/jni/ssh_tunnel.c"
-          "app/src/main/jni/udp_listener.c"
-          "app/src/main/jni/tcp_connection_manager.c"
-          "app/src/main/jni/client_manager.c"
-          "app/src/main/jni/udp_bridge_protocol.c"
-        )
-        
-        for file in "${required_files[@]}"; do
-          if [ ! -f "$file" ]; then
-            echo "❌ Required source file not found: $file"
-            exit 1
-          else
-            echo "✅ Found: $file"
-          fi
-        done
-        
-        # Check if ssh_tunnel.c contains USE_LIBSSH_MOCK guards
-        echo "🔍 Checking USE_LIBSSH_MOCK guards in ssh_tunnel.c..."
-        if grep -q "USE_LIBSSH_MOCK" app/src/main/jni/ssh_tunnel.c; then
-          echo "✅ USE_LIBSSH_MOCK guards found in ssh_tunnel.c"
-        else
-          echo "❌ USE_LIBSSH_MOCK guards not found in ssh_tunnel.c"
-        fi
-        
-        # Check libssh_mock.h for required constants
-        echo "🔍 Checking libssh_mock.h for required constants..."
-        if grep -q "SSH_OPTIONS_CIPHERS_C_S" app/src/main/jni/libssh_mock.h; then
-          echo "✅ Required SSH_OPTIONS constants found in libssh_mock.h"
-        else
-          echo "❌ Required SSH_OPTIONS constants missing in libssh_mock.h"
-        fi
-        
-        # Show CMakeLists.txt structure 
-        echo "📋 CMakeLists.txt content (first 30 lines):"
-        head -30 app/src/main/cpp/CMakeLists.txt
-        
-        # Create simplified CMakeLists.txt for mock build
-        echo "🔧 Creating simplified CMakeLists.txt for mock build..."
-        cp app/src/main/cpp/CMakeLists.txt app/src/main/cpp/CMakeLists.txt.backup
-        
-        # Write simplified CMakeLists.txt
-        cat > app/src/main/cpp/CMakeLists.txt << 'EOFCMAKE'
-        cmake_minimum_required(VERSION 3.18.1)
-        project("sshtunnel")
-        message(STATUS "Building with mock libssh implementation")
-        
-        # Create mock ssh library
-        add_library(ssh STATIC ../jni/libssh_mock.c)
-        target_include_directories(ssh PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../jni)
-        
-        # Create main library with all required source files
-        add_library(ssh_tunnel SHARED 
-            ../jni/ssh_tunnel.c
-            ../jni/udp_listener.c
-            ../jni/tcp_connection_manager.c
-            ../jni/client_manager.c
-            ../jni/udp_bridge_protocol.c
-        )
-        
-        # Set compile definitions and include directories
-        target_compile_definitions(ssh_tunnel PRIVATE USE_LIBSSH_MOCK=1)
-        target_include_directories(ssh_tunnel PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../jni)
-        
-        # Find required libraries
-        find_library(log-lib log)
-        
-        # Link libraries
-        target_link_libraries(ssh_tunnel ssh ${log-lib})
-        
-        # Compile options (relaxed warnings for mock build)
-        target_compile_options(ssh_tunnel PRIVATE 
-            -Wall 
-            -Wno-unused-parameter 
-            -Wno-unused-variable 
-            -Wno-unused-function
-            -Wno-format-security
-            -Wno-incompatible-pointer-types
-            -Wno-macro-redefined
-        )
-        target_link_options(ssh_tunnel PRIVATE -Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384)
-        EOFCMAKE
-        
-        echo "✅ Simplified CMakeLists.txt created for mock build (with all dependencies)"
-        
-        # Show the new CMakeLists.txt content  
-        echo "📋 New CMakeLists.txt content:"
-        cat app/src/main/cpp/CMakeLists.txt
-        
-        # Temporarily enable only one ABI for quick mock build
-        echo "📱 Temporarily setting single ABI for quick mock build..."
+        set -e
+        echo "[quick-build] Start"
+        rm -rf app/src/main/prebuilt/ app/.cxx/ app/build/intermediates/cxx/
+        ./gradlew clean --no-daemon || true
+        test -d ../third_party/udp2tcp/include || { echo "udp2tcp submodule missing"; exit 1; }
         cp app/build.gradle app/build.gradle.backup
-        sed -i 's/abiFilters "arm64-v8a"/abiFilters "arm64-v8a"/' app/build.gradle
-        
-        # Show updated ABI filters
-        echo "📱 Updated ABI filters in build.gradle:"
-        grep -A5 -B5 "abiFilters" app/build.gradle || echo "No abiFilters found"
-        
-        # Build with mock (should use libssh_mock.c)
-        echo "🔨 Starting Gradle build with mock libraries..."
-        
-        # Try to get more detailed ninja output
-        export NINJA_STATUS="[%f/%t] "
-        export CMAKE_VERBOSE_MAKEFILE=ON
-        
+        sed -i 's/abiFilters ".*"/abiFilters "arm64-v8a"/' app/build.gradle || true
         ./gradlew assembleDebug --no-daemon --stacktrace --info 2>&1 | tee build.log
-        
-        # Check for ninja/cmake errors first
-        echo "🔍 Checking for CMake/ninja errors..."
-        if grep -q "ninja.*finished with non-zero exit value" build.log; then
-          echo "❌ Ninja build failed!"
-          echo "📋 Full build error output (last 50 lines):"
-          tail -50 build.log
-          echo ""
-          echo "📋 CMake configuration messages:"
-          grep -A10 -B5 "CMAKE\|cmake" build.log | tail -30 || echo "No CMake messages found"
-          echo ""
-          echo "📋 Specific error messages:"
-          grep -A5 -B5 "error:\|Error:\|FAILED:" build.log | tail -40 || echo "No specific error messages found"
-          exit 1
-        fi
-        
-        # Check CMake messages for mock usage
-        echo "🔍 Checking CMake messages for mock library detection..."
-        if grep -q "Falling back to mock implementation" build.log; then
-          echo "✅ CMake correctly detected missing libraries and fell back to mock"
-        elif grep -q "libssh_mock.c" build.log; then
-          echo "✅ CMake is building with mock implementation"
-        else
-          echo "⚠️ Could not confirm mock library usage from build log"
-          echo "📋 CMake related messages:"
-          grep -i "cmake\|mock\|libssh\|prebuilt" build.log | head -20 || echo "No relevant messages found"
-        fi
-        
-        # Restore original build.gradle
         mv app/build.gradle.backup app/build.gradle
-        
-        # Restore original CMakeLists.txt
-        mv app/src/main/cpp/CMakeLists.txt.backup app/src/main/cpp/CMakeLists.txt
-        
-        # Check if build succeeded
-        if [ -f "app/build/outputs/apk/debug/app-debug.apk" ]; then
-          echo "✅ Mock build successful!"
-          ls -la app/build/outputs/apk/debug/app-debug.apk
-          
-          # Show APK info
-          echo "📦 APK info:"
-          unzip -l app/build/outputs/apk/debug/app-debug.apk | grep "\.so" || echo "No native libraries found"
+        if [ -f app/build/outputs/apk/debug/app-debug.apk ]; then
+          echo "[quick-build] Success"; unzip -l app/build/outputs/apk/debug/app-debug.apk | grep '\.so' || true
         else
-          echo "❌ Mock build failed!"
-          echo "📋 Last 50 lines of build log:"
-          tail -50 build.log
-          exit 1
+          echo "[quick-build] Failed"; tail -50 build.log; exit 1
         fi
-        
+        echo "[quick-build] End"
+
     - name: Upload quick build APK
       if: success()
       uses: actions/upload-artifact@v4
