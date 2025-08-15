@@ -1,145 +1,145 @@
 # GitHub Actions CI/CD Documentation
 
-Этот документ описывает настроенную систему непрерывной интеграции и доставки (CI/CD) для проекта SSH Tunnel Android App.
+This document describes the continuous integration and delivery (CI/CD) setup for the SSH Tunnel Android App project.
 
-## 📋 Обзор Workflows
+## 📋 Workflow Overview
 
 ### 1. Build and Release (`build-and-release.yml`)
-**Триггеры:**
-- Push в ветки `main`, `openssl`
-- Создание тегов `v*`
-- Pull requests в `main`
-- Ручной запуск
+**Triggers:**
+- Push to branches `main`, `openssl`
+- Tag creation matching `v*`
+- Pull requests targeting `main`
+- Manual dispatch
 
-**Возможности:**
-- Сборка зависимостей (OpenSSL, libssh) для всех архитектур
-- Сборка Android APK (debug и release)
-- Автоматическое тестирование
-- Создание релизов при создании тегов
-- Поддержка множественных архитектур (ARM64, ARMv7, x86, x86_64)
+**Capabilities:**
+- Build dependencies (OpenSSL, libssh) for all architectures
+- Build Android APK (debug and release)
+- Automated tests
+- Create releases when tags are pushed
+- Multi-architecture support (ARM64, ARMv7, x86, x86_64)
 
 ### 2. Pull Request Check (`pr-check.yml`)
-**Триггеры:**
-- Pull requests в ветки `main`, `openssl`
+**Triggers:**
+- Pull requests to `main`, `openssl`
 
-**Возможности:**
-- Линтинг и проверка кода
-- Быстрая сборка с mock библиотеками
-- Автоматические комментарии в PR с результатами
-- Загрузка отчетов о линтинге
+**Capabilities:**
+- Lint and static checks
+- Fast build with mock libraries
+- Automatic PR comments with results
+- Upload lint reports
 
 ### 3. Nightly Build (`nightly.yml`)
-**Триггеры:**
-- Ежедневно в 2:00 UTC
-- Ручной запуск с опцией принудительной сборки
+**Triggers:**
+- Daily at 02:00 UTC
+- Manual dispatch with forced build option
 
-**Возможности:**
-- Автоматическая проверка изменений за последние 24 часа
-- Сборка для множественных архитектур и типов сборки
-- Создание nightly релизов
-- Автоматическая очистка старых артефактов
-- Уведомления о статусе сборки
+**Capabilities:**
+- Detect changes over last 24h
+- Build for multiple architectures and build types
+- Generate nightly releases
+- Automatic cleanup of stale artifacts
+- Status notifications
 
 ### 4. Release on Tag (`release.yml`)
-**Триггеры:**
-- Создание тегов в формате `v*.*.*`
+**Triggers:**
+- Tag creation matching `v*.*.*`
 
-**Возможности:**
-- Валидация формата тегов
-- Автоматическое обновление версии в build.gradle
-- Подписание APK файлов
-- Генерация changelog из git коммитов
-- Создание полных релизов с документацией
-- Генерация SHA256 чексумм
+**Capabilities:**
+- Tag format validation
+- Auto version bump in build.gradle
+- APK signing
+- Changelog generation from git commits
+- Full release creation with documentation
+- SHA256 checksum generation
 
-## 🚀 Как использовать
+## 🚀 How to Use
 
-### Создание релиза
+### Create a Release
 
-1. **Подготовка:**
+1. **Prepare:**
    ```bash
    git checkout main
    git pull origin main
    ```
 
-2. **Создание тега:**
+2. **Create tag:**
    ```bash
-   # Для стабильного релиза
+   # Stable release
    git tag -a v1.0.0 -m "Release version 1.0.0"
    
-   # Для предварительного релиза
+   # Pre-release
    git tag -a v1.0.0-beta -m "Beta release 1.0.0"
    ```
 
-3. **Отправка тега:**
+3. **Push tag:**
    ```bash
    git push origin v1.0.0
    ```
 
-4. **Результат:**
-   - Автоматическая сборка для всех архитектур
-   - Создание GitHub релиза
-   - Подписанные APK файлы
-   - Автоматически сгенерированная документация
+4. **Result:**
+   - Automatic build for all architectures
+   - GitHub Release creation
+   - Signed APK files
+   - Auto-generated documentation bundle
 
-### Ручная сборка
+### Manual Build
 
-1. **Перейти в Actions на GitHub**
-2. **Выбрать "Build and Release"**
-3. **Нажать "Run workflow"**
-4. **Выбрать ветку и запустить**
+1. Go to Actions in GitHub
+2. Select "Build and Release"
+3. Click "Run workflow"
+4. Choose branch and run
 
-### Проверка Pull Request
+### Pull Request Validation
 
-1. **Создать PR**
-2. **Автоматически запустится:**
-   - Линтинг кода
-   - Быстрая сборка
-   - Комментарий с результатами
+1. Open a PR
+2. Automatically runs:
+   - Code linting
+   - Fast build
+   - Comment with summarized results
 
-## 🔧 Конфигурация
+## 🔧 Configuration
 
-### Переменные среды
+### Environment Variables
 
-| Переменная | Описание | Где используется |
-|------------|----------|------------------|
-| `ANDROID_HOME` | Путь к Android SDK | Все workflows |
-| `ANDROID_ABI` | Архитектура для сборки | build-* скрипты |
-| `GITHUB_TOKEN` | Токен для GitHub API | Создание релизов |
+| Variable | Description | Used in |
+|----------|-------------|---------|
+| `ANDROID_HOME` | Path to Android SDK | All workflows |
+| `ANDROID_ABI` | Target ABI to build | build-* scripts |
+| `GITHUB_TOKEN` | Token for GitHub API | Release creation |
 
-### Секреты (Рекомендуется добавить)
+### Secrets (Recommended)
 
-| Секрет | Описание | Использование |
-|--------|----------|---------------|
-| `ANDROID_KEYSTORE` | Base64 закодированный keystore | Подписание APK |
-| `KEYSTORE_PASSWORD` | Пароль от keystore | Подписание APK |
-| `KEY_ALIAS` | Алиас ключа | Подписание APK |
-| `KEY_PASSWORD` | Пароль ключа | Подписание APK |
-| `SLACK_WEBHOOK` | Webhook для уведомлений | Уведомления |
+| Secret | Description | Usage |
+|--------|-------------|-------|
+| `ANDROID_KEYSTORE` | Base64-encoded keystore | APK signing |
+| `KEYSTORE_PASSWORD` | Keystore password | APK signing |
+| `KEY_ALIAS` | Key alias | APK signing |
+| `KEY_PASSWORD` | Key password | APK signing |
+| `SLACK_WEBHOOK` | Slack webhook URL | Notifications |
 
-### Добавление секретов
+### Adding Secrets
 
-1. **Перейти в Settings → Secrets and variables → Actions**
-2. **Нажать "New repository secret"**
-3. **Добавить необходимые секреты**
+1. Go to Settings → Secrets and variables → Actions
+2. Click "New repository secret"
+3. Add required secrets
 
-## 📱 Архитектуры
+## 📱 Architectures
 
-Поддерживаемые архитектуры Android:
+Supported Android ABIs:
 
-- **arm64-v8a** - 64-bit ARM (современные устройства)
-- **armeabi-v7a** - 32-bit ARM (старые устройства)
-- **x86_64** - 64-bit x86 (эмуляторы, некоторые планшеты)
-- **x86** - 32-bit x86 (старые эмуляторы)
+- **arm64-v8a** - 64-bit ARM (modern devices)
+- **armeabi-v7a** - 32-bit ARM (legacy devices)
+- **x86_64** - 64-bit x86 (emulators / some tablets)
+- **x86** - 32-bit x86 (older emulators)
 
-## 🔄 Жизненный цикл сборки
+## 🔄 Build Lifecycle
 
-### Обычная разработка
+### Regular Development
 ```
 Code Push → PR Check → Review → Merge → Main Build
 ```
 
-### Релиз
+### Release
 ```
 Tag Creation → Validation → Build All Archs → Sign APKs → Create Release
 ```
@@ -149,43 +149,43 @@ Tag Creation → Validation → Build All Archs → Sign APKs → Create Release
 Schedule → Check Changes → Build → Test → Release → Cleanup
 ```
 
-## 📊 Мониторинг
+## 📊 Monitoring
 
-### Статус сборки
-- GitHub Actions предоставляет полную информацию о статусе
-- Артефакты доступны для скачивания
-- Логи сборки сохраняются
+### Build Status
+- GitHub Actions UI shows status
+- Artifacts downloadable
+- Build logs retained
 
-### Уведомления
-- Статус commit'ов
-- Комментарии в PR
-- Email уведомления (настраиваются в GitHub)
+### Notifications
+- Commit statuses
+- PR comments
+- Email notifications (configurable in GitHub)
 
-## 🛠️ Устранение неполадок
+## 🛠️ Troubleshooting
 
-### Частые проблемы
+### Common Issues
 
-1. **Ошибка сборки зависимостей:**
-   - Проверить доступность Android SDK
-   - Убедиться, что скрипты имеют права на выполнение
+1. **Dependency build failure:**
+   - Verify Android SDK availability
+   - Ensure scripts are executable
 
-2. **Ошибка подписания APK:**
-   - Проверить наличие keystore
-   - Убедиться в правильности паролей
+2. **APK signing failure:**
+   - Validate keystore secret presence
+   - Ensure passwords match secrets
 
-3. **Отсутствие артефактов:**
-   - Проверить completion статус предыдущих jobs
-   - Убедиться в правильности путей
+3. **Missing artifacts:**
+   - Check completion status of previous jobs
+   - Validate artifact paths
 
-### Отладка
+### Debugging
 
-1. **Включить debug режим:**
+1. **Enable debug mode:**
    ```yaml
    - name: Enable debug
      run: echo "ACTIONS_STEP_DEBUG=true" >> $GITHUB_ENV
    ```
 
-2. **Добавить дополнительное логирование:**
+2. **Add extra logging:**
    ```yaml
    - name: Debug info
      run: |
@@ -194,36 +194,36 @@ Schedule → Check Changes → Build → Test → Release → Cleanup
        echo "Environment: $(env | sort)"
    ```
 
-## 📈 Оптимизация
+## 📈 Optimization
 
-### Кэширование
-- Gradle кэш для ускорения сборки
-- Android SDK кэш
-- Зависимости кэшируются между запусками
+### Caching
+- Gradle build cache
+- Android SDK cache
+- Dependencies cached between runs
 
-### Параллельность
-- Сборка разных архитектур выполняется параллельно
-- Независимые jobs выполняются одновременно
+### Parallelism
+- Different architecture jobs run in parallel
+- Independent jobs overlap
 
-### Ресурсы
-- Используется стандартный GitHub runner (2 CPU, 7GB RAM)
-- Можно настроить self-hosted runners для больших проектов
+### Resources
+- Standard GitHub runner (2 CPU, 7GB RAM)
+- Self-hosted runners possible for larger builds
 
-## 🔐 Безопасность
+## 🔐 Security
 
-### Подписание APK
-- Используется временный keystore (демо)
-- В продакшене рекомендуется использовать secrets
+### APK Signing
+- Temporary/demo keystore used
+- Use repository secrets in production
 
-### Секреты
-- Никогда не добавляйте секреты в код
-- Используйте GitHub Secrets для конфиденциальной информации
+### Secrets
+- Never commit secrets
+- Use GitHub Secrets for sensitive data
 
-### Валидация
-- Автоматическая проверка целостности APK
-- SHA256 чексуммы для всех релизов
+### Validation
+- Automatic APK integrity checks
+- SHA256 checksums for all releases
 
-## 📚 Дополнительные ресурсы
+## 📚 Additional Resources
 
 - [GitHub Actions Documentation](https://docs.github.com/en/actions)
 - [Android CI/CD Best Practices](https://developer.android.com/studio/publish/app-signing)
