@@ -1,58 +1,58 @@
-## План реализации (Актуализирован для миграции на udp2tcp)
+## Implementation Plan (Updated for udp2tcp migration)
 
-Этот документ обновлён 14 августа 2025 г. и отражает переход проекта от кастомного «UDP Bridge» (протокол, listener, client manager, TCP Connection Manager) к использованию внешнего решения `udp2tcp` поверх SSH port forwarding. Исторические фазы (1–4) сохранены в разделе Legacy Summary и детализированы в отчетах в `docs_legacy/`.
+Updated 14 Aug 2025. This document reflects the transition from the custom "UDP Bridge" (protocol, listener, client manager, TCP Connection Manager) to using external `udp2tcp` over SSH port forwarding. Historical phases (1–4) are preserved in the Legacy Summary and detailed in reports in `docs_legacy/`.
 
-### TL;DR текущее состояние
-| Область | Статус | Комментарий |
-|---------|--------|-------------|
-| Legacy Phases 1–2 | DONE | Сервер + Android протоколная инфраструктура реализованы (теперь Legacy) |
-| Legacy Phases 3–4 | PARTIAL | Документация / CI частично, оставшееся станет нерелевантно после udp2tcp |
-| Выбор стратегии миграции | DONE | Принято: встроенный исходный код `udp2tcp` (NDK) |
-| Создание адаптера `udp2tcp_client_adapter` | IN PROGRESS | Заглушки / интерфейс есть, требуется полная реализация I/O |
-| Обновления README / Tech Spec | DONE | Маркировка Legacy / добавлены разделы udp2tcp |
-| Очистка Legacy исходников | PENDING | Выполнить после e2e подтверждения udp2tcp |
-| E2E udp2tcp тест | PENDING | Скрипт + docker сценарий |
-| CI обновление (исключить legacy) | PENDING | После удаления файлов |
-| Обновление документации (финал) | PENDING | После успешных тестов + cleanup |
-
----
-## 1. Исторический контекст (Legacy Summary)
-
-Оригинальный план ориентировался на разработку собственного бинарного протокола и серверной части. Завершённые этапы:
-1. Server UDP Bridge: протокол, таблица клиентов, UDP forwarder, select() server.
-2. Android внедрение: порт протокола, client manager, UDP listener, TCP connection manager, Java интерфейс.
-3. Частичное e2e и функциональное тестирование, подготовка CI/CD.
-4. Документация и отчёты (см. `docs_legacy/PHASE_*`, `TASK_*`, `PROTOCOL_IMPLEMENTATION_REPORT.md`).
-
-Причины отказа от кастомного стека: снижение сложности, уменьшение JNI кода, отказ от поддержки checksum/ping/client_table в пользу потоковой инкапсуляции `udp2tcp`.
+### TL;DR Current State
+| Area | Status | Comment |
+|------|--------|---------|
+| Legacy Phases 1–2 | DONE | Server + Android protocol infra implemented (now legacy) |
+| Legacy Phases 3–4 | PARTIAL | Docs / CI partly done; remainder becomes irrelevant post-udp2tcp |
+| Migration strategy selection | DONE | Chosen: vendored udp2tcp source (NDK) |
+| Adapter `udp2tcp_client_adapter` creation | IN PROGRESS | Stubs / interface exist; full I/O loops needed |
+| README / Tech Spec updates | DONE | Legacy marked; udp2tcp sections added |
+| Legacy source cleanup | PENDING | After udp2tcp e2e confirmation |
+| E2E udp2tcp test | PENDING | Script + docker scenario |
+| CI update (exclude legacy) | PENDING | After file removal |
+| Documentation update (final) | PENDING | After tests + cleanup |
 
 ---
-## 2. Цели актуального этапа
-1. Интегрировать `udp2tcp` клиент в Android (NDK) с минимальной прослойкой.
-2. Использовать существующий SSH port forwarding как транспорт.
-3. Обеспечить прозрачный локальный UDP порт для приложений.
-4. Сохранить / обновить статистику (пакеты, байты, uptime, ошибки).
-5. Удалить (или условно отключить) legacy код и тесты после подтверждения работоспособности.
-6. Упростить UI (убрать скрытые настройки legacy — уже частично сделано).
+## 1. Historical Context (Legacy Summary)
+
+Original plan focused on building a custom binary protocol and server. Completed phases:
+1. Server UDP Bridge: protocol, client table, UDP forwarder, select() server.
+2. Android integration: protocol port, client manager, UDP listener, TCP connection manager, Java interface.
+3. Partial e2e & functional testing, CI/CD preparation.
+4. Documentation & reports (see `docs_legacy/PHASE_*`, `TASK_*`, `PROTOCOL_IMPLEMENTATION_REPORT.md`).
+
+Reasons to abandon custom stack: reduce complexity, shrink JNI code, drop checksum/ping/client_table maintenance in favor of streaming encapsulation via `udp2tcp`.
 
 ---
-## 3. Структура нового плана
+## 2. Goals (Current Stage)
+1. Integrate `udp2tcp` client into Android (NDK) with minimal glue.
+2. Reuse existing SSH port forwarding as transport.
+3. Provide a transparent local UDP port for apps.
+4. Maintain / update stats (packets, bytes, uptime, errors).
+5. Remove (or conditionally disable) legacy code & tests after validation.
+6. Simplify UI (remove hidden legacy toggles — partly done).
 
-### 3.1 Подготовка
-- [x] Создать / обновить документ миграции (`MIGRATION_UDP2TCP.md`).
-- [x] Обновить техническую спецификацию (`TECH_SPEC_NEW_ARCHITECTURE.md`).
-- [x] Обновить README (индексация docs / маркировка Legacy).
-- [ ] Добавить lightweight диаграмму udp2tcp потока (опционально / позже).
+---
+## 3. New Plan Structure
 
-### 3.2 Интеграция исходников udp2tcp
-Подход A: включение исходников в `third_party/udp2tcp/`.
-- [ ] Импортировать актуальный tag / commit udp2tcp (README_IMPORT или git subtree / vendor).
-- [ ] Добавить Android.mk / CMakeLists фрагмент для сборки (arch‑агностично).
-- [ ] Определить минимальный набор исходников (клиентская часть без лишних тулов).
-- [ ] Проверка сборки для всех ABI (arm64-v8a / armeabi-v7a / x86_64 / x86).
+### 3.1 Preparation
+- [x] Create / update migration doc (`MIGRATION_UDP2TCP.md`).
+- [x] Update technical spec (`TECH_SPEC_NEW_ARCHITECTURE.md`).
+- [x] Update README (docs index / legacy marking).
+- [ ] Add lightweight udp2tcp flow diagram (optional / later).
 
-### 3.3 Адаптер (JNI прослойка)
-Интерфейс (эскиз):
+### 3.2 udp2tcp Source Integration
+Approach A: vendor sources under `third_party/udp2tcp/`.
+- [ ] Import current udp2tcp tag/commit (README_IMPORT or git subtree / vendor).
+- [ ] Add Android.mk / CMakeLists fragment (arch-agnostic).
+- [ ] Determine minimal source set (client portion only, exclude tools).
+- [ ] Build verification for all ABIs (arm64-v8a / armeabi-v7a / x86_64 / x86).
+
+### 3.3 Adapter (JNI layer)
+Interface (draft):
 ```c
 int udp2tcp_init(const char* remote_host, int remote_port, int local_udp_port);
 int udp2tcp_start(void);        // создает потоки RX/TX
@@ -60,123 +60,123 @@ int udp2tcp_stop(void);
 void udp2tcp_get_stats(uint64_t* rx_pkts, uint64_t* tx_pkts, uint64_t* rx_bytes, uint64_t* tx_bytes);
 int udp2tcp_is_running(void);
 ```
-- [x] Заготовка заголовков / структур.
-- [ ] Реализация loop приёма UDP (локально) -> отправка в tcp (через udp2tcp API).
-- [ ] Реализация loop чтения tcp -> инъекция в локальный UDP сокет.
-- [ ] Обработка ошибок / reconnect (конфигурируемые интервалы).
-- [ ] Атомарные счётчики статистики.
-- [ ] JNI методы + Java wrapper (заменяющие legacy сервисный слой).
+- [x] Header / struct scaffolding.
+- [ ] UDP receive loop (local) -> send over tcp (udp2tcp API).
+- [ ] TCP read loop -> inject into local UDP socket.
+- [ ] Error handling / reconnect (configurable intervals).
+- [ ] Atomic stats counters.
+- [ ] JNI methods + Java wrapper (replacing legacy service layer).
 
-### 3.4 SSH интеграция
-- [ ] Убедиться, что libssh forwarding поднимает локальный TCP на <local_forward_port> к <udp2tcp_server_host:udp2tcp_server_port>.
-- [ ] Параметризовать порт через UI / конфиг.
-- [ ] Проверить закрытие форварда при stop.
+### 3.4 SSH Integration
+- [ ] Ensure libssh forwarding binds local TCP on <local_forward_port> to <udp2tcp_server_host:udp2tcp_server_port>.
+- [ ] Parameterize port via UI / config.
+- [ ] Verify forward teardown on stop.
 
-### 3.5 Тестирование
-Категории:
-1. Unit (адаптер, простая передача пакета локально).
-2. Integration (локальный udp клиент -> адаптер -> tcp (через ssh) -> udp2tcp server -> echo target).
-3. E2E script (shell) для CI.
-4. Load (N * 1000 пакетов подряд + подсчёт потерь).
+### 3.5 Testing
+Categories:
+1. Unit (adapter, simple local packet transfer).
+2. Integration (local udp client -> adapter -> tcp (via ssh) -> udp2tcp server -> echo target).
+3. E2E script (shell) for CI.
+4. Load (N * 1000 packets + loss measurement).
 
-Задачи:
-- [ ] `test_udp2tcp_basic.sh` — отправка одного UDP пакета и проверка ответа.
-- [ ] Расширить `run_full_e2e_test.sh` режимом `--udp2tcp`.
-- [ ] Нагрузочный сценарий (пакеты: 10k, средний размер 200B, подсчёт latency).
-- [ ] Анализ логов (grep по маркерам udp2tcp_adapter).
+Tasks:
+- [ ] `test_udp2tcp_basic.sh` — send one UDP packet and verify reply.
+- [ ] Extend `run_full_e2e_test.sh` with `--udp2tcp` mode.
+- [ ] Load scenario (10k packets, avg size 200B, measure latency).
+- [ ] Log analysis (grep markers udp2tcp_adapter).
 
-### 3.6 Очистка Legacy
-- [ ] Добавить build флаг (временный) `ENABLE_LEGACY_BRIDGE=0`.
-- [ ] При успешном e2e: удалить `udp_listener.*`, `client_manager.*`, `udp_bridge_protocol.*`, `tcp_connection_manager.*`.
-- [ ] Переместить оставшиеся отчёты в `docs_legacy/` (уже сделано для большинства).
-- [ ] Удалить legacy тестовые скрипты (архивировать путь в логе миграции).
+### 3.6 Legacy Cleanup
+- [ ] Add temporary build flag `ENABLE_LEGACY_BRIDGE=0`.
+- [ ] After successful e2e: remove `udp_listener.*`, `client_manager.*`, `udp_bridge_protocol.*`, `tcp_connection_manager.*`.
+- [ ] Move remaining reports to `docs_legacy/` (most already migrated).
+- [ ] Remove legacy test scripts (archive path in migration log).
 
-### 3.7 CI/CD Актуализация
-- [ ] Обновить workflow: убрать проверки legacy файлов.
-- [ ] Добавить шаг сборки udp2tcp адаптера (ndk-build / cmake).
-- [ ] Добавить E2E udp2tcp smoke test контейнером.
-- [ ] Публикация артефактов: apk + лог теста.
+### 3.7 CI/CD Update
+- [ ] Update workflow: drop legacy file checks.
+- [ ] Add udp2tcp adapter build step (ndk-build / cmake).
+- [ ] Add E2E udp2tcp smoke test container.
+- [ ] Publish artifacts: apk + test log.
 
-### 3.8 Документация (финальный раунд)
-- [ ] Обновить QUICKSTART (заменить раздел про кастомный протокол).
-- [ ] Добавить раздел «Сравнение udp2tcp vs Legacy» (таблица сокращённая в README — расширенная здесь).
-- [ ] FAQ: вопросы по удалению функций ping/pong / client ids.
-- [ ] Архив: список удалённых файлов и commit hash последней версии.
+### 3.8 Documentation (Final Round)
+- [ ] Update QUICKSTART (replace custom protocol section).
+- [ ] Add "udp2tcp vs Legacy" comparison (expanded table, README version is short).
+- [ ] FAQ: questions on removal of ping/pong / client ids.
+- [ ] Archive: list removed files + last commit hash.
 
 ### 3.9 Release Criteria (Migration)
-Все чекбоксы должны быть отмечены:
-- [ ] Успешный e2e udp2tcp (>=3 повторов без потерь >2%).
-- [ ] Latency p95 без деградации (> +15% к baseline legacy: задокументировать).
-- [ ] Нет обращений JNI к legacy символам (grep). 
-- [ ] CI зелёный во всех матрицах ABI.
-- [ ] README и Tech Spec не содержат «будет удалён» пометок (переведены в прошедшее время).
-- [ ] Legacy код удалён из репозитория.
+All checkboxes must be ticked:
+- [ ] Successful udp2tcp e2e (≥3 runs without loss >2%).
+- [ ] p95 latency non-degraded (≤ +15% vs legacy baseline, documented).
+- [ ] No JNI references to legacy symbols (grep).
+- [ ] CI green across all ABI matrix.
+- [ ] README / Tech Spec free of "will be removed" notes (converted to past tense).
+- [ ] Legacy code removed from repository.
 
 ---
-## 4. Матрица задач (сводно)
+## 4. Task Matrix (Summary)
 
-| Категория | Задача | ID | Статус |
-|-----------|--------|----|--------|
-| Source Import | Импорт udp2tcp в third_party | S1 | ☐ |
-| Build | Android.mk/CMake интеграция | B1 | ☐ |
-| Adapter | Реализация TX/RX петель | A1 | ☐ |
-| Adapter | Статистика (atomic counters) | A2 | ☐ |
-| Adapter | JNI методы / Java wrapper | A3 | ☐ |
+| Category | Task | ID | Status |
+|----------|------|----|--------|
+| Source Import | Import udp2tcp into third_party | S1 | ☐ |
+| Build | Android.mk/CMake integration | B1 | ☐ |
+| Adapter | TX/RX loop implementation | A1 | ☐ |
+| Adapter | Statistics (atomic counters) | A2 | ☐ |
+| Adapter | JNI methods / Java wrapper | A3 | ☐ |
 | SSH | Forward binding & teardown | F1 | ☐ |
 | Testing | test_udp2tcp_basic.sh | T1 | ☐ |
-| Testing | E2E интеграция в run_full_e2e_test.sh | T2 | ☐ |
-| Testing | Нагрузочный тест 10k пакетов | T3 | ☐ |
-| Cleanup | Флаг отключения legacy | C1 | ☐ |
-| Cleanup | Удаление legacy файлов | C2 | ☐ |
+| Testing | E2E integration in run_full_e2e_test.sh | T2 | ☐ |
+| Testing | Load test 10k packets | T3 | ☐ |
+| Cleanup | Legacy disable flag | C1 | ☐ |
+| Cleanup | Remove legacy files | C2 | ☐ |
 | CI/CD | Workflow udp2tcp steps | CI1 | ☐ |
-| Docs | QUICKSTART udp2tcp обновление | D1 | ☐ |
-| Docs | FAQ / Comparison таблица | D2 | ☐ |
-| Release | Проверка p95 latency | R1 | ☐ |
-| Release | Отсутствие legacy ссылок | R2 | ☐ |
+| Docs | QUICKSTART udp2tcp update | D1 | ☐ |
+| Docs | FAQ / Comparison table | D2 | ☐ |
+| Release | p95 latency verification | R1 | ☐ |
+| Release | No legacy references | R2 | ☐ |
 
-Легенда: ☐ не начато, ◐ в процессе, ☑ завершено.
-
----
-## 5. Риски и митигация (актуализировано)
-
-| Риск | Вероятность | Влияние | Митигация |
-|------|-------------|---------|-----------|
-| Потенциальная несовместимость udp2tcp API с Android | Medium | Medium | Локальный fork / адаптация сокетов, минимизировать зависимость от POSIX-специфичных опций |
-| Рост latency против legacy (CRC/таблица клиентов уже убраны, но TCP эффекты) | Medium | Medium | Настройка TCP_NODELAY, буферов сокетов, измерения и тюнинг |
-| Утечки ресурсов при остановке адаптера | Low | High | RAII-подход в C (структура с cleanup), тест остановки в цикле |
-| Отсутствие ping/pong механизма | Low | Low | Опционально реализовать keepalive на уровне TCP или таймер активности |
-| Недостаточное покрытие тестами многоархитектурных сборок | Medium | Medium | Добавить матрицу ABI в CI на раннем этапе (до удаления legacy) |
+Legend: ☐ not started, ◐ in progress, ☑ done.
 
 ---
-## 6. Метрики успеха (пересмотр)
-| Метрика | Цель |
-|---------|------|
-| Успешный e2e тест udp2tcp | ≥3 последовательных прогона без критических ошибок |
-| Packet loss (нагрузочный тест) | < 1% |
-| p95 latency | ≤ +15% относительно зафиксированного baseline legacy |
-| Memory footprint адаптера | < 5 MB дополнительного RSS |
-| Количество строк JNI кода | Снижение ≥40% от legacy набора |
+## 5. Risks & Mitigation (Updated)
+
+| Risk | Probability | Impact | Mitigation |
+|------|-------------|--------|-----------|
+| Potential udp2tcp API incompatibility on Android | Medium | Medium | Local fork / socket adaptation; minimize POSIX-specific dependencies |
+| Latency increase vs legacy (CRC/client table removed, TCP effects remain) | Medium | Medium | Tune TCP_NODELAY, socket buffers; measure & adjust |
+| Resource leaks on adapter stop | Low | High | Structured cleanup, loop stop test cycle |
+| Missing ping/pong mechanism | Low | Low | Optional keepalive via TCP or idle timer |
+| Insufficient multi-ABI test coverage | Medium | Medium | Add ABI matrix early (before legacy removal) |
 
 ---
-## 7. Депривация Legacy
-- Создать файл `docs/LEGACY_REMOVAL_CHANGELOG.md` (после удаления) с перечислением удалённых артефактов.
-- Зафиксировать последний commit SHA перед удалением.
-- Добавить раздел «Исторические артефакты» в README → указывать на `docs_legacy/`.
+## 6. Success Metrics (Revised)
+| Metric | Target |
+|--------|--------|
+| Successful udp2tcp e2e test | ≥3 consecutive runs without critical errors |
+| Packet loss (load test) | < 1% |
+| p95 latency | ≤ +15% over recorded legacy baseline |
+| Adapter memory footprint | < 5 MB additional RSS |
+| JNI code line count | ≥40% reduction vs legacy set |
 
 ---
-## 8. Следующие немедленные шаги (оперативный фокус)
-1. Импорт кода `udp2tcp` (S1).
-2. Сборка адаптера для одной архитектуры (arm64-v8a) — smoke build (B1).
-3. Реализация RX/TX петель (A1) + счётчики (A2).
-4. Минимальный `test_udp2tcp_basic.sh` (T1).
-5. E2E проверка через SSH port forward вручную (до автоматизации).
-
-После успешной проверки — параллельная работа над CI (CI1) и cleanup (C1).
+## 7. Legacy Decommission
+- Create `docs/LEGACY_REMOVAL_CHANGELOG.md` (post-removal) listing deleted artifacts.
+- Record last commit SHA before deletion.
+- Add "Historical Artifacts" section in README → pointing to `docs_legacy/`.
 
 ---
-## 9. Ссылки
-- Миграция: `MIGRATION_UDP2TCP.md`
-- Тех. спецификация: `TECH_SPEC_NEW_ARCHITECTURE.md`
-- Исторические отчёты: `../docs_legacy/`
+## 8. Immediate Next Steps (Focus)
+1. Import `udp2tcp` code (S1).
+2. Build adapter for one ABI (arm64-v8a) — smoke build (B1).
+3. Implement RX/TX loops (A1) + counters (A2).
+4. Minimal `test_udp2tcp_basic.sh` (T1).
+5. Manual e2e via SSH port forward (pre-automation).
 
-Документ поддерживается до завершения миграции; затем будет преобразован в короткую «Roadmap.md».
+After validation — parallelize CI (CI1) + cleanup (C1).
+
+---
+## 9. References
+- Migration: `MIGRATION_UDP2TCP.md`
+- Technical spec: `TECH_SPEC_NEW_ARCHITECTURE.md`
+- Historical reports: `../docs_legacy/`
+
+Maintained until migration complete; then will be converted into a short `Roadmap.md`.
