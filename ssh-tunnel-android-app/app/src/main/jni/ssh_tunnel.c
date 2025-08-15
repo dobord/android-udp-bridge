@@ -397,7 +397,7 @@ void* tcp_port_forward_thread(void* arg) {
             continue;
         }
         
-    LOGI("Accepted TCP connection for forwarding to remote %s:%d", remote_host, remote_port);
+        LOGI("Accepted TCP connection for forwarding to remote %s:%d", remote_host, remote_port);
         
         // Create SSH channel for forwarding
         pthread_mutex_lock(&session_mutex);
