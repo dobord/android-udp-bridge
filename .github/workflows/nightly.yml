@@ -63,11 +63,28 @@ jobs:
         fetch-depth: 0
 
     - name: Fetch udp2tcp submodule (required)
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         echo "Fetching udp2tcp submodule (required)..."
-        git submodule update --init --recursive third_party/udp2tcp
+        set -e
+        URL="https://github.com/dobord/udp2tcp.git"
+        if [ -n "$GITHUB_TOKEN" ]; then
+          URL="https://${GITHUB_TOKEN}:x-oauth-basic@github.com/dobord/udp2tcp.git"
+        fi
+        rm -rf third_party/udp2tcp
+        git submodule deinit -f third_party/udp2tcp 2>/dev/null || true
+        git config submodule.third_party/udp2tcp.url "$URL"
+        attempts=0
+        until [ $attempts -ge 3 ]; do
+          if git submodule update --init --depth 1 third_party/udp2tcp; then
+            break
+          fi
+          attempts=$((attempts+1))
+          echo "Retry $attempts..."; sleep 2
+        done
         if [ ! -d third_party/udp2tcp/include ]; then
-          echo "❌ Required udp2tcp headers missing (third_party/udp2tcp/include)." >&2
+          echo "❌ Required udp2tcp headers missing after retries." >&2
           exit 1
         fi
         echo "✅ udp2tcp present: $(git -C third_party/udp2tcp log --oneline -1 | head -1 || true)"

@@ -59,14 +59,14 @@ Tasks:
 - [x] Create placeholder `legacy/README.md` describing the deprecation plan.
 - [x] Remove `udp2tcp_client_adapter.c` (legacy C stub) after confirming C++ adapter (`udp2tcp_client_adapter.cpp`) works on all ABIs.
 - [x] Update CI: (initially added matrix with legacy OFF build) — now simplified: legacy forced build removed from CI; only auto & force-on paths kept.
-- [ ] Update `IMPLEMENTATION_PLAN.md` (add migration section summarizing completed phases and remaining risks).
+- [ ] Update `IMPLEMENTATION_PLAN.md` (add migration section summarizing completed phases and remaining risks).  <!-- TODO: Next step -->
 
 Status: Phase 4 initiated (this commit). Next concrete change will be relocating legacy sources and guarding their inclusion.
 
 ### Phase 5 — Testing
-- [ ] Adapt `run_full_e2e_test.sh` for udp2tcp end-to-end scenario
+- [ ] Adapt `run_full_e2e_test.sh` for udp2tcp end-to-end scenario  <!-- TODO: implement client/server echo path -->
 - [x] Add script `test_udp2tcp_basic.sh` (placeholder)
-- [ ] Load test: send 10k UDP packets -> integrity check
+- [ ] Load test: send 10k UDP packets -> integrity check  <!-- TODO: scripted loop using netcat/socat -->
 
 ### Phase 6 — Documentation final
 - [ ] Extend README with "Architecture comparison"
