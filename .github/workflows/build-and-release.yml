@@ -22,19 +22,29 @@ jobs:
       matrix:
         arch: [arm64-v8a, armeabi-v7a, x86_64, x86]
     steps:
-      - name: Checkout code
+      - name: Checkout code (no submodules to allow optional fetch)
         uses: actions/checkout@v4
         with:
-          submodules: recursive
           fetch-depth: 0
 
-      - name: Verify udp2tcp submodule (dependencies job)
+      - name: Optional fetch udp2tcp submodule (full recursive)
         run: |
-          if [ -d "third_party/udp2tcp/.git" ]; then
+          echo "Attempting full recursive fetch of udp2tcp submodule..."
+          set +e
+          git submodule update --init --recursive third_party/udp2tcp 2>&1
+          status=$?
+          if [ $status -ne 0 ]; then
+            echo "⚠️  udp2tcp submodule fetch failed (status=$status); proceeding in legacy mode."
+          fi
+          set -e
+          if [ -d third_party/udp2tcp/include ]; then
             echo "✅ udp2tcp submodule present (third_party/udp2tcp)"
-            git -C third_party/udp2tcp log --oneline -1 || true
+            git -C third_party/udp2tcp log --oneline -1 | head -1 || true
+            if [ -d third_party/udp2tcp/third_party/libcoro/.git ]; then
+              echo "Nested libcoro: $(git -C third_party/udp2tcp/third_party/libcoro log --oneline -1 | head -1 || true)"
+            fi
           else
-            echo "⚠️  udp2tcp submodule NOT present; legacy fallback build will be used later."
+            echo "ℹ️  udp2tcp sources not present; CMake auto-detect will stay OFF."
           fi
 
       - name: Setup Android SDK
@@ -198,19 +208,29 @@ jobs:
     needs: build-dependencies
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout code (no submodules to allow optional fetch)
         uses: actions/checkout@v4
         with:
-          submodules: recursive
           fetch-depth: 0
 
-      - name: Verify udp2tcp submodule (android build job)
+      - name: Optional fetch udp2tcp submodule (full recursive)
         run: |
-          if [ -d "third_party/udp2tcp/.git" ]; then
+          echo "Attempting full recursive fetch of udp2tcp submodule..."
+          set +e
+          git submodule update --init --recursive third_party/udp2tcp 2>&1
+          status=$?
+          if [ $status -ne 0 ]; then
+            echo "⚠️  udp2tcp submodule fetch failed (status=$status); continuing with legacy fallback."
+          fi
+          set -e
+          if [ -d third_party/udp2tcp/include ]; then
             echo "✅ udp2tcp submodule present (third_party/udp2tcp)"
             git -C third_party/udp2tcp log --oneline -1 | head -1 || true
+            if [ -d third_party/udp2tcp/third_party/libcoro/.git ]; then
+              echo "Nested libcoro: $(git -C third_party/udp2tcp/third_party/libcoro log --oneline -1 | head -1 || true)"
+            fi
           else
-            echo "⚠️  udp2tcp submodule NOT present; CMake will auto-disable USE_UDP2TCP."
+            echo "ℹ️  udp2tcp sources not present; build will use legacy path."
           fi
 
       - name: Set up JDK 17
