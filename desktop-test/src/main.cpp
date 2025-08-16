@@ -9,6 +9,11 @@
 #include <string>
 #include <unistd.h>
 #include <vector>
+#include <thread>
+#include <chrono>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include "ssh_tunnel_api.h"
 #include "udp2tcp_client_adapter.h"
 
@@ -22,6 +27,7 @@ static void usage(const char* prog) {
   printf("  --udp2tcp-log-level <lvl>   Set udp2tcp log level: debug|info|warn|error (default: info)\n");
   printf("  --stats-wait <sec>          Total duration to run udp2tcp client before exit (default: 5; 0 = infinite until Ctrl+C)\n");
   printf("  --stats-interval <sec>      Print stats every <sec> seconds during run (default: disabled)\n");
+  printf("  --udp-spam <count> <size> [gap_ms]  Send <count> UDP datagrams of <size> bytes to <ludp_host>:<ludp_port> while running (default gap=20ms)\n");
 }
 
 // Simple local forward, re-implemented here for CLI: we will connect a TCP socket via SSH direct-tcpip when a local client arrives.
@@ -48,6 +54,9 @@ int main(int argc, char** argv) {
   const char *u_loglevel=nullptr;
   int u_stats_wait=5; // seconds; 0 = infinite
   int u_stats_interval=0; // seconds; 0 = disabled
+  int u_spam_count=0; // 0 = disabled
+  int u_spam_size=0;
+  int u_spam_gap_ms=20;
 
   for (size_t i=0; i<args.size();) {
     if (args[i] == "--ssh" && i+4 < args.size()) {
@@ -67,6 +76,14 @@ int main(int argc, char** argv) {
       u_stats_wait = std::stoi(args[i+1]); i += 2; continue;
     } else if (args[i] == "--stats-interval" && i+1 < args.size()) {
       u_stats_interval = std::stoi(args[i+1]); i += 2; continue;
+    } else if (args[i] == "--udp-spam" && i+2 < args.size()) {
+      u_spam_count = std::stoi(args[i+1]);
+      u_spam_size = std::stoi(args[i+2]);
+      if (i+3 < args.size() && args[i+3].rfind("--", 0) != 0) {
+        u_spam_gap_ms = std::stoi(args[i+3]);
+        i += 4; continue;
+      }
+      i += 3; continue;
     } else if (args[i] == "-h" || args[i] == "--help") {
       usage(argv[0]); return 0;
     } else {
@@ -101,6 +118,26 @@ int main(int argc, char** argv) {
                        u_rdst_host ? u_rdst_host : "127.0.0.1", u_rdst_port);
     printf("udp2tcp_start rc=%d\n", rc);
     if (rc==0) {
+      // Optional UDP spammer thread sending to local UDP listener
+      std::thread spammer;
+      std::atomic<bool> spam_stop{false};
+      if (u_spam_count > 0 && u_ludp_host && u_ludp_port > 0 && u_spam_size > 0) {
+        spammer = std::thread([&]() {
+          int fd = ::socket(AF_INET, SOCK_DGRAM, 0);
+          if (fd < 0) return;
+          sockaddr_in sa{}; sa.sin_family = AF_INET; sa.sin_port = htons((uint16_t)u_ludp_port);
+          ::inet_pton(AF_INET, u_ludp_host, &sa.sin_addr);
+          std::string payload;
+          payload.resize((size_t)u_spam_size, '\0');
+          for (int i=1;i<=u_spam_count && !spam_stop.load();++i) {
+            ::sendto(fd, payload.data(), payload.size(), 0, (sockaddr*)&sa, sizeof(sa));
+            if (i%25==0) { printf("udp-spam sent %d\n", i); fflush(stdout); }
+            std::this_thread::sleep_for(std::chrono::milliseconds(u_spam_gap_ms));
+          }
+          ::close(fd);
+        });
+      }
+
       // Periodic or single-shot stats printing
       if (u_stats_interval > 0) {
         if (u_stats_wait <= 0) {
@@ -142,6 +179,8 @@ int main(int argc, char** argv) {
       }
       // If we reached here, either finite wait completed or we are being terminated externally
       if (u_stats_wait > 0) {
+  spam_stop.store(true);
+  if (spammer.joinable()) spammer.join();
         udp2tcp_stop();
         udp2tcp_cleanup();
       }

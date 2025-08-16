@@ -88,26 +88,10 @@ timeout --preserve-status "${UDP2TCP_RUN_SECS}s" \
   "$LOCAL_UDP_HOST" "$LOCAL_UDP_PORT" \
   "$REMOTE_UDP_HOST" "$REMOTE_UDP_PORT" \
   --stats-wait "$UDP2TCP_RUN_SECS" --stats-interval 2 \
+  --udp-spam 500 200 10 \
   --udp2tcp-log-level "$UDP2TCP_LOG_LEVEL" \
   --ssh "$SSH_HOST" "$SSH_USER" "$SSH_PASS" "$SSH_PORT" &
 UDP2TCP_PID=$!
-
-# Wait until client starts listening on UDP or timeout
-for i in {1..20}; do
-  if ss -lun 2>/dev/null | awk '{print $5}' | grep -q ":$LOCAL_UDP_PORT$"; then
-    break
-  fi
-  sleep 0.5
-done
-
-# Send burst of UDP datagrams to local udp2tcp listener
-COUNT=100
-SIZE=120
-for i in $(seq 1 $COUNT); do
-  dd if=/dev/zero bs=$SIZE count=1 2>/dev/null | nc -u -w1 "$LOCAL_UDP_HOST" "$LOCAL_UDP_PORT" >/dev/null 2>&1 || true
-  if (( i % 25 == 0 )); then echo "udp sent $i"; fi
-  usleep 20000 2>/dev/null || sleep 0.02
-done
 
 wait $UDP2TCP_PID || true
 

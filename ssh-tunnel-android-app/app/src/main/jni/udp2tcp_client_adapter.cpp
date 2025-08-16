@@ -71,8 +71,9 @@ int udp2tcp_start(const char* remoteBridgeHost,
     fwd.listen_port = static_cast<uint16_t>(localUdpPort);
     fwd.remote_dst_ip = remoteUdpHost;
     fwd.remote_dst_port = static_cast<uint16_t>(remoteUdpPort);
-    fwd.recv_buffer_bytes = 0;
-    fwd.send_buffer_bytes = 0;
+    // Set explicit buffers to reasonable defaults
+    fwd.recv_buffer_bytes = 65536;
+    fwd.send_buffer_bytes = 65536;
 
     udp2tcp_client_cfg cfg{};
     cfg.tcp_connect.host = localBridgeHost;
@@ -85,14 +86,20 @@ int udp2tcp_start(const char* remoteBridgeHost,
     cfg.auth.token = "";
     cfg.udp_forward = &fwd;
     cfg.udp_forward_len = 1;
-    cfg.limits.max_frame_bytes = 0;
-    cfg.limits.max_inflight_frames = 0;
+    // Explicit non-zero limits
+    cfg.limits.max_frame_bytes = 65536;
+    cfg.limits.max_inflight_frames = 1024;
     cfg.logging.level = g_log_level.c_str();
     cfg.logging.format = "text";
     cfg.metrics.enabled = 0;
     cfg.metrics.listen_addr = nullptr;
     cfg.metrics.listen_port = 0;
 
+    LOGI("Starting udp2tcp client: tcp %s:%d, udp-listen %s:%d -> remote %s:%d, log=%s",
+        cfg.tcp_connect.host, (int)cfg.tcp_connect.port,
+        fwd.listen_addr, (int)fwd.listen_port,
+        fwd.remote_dst_ip, (int)fwd.remote_dst_port,
+        cfg.logging.level ? cfg.logging.level : "(null)");
     int rc = udp2tcp_client_start(&cfg, &g_client_handle);
     if (rc != 0) {
         LOGE("udp2tcp_client_start failed rc=%d", rc);
