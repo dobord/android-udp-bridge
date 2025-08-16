@@ -49,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
     // UI Elements - New simplified UI
     private MaterialButton connectButton;
     private TextView bridgeStatsTextView;
+    private TextView networkStatsTextView;
     private AutoCompleteTextView serverDropdown;
     private FloatingActionButton addServerButton;
     private MaterialButton settingsButton;
@@ -95,6 +96,7 @@ public class MainActivity extends AppCompatActivity {
         // New simplified UI
         connectButton = findViewById(R.id.connect_button);
         bridgeStatsTextView = findViewById(R.id.bridge_stats_text_view);
+    networkStatsTextView = findViewById(R.id.network_stats_text_view);
         serverDropdown = findViewById(R.id.server_dropdown);
         addServerButton = findViewById(R.id.add_server_button);
         settingsButton = findViewById(R.id.settings_button);
@@ -164,6 +166,31 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 connectToSshServer();
             }
+        });
+
+        // Long-press on status text to send a test UDP burst (manual load simulation)
+        bridgeStatsTextView.setOnLongClickListener(v -> {
+            if (!serviceBound || sshTunnelService == null) return true;
+            new Thread(() -> {
+                boolean running = false;
+                boolean ok = false;
+                try {
+                    running = sshTunnelService.isUdp2TcpRunning();
+                    if (running) ok = sshTunnelService.sendTestUdpBurst(10, 128);
+                } catch (Throwable t) {
+                    ok = false;
+                }
+                final boolean fRunning = running;
+                final boolean fOk = ok;
+                runOnUiThread(() -> {
+                    if (!fRunning) {
+                        Toast.makeText(MainActivity.this, "UDP forwarding is not running", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(MainActivity.this, fOk ? "Test UDP burst sent" : "Test UDP burst failed", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }).start();
+            return true;
         });
 
         serverDropdown.setOnItemClickListener((parent, view, position, id) -> {
@@ -359,6 +386,16 @@ public class MainActivity extends AppCompatActivity {
                     bridgeStatsTextView
                             .setText("Forwarding " + displayLocal + ":" + fLocalUdpPort + " -> " + fRemoteUdpHost + ":"
                                     + fRemoteUdpPort);
+
+                    // Fire a small test packet to simulate client activity and validate path
+                    new Thread(() -> {
+                        try {
+                            boolean ok = sshTunnelService.sendTestUdpRandom(64);
+                            android.util.Log.d("MainActivity", "Test UDP random send result: " + ok);
+                        } catch (Throwable t) {
+                            android.util.Log.w("MainActivity", "Test UDP send error", t);
+                        }
+                    }).start();
                 } else {
                     Toast.makeText(MainActivity.this, "Failed to start UDP forwarding", Toast.LENGTH_SHORT).show();
                 }
@@ -448,8 +485,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateBridgeStats() {
-        // For now rely on udp2tcp stats log; could fetch via SshTunnelService native
-        // method if exposed
+        // Show live udp2tcp stats under the main button
+        if (serviceBound && sshTunnelService != null && sshTunnelService.isUdp2TcpRunning()) {
+            try {
+                String stats = sshTunnelService.getUdp2TcpStats();
+                if (stats != null && !stats.isEmpty()) {
+                    networkStatsTextView.setText(stats);
+                } else {
+                    networkStatsTextView.setText("");
+                }
+            } catch (Throwable t) {
+                networkStatsTextView.setText("");
+            }
+        } else {
+            networkStatsTextView.setText("");
+        }
     }
 
     /**

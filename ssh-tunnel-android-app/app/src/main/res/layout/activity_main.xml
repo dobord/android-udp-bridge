@@ -55,6 +55,17 @@
                         app:cornerRadius="100dp"
                         app:strokeWidth="0dp" />
 
+                    <!-- Live Network Stats (udp2tcp) under the main button) -->
+                    <TextView
+                        android:id="@+id/network_stats_text_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text=""
+                        style="@style/CaptionTextStyle"
+                        android:fontFamily="monospace"
+                        android:gravity="center"
+                        android:layout_marginBottom="12dp" />
+
                     <!-- Connection Status Info -->
                     <TextView
                         android:id="@+id/bridge_stats_text_view"

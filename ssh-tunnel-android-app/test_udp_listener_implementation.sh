@@ -16,7 +16,6 @@ required_files=(
     "app/src/main/jni/client_manager.h"
     "app/src/main/jni/client_manager.c"
     "app/src/main/jni/ssh_tunnel.c"
-    "app/src/main/jni/Android.mk"
 )
 
 missing_files=()
@@ -40,13 +39,7 @@ fi
 echo ""
 echo "Checking UDP listener integration..."
 
-# Check if udp_listener.c is included in Android.mk
-if grep -q "udp_listener.c" app/src/main/jni/Android.mk; then
-    echo "✅ udp_listener.c included in Android.mk"
-else
-    echo "❌ udp_listener.c not included in Android.mk"
-    exit 1
-fi
+echo "Skipping Android.mk integration check (project uses CMake/Gradle)"
 
 # Check if udp_listener.h is included in ssh_tunnel.c
 if grep -q "#include \"udp_listener.h\"" app/src/main/jni/ssh_tunnel.c; then
@@ -56,25 +49,7 @@ else
     exit 1
 fi
 
-# Check for UDP bridge specific JNI functions
-echo ""
-echo "Checking JNI function implementations..."
-
-jni_functions=(
-    "Java_com_example_sshtunnel_SSHTunnelService_getUdpBridgeStats"
-    "Java_com_example_sshtunnel_SSHTunnelService_isUdpBridgeRunning"
-    "Java_com_example_sshtunnel_SSHTunnelService_resetUdpBridgeStats"
-    "Java_com_example_sshtunnel_SSHTunnelService_getUdpBridgeClientCount"
-)
-
-for func in "${jni_functions[@]}"; do
-    if grep -q "$func" app/src/main/jni/ssh_tunnel.c; then
-        echo "✅ $func implemented"
-    else
-        echo "❌ $func missing"
-        exit 1
-    fi
-done
+echo "Skipping legacy UDP bridge JNI symbol checks (removed after udp2tcp migration)"
 
 # Check for protocol integration
 echo ""

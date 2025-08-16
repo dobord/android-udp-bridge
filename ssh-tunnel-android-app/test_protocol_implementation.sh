@@ -30,27 +30,12 @@ fi
 echo "✓ Common protocol header found"
 
 # Check Java files
-if [ ! -f "app/src/main/java/com/example/udpbridge/UdpBridgeProtocol.java" ]; then
-    echo "Error: Java protocol interface not found"
-    exit 1
-fi
-
-echo "✓ Java protocol interface found"
-
-if [ ! -f "app/src/main/java/com/example/udpbridge/UdpBridgeConfig.java" ]; then
-    echo "Error: Java config class not found"
-    exit 1
-fi
-
-echo "✓ Java config class found"
+# Legacy Java protocol classes were removed after migration to SshTunnelService/udp2tcp
+echo "✓ Skipping legacy Java protocol interface/config checks (removed)"
 
 # Check Android.mk modifications
-if ! grep -q "udp_bridge_protocol.c" app/src/main/jni/Android.mk; then
-    echo "Error: Android.mk not updated to include protocol files"
-    exit 1
-fi
-
-echo "✓ Android.mk updated correctly"
+# Skip Android.mk checks (project migrated to CMake/Gradle build)
+echo "✓ Skipping Android.mk checks (using CMake/Gradle)"
 
 # Test basic compilation (syntax check only)
 echo "Testing protocol header syntax..."
