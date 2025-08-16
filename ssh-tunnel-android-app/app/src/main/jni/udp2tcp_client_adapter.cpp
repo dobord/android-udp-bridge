@@ -24,6 +24,7 @@
 
 static std::atomic<int> g_running{0};     // running state flag
 static udp2tcp_client* g_client_handle = nullptr; // C API client handle
+static std::string g_log_level = "info"; // default log level
 
 // Logging callback from udp2tcp
 static void udp2tcp_log_cb(int level, const char* message, void* /*user*/) {
@@ -39,6 +40,13 @@ static void udp2tcp_log_cb(int level, const char* message, void* /*user*/) {
 
 // Provide C linkage for functions used by C file ssh_tunnel.c
 extern "C" {
+
+void udp2tcp_set_log_level(const char* level)
+{
+    if (level && *level) {
+        g_log_level = level;
+    }
+}
 
 int udp2tcp_start(const char* remoteBridgeHost,
                   int remoteBridgePort,
@@ -79,7 +87,7 @@ int udp2tcp_start(const char* remoteBridgeHost,
     cfg.udp_forward_len = 1;
     cfg.limits.max_frame_bytes = 0;
     cfg.limits.max_inflight_frames = 0;
-    cfg.logging.level = "info";
+    cfg.logging.level = g_log_level.c_str();
     cfg.logging.format = "text";
     cfg.metrics.enabled = 0;
     cfg.metrics.listen_addr = nullptr;

@@ -33,6 +33,10 @@ int udp2tcp_get_library_stats(uint64_t* tx_frames, uint64_t* rx_frames,
 // Check if adapter is running
 int udp2tcp_is_running(void);
 
+// Set udp2tcp logging level (e.g., "debug", "info", "warn", "error").
+// Must be called before udp2tcp_start(). If not set, defaults to "info".
+void udp2tcp_set_log_level(const char* level);
+
 #ifdef __cplusplus
 }
 #endif
