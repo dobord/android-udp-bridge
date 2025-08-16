@@ -34,6 +34,6 @@ udp_forward:
     listen_addr: 0.0.0.0
     listen_port: 40000
     remote_dst_ip: 127.0.0.1
-    remote_dst_port: 9  # discard/echo-like, adjust to your echo service
+    remote_dst_port: 9001  # local UDP echo inside container
     recv_buffer_bytes: 0
     send_buffer_bytes: 0

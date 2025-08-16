@@ -22,9 +22,9 @@ LOCAL_BRIDGE_PORT=${LOCAL_BRIDGE_PORT:-47000}
 # Local UDP listen should NOT clash with docker-published 40000/udp; default to 40100 and auto-bump if busy
 LOCAL_UDP_HOST=${LOCAL_UDP_HOST:-127.0.0.1}
 LOCAL_UDP_PORT=${LOCAL_UDP_PORT:-40100}
-# Remote UDP destination on the server side; the server config forwards to 127.0.0.1:9 (discard)
+# Remote UDP destination on the server side; point to UDP echo in container
 REMOTE_UDP_HOST=${REMOTE_UDP_HOST:-127.0.0.1}
-REMOTE_UDP_PORT=${REMOTE_UDP_PORT:-9}
+REMOTE_UDP_PORT=${REMOTE_UDP_PORT:-9001}
 UDP2TCP_LOG_LEVEL=${UDP2TCP_LOG_LEVEL:-info}
 UDP2TCP_RUN_SECS=${UDP2TCP_RUN_SECS:-12}
 
