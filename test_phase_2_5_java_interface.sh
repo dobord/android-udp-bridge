@@ -22,13 +22,8 @@ else
     exit 1
 fi
 
-# Check UdpBridgeService.java
-if [ -f "app/src/main/java/com/example/udpbridge/UdpBridgeService.java" ]; then
-    echo "✓ UdpBridgeService.java exists"
-else
-    echo "✗ UdpBridgeService.java missing"
-    exit 1
-fi
+# UdpBridgeService.java removed after udp2tcp migration (not required)
+echo "ℹ UdpBridgeService.java no longer required (udp2tcp migration)"
 
 # Check UdpBridgeConfigActivity.java
 if [ -f "app/src/main/java/com/example/udpbridge/UdpBridgeConfigActivity.java" ]; then
@@ -58,13 +53,8 @@ fi
 
 echo "3. Checking AndroidManifest.xml..."
 
-# Check services are declared
-if grep -q "UdpBridgeService" app/src/main/AndroidManifest.xml; then
-    echo "✓ UdpBridgeService declared in manifest"
-else
-    echo "✗ UdpBridgeService not declared in manifest"
-    exit 1
-fi
+# UdpBridgeService declaration removed from manifest (not required)
+echo "ℹ UdpBridgeService manifest entry not required"
 
 # Check activities are declared
 if grep -q "UdpBridgeConfigActivity" app/src/main/AndroidManifest.xml; then
@@ -94,13 +84,8 @@ fi
 
 echo "5. Checking MainActivity integration..."
 
-# Check MainActivity has UdpBridge imports
-if grep -q "UdpBridgeService" app/src/main/java/com/example/sshtunnel/MainActivity.java; then
-    echo "✓ MainActivity imports UdpBridgeService"
-else
-    echo "✗ MainActivity missing UdpBridge imports"
-    exit 1
-fi
+# MainActivity no longer imports UdpBridgeService
+echo "ℹ MainActivity doesn't import UdpBridgeService (expected)"
 
 echo "6. Attempting Gradle sync check..."
 

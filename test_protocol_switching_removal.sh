@@ -21,13 +21,8 @@ else
     echo "✓ UdpBridgeConfig.java clean of protocol switching"
 fi
 
-# Check UdpBridgeService.java
-if grep -q "useNewProtocol\|NEW_PROTOCOL" app/src/main/java/com/example/udpbridge/UdpBridgeService.java; then
-    echo "✗ UdpBridgeService.java still contains protocol switching code"
-    exit 1
-else
-    echo "✓ UdpBridgeService.java clean of protocol switching"
-fi
+# UdpBridgeService.java removed after migration; skip check
+echo "ℹ Skipping UdpBridgeService.java protocol switching check (file removed)"
 
 # Check MainActivity.java
 if grep -q "newProtocolSwitch\|UseNewProtocol" app/src/main/java/com/example/sshtunnel/MainActivity.java; then
