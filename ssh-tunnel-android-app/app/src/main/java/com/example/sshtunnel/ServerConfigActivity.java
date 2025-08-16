@@ -41,15 +41,17 @@ public class ServerConfigActivity extends AppCompatActivity {
     private RadioGroup authMethodRadioGroup;
     
     // Bridge settings
-    private TextInputEditText bridgeHostEditText;
-    private TextInputEditText bridgePortEditText;
-    private TextInputEditText localPortEditText;
+    private TextInputEditText remoteBridgeHostEditText;
+    private TextInputEditText remoteBridgePortEditText;
+    private TextInputEditText localBridgePortEditText;
+    private TextInputEditText localBridgeHostEditText;
     private SwitchMaterial autoReconnectSwitch;
     private TextInputEditText connectionTimeoutEditText;
     
     // Advanced UDP settings
     private TextInputEditText localUdpPortEditText;
-    private TextInputEditText remoteHostEditText;
+    private TextInputEditText localUdpHostEditText;
+    private TextInputEditText remoteUdpHostEditText;
     private TextInputEditText remoteUdpPortEditText;
 
     @Override
@@ -88,15 +90,17 @@ public class ServerConfigActivity extends AppCompatActivity {
         
         authMethodRadioGroup = findViewById(R.id.auth_method_radio_group);
         
-        bridgeHostEditText = findViewById(R.id.bridge_host_edit_text);
-        bridgePortEditText = findViewById(R.id.bridge_port_edit_text);
-        localPortEditText = findViewById(R.id.local_port_edit_text);
+    remoteBridgeHostEditText = findViewById(R.id.bridge_host_edit_text);
+    remoteBridgePortEditText = findViewById(R.id.bridge_port_edit_text);
+    localBridgePortEditText = findViewById(R.id.local_port_edit_text);
+    localBridgeHostEditText = findViewById(R.id.local_bridge_host_edit_text);
         autoReconnectSwitch = findViewById(R.id.auto_reconnect_switch);
         connectionTimeoutEditText = findViewById(R.id.connection_timeout_edit_text);
         
-        localUdpPortEditText = findViewById(R.id.local_udp_port_edit_text);
-        remoteHostEditText = findViewById(R.id.remote_host_edit_text);
-        remoteUdpPortEditText = findViewById(R.id.remote_udp_port_edit_text);
+    localUdpPortEditText = findViewById(R.id.local_udp_port_edit_text);
+    localUdpHostEditText = findViewById(R.id.local_udp_host_edit_text);
+    remoteUdpHostEditText = findViewById(R.id.remote_host_edit_text);
+    remoteUdpPortEditText = findViewById(R.id.remote_udp_port_edit_text);
     }
 
     private void setupClickListeners() {
@@ -149,18 +153,25 @@ public class ServerConfigActivity extends AppCompatActivity {
             passwordEditText.setText(serverConfig.getPassword());
         }
         
-        // Bridge settings
-        bridgeHostEditText.setText(serverConfig.getBridgeHost());
-        bridgePortEditText.setText(String.valueOf(serverConfig.getBridgePort()));
-        localPortEditText.setText(String.valueOf(serverConfig.getLocalPort()));
+    // Bridge settings
+    remoteBridgeHostEditText.setText(serverConfig.getRemoteBridgeHost());
+    remoteBridgePortEditText.setText(String.valueOf(serverConfig.getRemoteBridgePort()));
+    localBridgePortEditText.setText(String.valueOf(serverConfig.getLocalBridgePort()));
+    {
+        String lb = serverConfig.getLocalBridgeHost();
+        localBridgeHostEditText.setText((lb != null && !lb.isEmpty()) ? lb : "127.0.0.1");
+    }
         autoReconnectSwitch.setChecked(serverConfig.isAutoReconnect());
         connectionTimeoutEditText.setText(String.valueOf(serverConfig.getConnectionTimeout()));
         
-        // UDP settings
+    // UDP settings
         if (serverConfig.getLocalUdpPort() > 0) {
             localUdpPortEditText.setText(String.valueOf(serverConfig.getLocalUdpPort()));
         }
-        remoteHostEditText.setText(serverConfig.getRemoteHost());
+    String luh = serverConfig.getLocalUdpHost();
+    localUdpHostEditText.setText((luh != null && !luh.isEmpty()) ? luh : "127.0.0.1");
+    String ruh = serverConfig.getRemoteUdpHost();
+    remoteUdpHostEditText.setText((ruh != null && !ruh.isEmpty()) ? ruh : "127.0.0.1");
         if (serverConfig.getRemoteUdpPort() > 0) {
             remoteUdpPortEditText.setText(String.valueOf(serverConfig.getRemoteUdpPort()));
         }
@@ -223,20 +234,21 @@ public class ServerConfigActivity extends AppCompatActivity {
             serverConfig.setPassphrase(null);
         }
         
-        // Save bridge settings
-        serverConfig.setBridgeHost(bridgeHostEditText.getText().toString().trim());
-        serverConfig.setBridgePort(Integer.parseInt(bridgePortEditText.getText().toString().trim()));
-        serverConfig.setLocalPort(Integer.parseInt(localPortEditText.getText().toString().trim()));
+    // Save bridge settings
+    serverConfig.setRemoteBridgeHost(remoteBridgeHostEditText.getText().toString().trim());
+    serverConfig.setRemoteBridgePort(Integer.parseInt(remoteBridgePortEditText.getText().toString().trim()));
+    serverConfig.setLocalBridgePort(Integer.parseInt(localBridgePortEditText.getText().toString().trim()));
+    serverConfig.setLocalBridgeHost(localBridgeHostEditText.getText().toString().trim());
         serverConfig.setConnectionTimeout(Integer.parseInt(connectionTimeoutEditText.getText().toString().trim()));
         serverConfig.setAutoReconnect(autoReconnectSwitch.isChecked());
         
         // Save UDP settings
-        String localUdpPortStr = localUdpPortEditText.getText().toString().trim();
+    String localUdpPortStr = localUdpPortEditText.getText().toString().trim();
         if (!localUdpPortStr.isEmpty()) {
             serverConfig.setLocalUdpPort(Integer.parseInt(localUdpPortStr));
         }
-        
-        serverConfig.setRemoteHost(remoteHostEditText.getText().toString().trim());
+    serverConfig.setLocalUdpHost(localUdpHostEditText.getText().toString().trim());
+    serverConfig.setRemoteUdpHost(remoteUdpHostEditText.getText().toString().trim());
         
         String remoteUdpPortStr = remoteUdpPortEditText.getText().toString().trim();
         if (!remoteUdpPortStr.isEmpty()) {
@@ -308,49 +320,49 @@ public class ServerConfigActivity extends AppCompatActivity {
         }
         
         // Validate bridge settings (always required now)
-        if (bridgeHostEditText.getText().toString().trim().isEmpty()) {
-            bridgeHostEditText.setError("Bridge host is required");
-            bridgeHostEditText.requestFocus();
+        if (remoteBridgeHostEditText.getText().toString().trim().isEmpty()) {
+            remoteBridgeHostEditText.setError("Bridge host is required");
+            remoteBridgeHostEditText.requestFocus();
             return false;
         }
         
-        String bridgePortStr = bridgePortEditText.getText().toString().trim();
+        String bridgePortStr = remoteBridgePortEditText.getText().toString().trim();
         if (bridgePortStr.isEmpty()) {
-            bridgePortEditText.setError("Bridge port is required");
-            bridgePortEditText.requestFocus();
+            remoteBridgePortEditText.setError("Bridge port is required");
+            remoteBridgePortEditText.requestFocus();
             return false;
         }
         
         try {
             int bridgePort = Integer.parseInt(bridgePortStr);
             if (bridgePort <= 0 || bridgePort > 65535) {
-                bridgePortEditText.setError("Port must be between 1 and 65535");
-                bridgePortEditText.requestFocus();
+                remoteBridgePortEditText.setError("Port must be between 1 and 65535");
+                remoteBridgePortEditText.requestFocus();
                 return false;
             }
         } catch (NumberFormatException e) {
-            bridgePortEditText.setError("Invalid port number");
-            bridgePortEditText.requestFocus();
+            remoteBridgePortEditText.setError("Invalid port number");
+            remoteBridgePortEditText.requestFocus();
             return false;
         }
         
-        String localPortStr = localPortEditText.getText().toString().trim();
+        String localPortStr = localBridgePortEditText.getText().toString().trim();
         if (localPortStr.isEmpty()) {
-            localPortEditText.setError("Local port is required");
-            localPortEditText.requestFocus();
+            localBridgePortEditText.setError("Local port is required");
+            localBridgePortEditText.requestFocus();
             return false;
         }
         
         try {
             int localPort = Integer.parseInt(localPortStr);
             if (localPort <= 0 || localPort > 65535) {
-                localPortEditText.setError("Port must be between 1 and 65535");
-                localPortEditText.requestFocus();
+                localBridgePortEditText.setError("Port must be between 1 and 65535");
+                localBridgePortEditText.requestFocus();
                 return false;
             }
         } catch (NumberFormatException e) {
-            localPortEditText.setError("Invalid port number");
-            localPortEditText.requestFocus();
+            localBridgePortEditText.setError("Invalid port number");
+            localBridgePortEditText.requestFocus();
             return false;
         }
         

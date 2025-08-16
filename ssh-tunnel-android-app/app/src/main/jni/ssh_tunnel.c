@@ -982,45 +982,53 @@ JNIEXPORT jstring JNICALL Java_com_example_sshtunnel_SshTunnelService_nativeDebu
 
 // udp2tcp JNI section (real implementation only when USE_UDP2TCP defined)
 #ifdef USE_UDP2TCP
-// Start udp2tcp (initialize + start thread) with explicit 6-parameter contract
+// Start udp2tcp (initialize + start thread) with explicit 8-parameter contract
 JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SshTunnelService_startUdp2Tcp(
     JNIEnv *env, jobject obj,
-    jstring j_tcp_connect_host, jint tcp_connect_port,
-    jstring j_listen_addr,     jint listen_port,
-    jstring j_remote_dst_ip,   jint remote_dst_port) {
+    jstring j_remote_bridge_host, jint remote_bridge_port,
+    jstring j_local_bridge_host, jint local_bridge_port,
+    jstring j_local_udp_host,    jint local_udp_port,
+    jstring j_remote_udp_host,   jint remote_udp_port) {
     (void)obj;
-    const char* tcp_connect_host = j_tcp_connect_host ? (*env)->GetStringUTFChars(env, j_tcp_connect_host, 0) : NULL;
-    const char* listen_addr      = j_listen_addr     ? (*env)->GetStringUTFChars(env, j_listen_addr, 0)      : NULL;
-    const char* remote_dst_ip    = j_remote_dst_ip   ? (*env)->GetStringUTFChars(env, j_remote_dst_ip, 0)   : NULL;
+    const char* remote_bridge_host = j_remote_bridge_host ? (*env)->GetStringUTFChars(env, j_remote_bridge_host, 0) : NULL;
+    const char* local_bridge_host = j_local_bridge_host ? (*env)->GetStringUTFChars(env, j_local_bridge_host, 0) : NULL;
+    const char* local_udp_host    = j_local_udp_host    ? (*env)->GetStringUTFChars(env, j_local_udp_host, 0)    : NULL;
+    const char* remote_udp_host   = j_remote_udp_host   ? (*env)->GetStringUTFChars(env, j_remote_udp_host, 0)   : NULL;
 
 #ifdef USE_UDP2TCP
-    // Configure SSH port forward: local 127.0.0.1:tcp_connect_port -> remote 127.0.0.1:tcp_connect_port
+    // Configure SSH port forward: local local_bridge_host:local_bridge_port -> remote remote_bridge_host:remote_udp_port
     if (port_forward_thread == 0) {
-        if (setup_tcp_port_forwarding("127.0.0.1", tcp_connect_port, tcp_connect_port) != 0) {
+        const char* eff_remote_bridge_host = (remote_bridge_host && *remote_bridge_host) ? remote_bridge_host : "127.0.0.1";
+        int eff_remote_bridge_port = (remote_bridge_port > 0) ? remote_bridge_port : local_bridge_port;
+        if (setup_tcp_port_forwarding(eff_remote_bridge_host, eff_remote_bridge_port, local_bridge_port) != 0) {
             LOGW("Failed to setup TCP port forwarding prior to udp2tcp start");
         }
     }
 #endif
 
-    const char* eff_tcp_host = (tcp_connect_host && *tcp_connect_host) ? tcp_connect_host : "127.0.0.1";
-    const char* eff_listen    = (listen_addr && *listen_addr) ? listen_addr : "0.0.0.0";
-    const char* eff_dst_ip    = (remote_dst_ip && *remote_dst_ip) ? remote_dst_ip : "127.0.0.1";
+    const char* eff_tcp_host = (local_bridge_host && *local_bridge_host) ? local_bridge_host : "127.0.0.1";
+    const char* eff_listen    = (local_udp_host && *local_udp_host) ? local_udp_host : "127.0.0.1";
+    const char* eff_dst_ip    = (remote_udp_host && *remote_udp_host) ? remote_udp_host : "127.0.0.1";
 
-    LOGI("Starting udp2tcp with params:\n tcp_connect=%s:%d\n listen=%s:%d\n dst_udp=%s:%d",
-         eff_tcp_host, tcp_connect_port, eff_listen, listen_port, eff_dst_ip, remote_dst_port);
+    LOGI("Starting udp2tcp with params:\n remote_bridge=%s:%d\n tcp_connect=%s:%d\n listen=%s:%d\n dst_udp=%s:%d",
+         remote_bridge_host ? remote_bridge_host : "127.0.0.1", remote_bridge_port,
+         eff_tcp_host, local_bridge_port, eff_listen, local_udp_port, eff_dst_ip, remote_udp_port);
 
     int rc = udp2tcp_start(
-        eff_tcp_host,                // tcp_connect.host (via SSH forward typically 127.0.0.1)
-        tcp_connect_port,            // tcp_connect.port
-        eff_listen,                  // listen_addr
-        listen_port,                 // listen_port
-        eff_dst_ip,                  // remote_dst_ip
-        remote_dst_port              // remote_dst_port
+        (remote_bridge_host && *remote_bridge_host) ? remote_bridge_host : "127.0.0.1", // remoteBridgeHost (diagnostic)
+        (remote_bridge_port > 0) ? remote_bridge_port : local_bridge_port,               // remoteBridgePort (diagnostic)
+        eff_tcp_host,                // localBridgeHost (via SSH forward typically 127.0.0.1)
+        local_bridge_port,           // localBridgePort
+        eff_listen,                  // localUdpHost
+        local_udp_port,              // localUdpPort
+        eff_dst_ip,                  // remoteUdpHost
+        remote_udp_port              // remoteUdpPort
     );
 
-    if (j_remote_dst_ip) (*env)->ReleaseStringUTFChars(env, j_remote_dst_ip, remote_dst_ip);
-    if (j_listen_addr)   (*env)->ReleaseStringUTFChars(env, j_listen_addr, listen_addr);
-    if (j_tcp_connect_host) (*env)->ReleaseStringUTFChars(env, j_tcp_connect_host, tcp_connect_host);
+    if (j_remote_udp_host) (*env)->ReleaseStringUTFChars(env, j_remote_udp_host, remote_udp_host);
+    if (j_local_udp_host)  (*env)->ReleaseStringUTFChars(env, j_local_udp_host, local_udp_host);
+    if (j_local_bridge_host) (*env)->ReleaseStringUTFChars(env, j_local_bridge_host, local_bridge_host);
+    if (j_remote_bridge_host) (*env)->ReleaseStringUTFChars(env, j_remote_bridge_host, remote_bridge_host);
     return rc;
 }
 
@@ -1058,9 +1066,17 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_isUdp2Tcp
 #else
 // Stub implementations when udp2tcp is not compiled in (avoid missing JNI symbols)
 JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SshTunnelService_startUdp2Tcp(
-    JNIEnv *env, jobject obj, jstring remote_host, jint remote_port, jint local_udp_port) {
-    (void)env; (void)obj; (void)remote_host; (void)remote_port; (void)local_udp_port;
-    LOGW("udp2tcp not enabled in this build (startUdp2Tcp)");
+    JNIEnv *env, jobject obj,
+    jstring j_remote_bridge_host, jint remote_bridge_port,
+    jstring j_local_bridge_host,  jint local_bridge_port,
+    jstring j_local_udp_host,     jint local_udp_port,
+    jstring j_remote_udp_host,    jint remote_udp_port) {
+    (void)env; (void)obj;
+    (void)j_remote_bridge_host; (void)remote_bridge_port;
+    (void)j_local_bridge_host;  (void)local_bridge_port;
+    (void)j_local_udp_host;     (void)local_udp_port;
+    (void)j_remote_udp_host;    (void)remote_udp_port;
+    LOGW("udp2tcp not enabled in this build (startUdp2Tcp, 8-arg stub)");
     return -1;
 }
 

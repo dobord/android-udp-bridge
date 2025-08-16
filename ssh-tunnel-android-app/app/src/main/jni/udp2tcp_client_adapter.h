@@ -6,19 +6,19 @@
 extern "C" {
 #endif
 
-// Start background handler with explicit parameters
-// tcp_connect.host: TCP host to connect to (e.g., 127.0.0.1 for SSH forward)
-// tcp_connect.port: TCP port to connect to
-// listen_addr: local UDP listen address (e.g., 0.0.0.0)
-// listen_port: local UDP listen port
-// remote_dst_ip: destination UDP IP on the server side
-// remote_dst_port: destination UDP port on the server side
-int udp2tcp_start(const char* tcp_connect_host,
-				  int tcp_connect_port,
-				  const char* listen_addr,
-				  int listen_port,
-				  const char* remote_dst_ip,
-				  int remote_dst_port);
+// Start background handler with explicit ServerConfig-aligned parameters (8 args)
+// remoteBridgeHost/Port: SSH remote side host:port that localBridge will forward to (diagnostic only here)
+// localBridgeHost/Port: TCP connect target (typically 127.0.0.1:<localBridgePort> created by SSH forward)
+// localUdpHost/Port: local UDP listen address:port
+// remoteUdpHost/Port: destination UDP endpoint on the server side
+int udp2tcp_start(const char* remoteBridgeHost,
+				  int remoteBridgePort,
+				  const char* localBridgeHost,
+				  int localBridgePort,
+				  const char* localUdpHost,
+				  int localUdpPort,
+				  const char* remoteUdpHost,
+				  int remoteUdpPort);
 
 // Stop
 int udp2tcp_stop(void);

@@ -8,7 +8,7 @@ import android.util.Log;
  */
 public class UdpBridgeProtocol {
     private static final String TAG = "UdpBridgeProtocol";
-    
+
     // Load native library
     static {
         try {
@@ -18,22 +18,27 @@ public class UdpBridgeProtocol {
             Log.e(TAG, "Failed to load native library", e);
         }
     }
-    
+
     // Native method declarations
     public native int initProtocol(int localPort);
+
     public native void cleanupProtocol();
+
     public native int connectToBridge(String serverHost, int serverPort);
+
     public native void disconnectFromBridge();
+
     public native boolean isConnected();
-    
+
     // Instance variables
     private boolean initialized = false;
     private int localPort = 0;
     private String bridgeServerHost = null;
     private int bridgeServerPort = 0;
-    
+
     /**
      * Initialize the UDP bridge protocol
+     * 
      * @param localPort Local UDP port to bind to
      * @return true if successful, false otherwise
      */
@@ -42,7 +47,7 @@ public class UdpBridgeProtocol {
             Log.w(TAG, "Protocol already initialized, cleaning up first");
             cleanup();
         }
-        
+
         int result = initProtocol(localPort);
         if (result == 0) {
             initialized = true;
@@ -54,7 +59,7 @@ public class UdpBridgeProtocol {
             return false;
         }
     }
-    
+
     /**
      * Cleanup protocol resources
      */
@@ -68,9 +73,10 @@ public class UdpBridgeProtocol {
             Log.i(TAG, "Protocol cleaned up");
         }
     }
-    
+
     /**
      * Connect to UDP bridge server
+     * 
      * @param serverHost Bridge server hostname or IP
      * @param serverPort Bridge server port
      * @return true if connected successfully, false otherwise
@@ -80,12 +86,12 @@ public class UdpBridgeProtocol {
             Log.e(TAG, "Protocol not initialized");
             return false;
         }
-        
+
         if (isConnected()) {
             Log.w(TAG, "Already connected, disconnecting first");
             disconnect();
         }
-        
+
         int result = connectToBridge(serverHost, serverPort);
         if (result == 0) {
             this.bridgeServerHost = serverHost;
@@ -97,7 +103,7 @@ public class UdpBridgeProtocol {
             return false;
         }
     }
-    
+
     /**
      * Disconnect from bridge server
      */
@@ -109,62 +115,68 @@ public class UdpBridgeProtocol {
             Log.i(TAG, "Disconnected from bridge server");
         }
     }
-    
+
     /**
      * Check if connected to bridge server
+     * 
      * @return true if connected, false otherwise
      */
     public boolean isConnectedToBridge() {
         return initialized && isConnected();
     }
-    
+
     /**
      * Get current status information
+     * 
      * @return Status string
      */
     public String getStatus() {
         if (!initialized) {
             return "Not initialized";
         }
-        
+
         StringBuilder status = new StringBuilder();
         status.append("Protocol initialized on port ").append(localPort);
-        
+
         if (isConnected()) {
             status.append(", connected to ").append(bridgeServerHost).append(":").append(bridgeServerPort);
         } else {
             status.append(", not connected");
         }
-        
+
         return status.toString();
     }
-    
+
     /**
      * Get local UDP port
+     * 
      * @return Local port number or 0 if not initialized
      */
     public int getLocalPort() {
         return localPort;
     }
-    
+
     /**
      * Get bridge server host
+     * 
      * @return Server host or null if not connected
      */
     public String getBridgeServerHost() {
         return bridgeServerHost;
     }
-    
+
     /**
      * Get bridge server port
+     * 
      * @return Server port or 0 if not connected
      */
     public int getBridgeServerPort() {
         return bridgeServerPort;
     }
-    
+
     /**
      * Run self-test to verify protocol implementation
+     * 
      * @return true if all tests pass, false otherwise
      */
     public boolean runSelfTest() {

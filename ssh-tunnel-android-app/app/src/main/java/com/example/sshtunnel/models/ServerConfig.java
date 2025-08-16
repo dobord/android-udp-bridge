@@ -13,27 +13,31 @@ public class ServerConfig implements Parcelable {
     private boolean usePrivateKey;
     private String privateKeyPath;
     private String passphrase;
-    
+
     // Bridge settings
-    private String bridgeHost;
-    private int bridgePort;
-    private int localPort;
+    private String remoteBridgeHost;
+    private int remoteBridgePort;
+    private int localBridgePort;
+    private String localBridgeHost;
     private boolean autoReconnect;
     private int connectionTimeout;
-    
-    // Advanced UDP forwarding settings
+
+    // UDP forwarding settings
     private int localUdpPort;
-    private String remoteHost;
+    private String localUdpHost;
+    private String remoteUdpHost;
     private int remoteUdpPort;
 
     public ServerConfig() {
         this.id = System.currentTimeMillis();
         this.sshPort = 22;
-        this.bridgePort = 8080;
-        this.localPort = 5060;
+        this.remoteBridgePort = 8080;
+        this.localBridgePort = 5060;
+        this.localBridgeHost = "127.0.0.1";
         this.connectionTimeout = 30;
         this.autoReconnect = true;
-        this.remoteHost = "127.0.0.1";
+        this.localUdpHost = "127.0.0.1";
+        this.remoteUdpHost = "127.0.0.1";
         this.localUdpPort = 0;
         this.remoteUdpPort = 0;
     }
@@ -58,13 +62,15 @@ public class ServerConfig implements Parcelable {
         usePrivateKey = in.readByte() != 0;
         privateKeyPath = in.readString();
         passphrase = in.readString();
-        bridgeHost = in.readString();
-        bridgePort = in.readInt();
-        localPort = in.readInt();
+        remoteBridgeHost = in.readString();
+        remoteBridgePort = in.readInt();
+        localBridgePort = in.readInt();
+        localBridgeHost = in.readString();
         autoReconnect = in.readByte() != 0;
         connectionTimeout = in.readInt();
         localUdpPort = in.readInt();
-        remoteHost = in.readString();
+        localUdpHost = in.readString();
+        remoteUdpHost = in.readString();
         remoteUdpPort = in.readInt();
     }
 
@@ -96,67 +102,170 @@ public class ServerConfig implements Parcelable {
         dest.writeByte((byte) (usePrivateKey ? 1 : 0));
         dest.writeString(privateKeyPath);
         dest.writeString(passphrase);
-        dest.writeString(bridgeHost);
-        dest.writeInt(bridgePort);
-        dest.writeInt(localPort);
+        dest.writeString(remoteBridgeHost);
+        dest.writeInt(remoteBridgePort);
+        dest.writeInt(localBridgePort);
+        dest.writeString(localBridgeHost);
         dest.writeByte((byte) (autoReconnect ? 1 : 0));
         dest.writeInt(connectionTimeout);
         dest.writeInt(localUdpPort);
-        dest.writeString(remoteHost);
+        dest.writeString(localUdpHost);
+        dest.writeString(remoteUdpHost);
         dest.writeInt(remoteUdpPort);
     }
 
     // Getters and setters
-    public long getId() { return id; }
-    public void setId(long id) { this.id = id; }
+    public long getId() {
+        return id;
+    }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public void setId(long id) {
+        this.id = id;
+    }
 
-    public String getSshHost() { return sshHost; }
-    public void setSshHost(String sshHost) { this.sshHost = sshHost; }
+    public String getName() {
+        return name;
+    }
 
-    public int getSshPort() { return sshPort; }
-    public void setSshPort(int sshPort) { this.sshPort = sshPort; }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
+    public String getSshHost() {
+        return sshHost;
+    }
 
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
+    public void setSshHost(String sshHost) {
+        this.sshHost = sshHost;
+    }
 
-    public boolean isUsePrivateKey() { return usePrivateKey; }
-    public void setUsePrivateKey(boolean usePrivateKey) { this.usePrivateKey = usePrivateKey; }
+    public int getSshPort() {
+        return sshPort;
+    }
 
-    public String getPrivateKeyPath() { return privateKeyPath; }
-    public void setPrivateKeyPath(String privateKeyPath) { this.privateKeyPath = privateKeyPath; }
+    public void setSshPort(int sshPort) {
+        this.sshPort = sshPort;
+    }
 
-    public String getPassphrase() { return passphrase; }
-    public void setPassphrase(String passphrase) { this.passphrase = passphrase; }
+    public String getUsername() {
+        return username;
+    }
 
-    public String getBridgeHost() { return bridgeHost; }
-    public void setBridgeHost(String bridgeHost) { this.bridgeHost = bridgeHost; }
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
-    public int getBridgePort() { return bridgePort; }
-    public void setBridgePort(int bridgePort) { this.bridgePort = bridgePort; }
+    public String getPassword() {
+        return password;
+    }
 
-    public int getLocalPort() { return localPort; }
-    public void setLocalPort(int localPort) { this.localPort = localPort; }
+    public void setPassword(String password) {
+        this.password = password;
+    }
 
-    public boolean isAutoReconnect() { return autoReconnect; }
-    public void setAutoReconnect(boolean autoReconnect) { this.autoReconnect = autoReconnect; }
+    public boolean isUsePrivateKey() {
+        return usePrivateKey;
+    }
 
-    public int getConnectionTimeout() { return connectionTimeout; }
-    public void setConnectionTimeout(int connectionTimeout) { this.connectionTimeout = connectionTimeout; }
+    public void setUsePrivateKey(boolean usePrivateKey) {
+        this.usePrivateKey = usePrivateKey;
+    }
 
-    public int getLocalUdpPort() { return localUdpPort; }
-    public void setLocalUdpPort(int localUdpPort) { this.localUdpPort = localUdpPort; }
+    public String getPrivateKeyPath() {
+        return privateKeyPath;
+    }
 
-    public String getRemoteHost() { return remoteHost; }
-    public void setRemoteHost(String remoteHost) { this.remoteHost = remoteHost; }
+    public void setPrivateKeyPath(String privateKeyPath) {
+        this.privateKeyPath = privateKeyPath;
+    }
 
-    public int getRemoteUdpPort() { return remoteUdpPort; }
-    public void setRemoteUdpPort(int remoteUdpPort) { this.remoteUdpPort = remoteUdpPort; }
+    public String getPassphrase() {
+        return passphrase;
+    }
+
+    public void setPassphrase(String passphrase) {
+        this.passphrase = passphrase;
+    }
+
+    public String getRemoteBridgeHost() {
+        return remoteBridgeHost;
+    }
+
+    public void setRemoteBridgeHost(String bridgeHost) {
+        this.remoteBridgeHost = bridgeHost;
+    }
+
+    public int getRemoteBridgePort() {
+        return remoteBridgePort;
+    }
+
+    public void setRemoteBridgePort(int bridgePort) {
+        this.remoteBridgePort = bridgePort;
+    }
+
+    public int getLocalBridgePort() {
+        return localBridgePort;
+    }
+
+    public void setLocalBridgePort(int localPort) {
+        this.localBridgePort = localPort;
+    }
+
+    public String getLocalBridgeHost() {
+        return localBridgeHost;
+    }
+
+    public void setLocalBridgeHost(String localBridgeHost) {
+        this.localBridgeHost = localBridgeHost;
+    }
+
+    public boolean isAutoReconnect() {
+        return autoReconnect;
+    }
+
+    public void setAutoReconnect(boolean autoReconnect) {
+        this.autoReconnect = autoReconnect;
+    }
+
+    public int getConnectionTimeout() {
+        return connectionTimeout;
+    }
+
+    public void setConnectionTimeout(int connectionTimeout) {
+        this.connectionTimeout = connectionTimeout;
+    }
+
+    public int getLocalUdpPort() {
+        return localUdpPort;
+    }
+
+    public void setLocalUdpPort(int localUdpPort) {
+        this.localUdpPort = localUdpPort;
+    }
+
+    public String getLocalUdpHost() {
+        return localUdpHost;
+    }
+
+    public void setLocalUdpHost(String localUdpHost) {
+        this.localUdpHost = localUdpHost;
+    }
+
+    public String getRemoteUdpHost() {
+        return remoteUdpHost;
+    }
+
+    public void setRemoteUdpHost(String remoteUdpHost) {
+        this.remoteUdpHost = remoteUdpHost;
+    }
+
+    public int getRemoteUdpPort() {
+        return remoteUdpPort;
+    }
+
+    public void setRemoteUdpPort(int remoteUdpPort) {
+        this.remoteUdpPort = remoteUdpPort;
+    }
 
     // Utility methods
     public String getDisplayName() {
@@ -168,17 +277,17 @@ public class ServerConfig implements Parcelable {
 
     public boolean isValidSshConfig() {
         return sshHost != null && !sshHost.trim().isEmpty() &&
-               username != null && !username.trim().isEmpty() &&
-               sshPort > 0 && sshPort <= 65535 &&
-               ((usePrivateKey && privateKeyPath != null && !privateKeyPath.trim().isEmpty()) ||
-                (!usePrivateKey && password != null && !password.trim().isEmpty()));
+                username != null && !username.trim().isEmpty() &&
+                sshPort > 0 && sshPort <= 65535 &&
+                ((usePrivateKey && privateKeyPath != null && !privateKeyPath.trim().isEmpty()) ||
+                        (!usePrivateKey && password != null && !password.trim().isEmpty()));
     }
 
     public boolean isValidBridgeConfig() {
         // Bridge is always enabled, so always validate
-        return bridgeHost != null && !bridgeHost.trim().isEmpty() &&
-               bridgePort > 0 && bridgePort <= 65535 &&
-               localPort > 0 && localPort <= 65535;
+        return remoteBridgeHost != null && !remoteBridgeHost.trim().isEmpty() &&
+                remoteBridgePort > 0 && remoteBridgePort <= 65535 &&
+                localBridgePort > 0 && localBridgePort <= 65535;
     }
 
     @Override

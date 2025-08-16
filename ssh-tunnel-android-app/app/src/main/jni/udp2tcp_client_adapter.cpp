@@ -40,32 +40,35 @@ static void udp2tcp_log_cb(int level, const char* message, void* /*user*/) {
 // Provide C linkage for functions used by C file ssh_tunnel.c
 extern "C" {
 
-int udp2tcp_start(const char* tcp_connect_host,
-                  int tcp_connect_port,
-                  const char* listen_addr,
-                  int listen_port,
-                  const char* remote_dst_ip,
-                  int remote_dst_port)
+int udp2tcp_start(const char* remoteBridgeHost,
+                  int remoteBridgePort,
+                  const char* localBridgeHost,
+                  int localBridgePort,
+                  const char* localUdpHost,
+                  int localUdpPort,
+                  const char* remoteUdpHost,
+                  int remoteUdpPort)
 {
     if (g_running.load()) return 0; // already running
-    if (!tcp_connect_host || !listen_addr || !remote_dst_ip) return -1;
-    if (tcp_connect_port <= 0 || listen_port <= 0 || remote_dst_port <= 0) return -1;
+    (void)remoteBridgeHost; (void)remoteBridgePort; // not used directly by adapter; logged upstream
+    if (!localBridgeHost || !localUdpHost || !remoteUdpHost) return -1;
+    if (localBridgePort <= 0 || localUdpPort <= 0 || remoteUdpPort <= 0) return -1;
 
     udp2tcp_set_log_callback(udp2tcp_log_cb, nullptr);
 
     // Forward one local port to remote with provided parameters
     static udp2tcp_udp_forward_item fwd{}; // static lifetime is OK while running
     fwd.name = "default";
-    fwd.listen_addr = listen_addr;
-    fwd.listen_port = static_cast<uint16_t>(listen_port);
-    fwd.remote_dst_ip = remote_dst_ip;
-    fwd.remote_dst_port = static_cast<uint16_t>(remote_dst_port);
+    fwd.listen_addr = localUdpHost;
+    fwd.listen_port = static_cast<uint16_t>(localUdpPort);
+    fwd.remote_dst_ip = remoteUdpHost;
+    fwd.remote_dst_port = static_cast<uint16_t>(remoteUdpPort);
     fwd.recv_buffer_bytes = 0;
     fwd.send_buffer_bytes = 0;
 
     udp2tcp_client_cfg cfg{};
-    cfg.tcp_connect.host = tcp_connect_host;
-    cfg.tcp_connect.port = static_cast<uint16_t>(tcp_connect_port);
+    cfg.tcp_connect.host = localBridgeHost;
+    cfg.tcp_connect.port = static_cast<uint16_t>(localBridgePort);
     cfg.tcp_connect.tls.enabled = 0;
     cfg.tcp_connect.tls.verify_peer = 0;
     cfg.tcp_connect.tls.certificate = nullptr;
