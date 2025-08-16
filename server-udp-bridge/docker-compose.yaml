@@ -1,0 +1,19 @@
+services:
+  udp2tcp-srv:
+    build:
+      context: ./docker
+    image: udp2tcp-srv:test
+    container_name: udp2tcp-srv
+    restart: unless-stopped
+    ports:
+      - "38080:38080/tcp"   # TCP control/data stream for udp2tcp
+      - "40000:40000/udp"   # UDP echo listen (as configured)
+    volumes:
+      - ./configs/udp2tcp_srv.yaml:/etc/udp2tcp/udp2tcp_srv.yaml:ro
+      - ../third_party/udp2tcp/build/udp2tcp_srv:/app/udp2tcp_srv:ro
+    command: ["/usr/local/bin/udp2tcp_srv", "/etc/udp2tcp/udp2tcp_srv.yaml"]
+    healthcheck:
+      test: "ss -lnt | grep -q ':38080'"
+      interval: "3s"
+      timeout: "2s"
+      retries: 20

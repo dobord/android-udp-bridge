@@ -1,0 +1,39 @@
+# udp2tcp server config for test stand
+logging:
+  level: debug
+  format: text
+
+limits:
+  max_frame_bytes: 65536
+  max_inflight_frames: 1024
+
+tcp_listen:
+  addr: 0.0.0.0
+  port: 38080
+  backlog: 128
+  keepalive_seconds: 30
+
+auth:
+  mode: none
+  token: ""
+
+tls:
+  enabled: false
+  verify_client: false
+  certificate: ""
+  private_key: ""
+
+metrics:
+  enabled: false
+  listen_addr: 0.0.0.0
+  listen_port: 9100
+
+# One UDP forward rule example (listen on server side and forward to local echo)
+udp_forward:
+  - name: echo
+    listen_addr: 0.0.0.0
+    listen_port: 40000
+    remote_dst_ip: 127.0.0.1
+    remote_dst_port: 9  # discard/echo-like, adjust to your echo service
+    recv_buffer_bytes: 0
+    send_buffer_bytes: 0
