@@ -6,8 +6,18 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APK_PATH="$SCRIPT_DIR/ssh-tunnel-android-app/app/build/outputs/apk/debug/app-debug.apk"
 PACKAGE_NAME="com.example.sshtunnel"
 
+# Resolve absolute path for reliable adb install guidance
+if command -v readlink >/dev/null 2>&1; then
+    ABS_APK="$(readlink -f "$APK_PATH" 2>/dev/null || echo "$APK_PATH")"
+elif command -v realpath >/dev/null 2>&1; then
+    ABS_APK="$(realpath "$APK_PATH" 2>/dev/null || echo "$APK_PATH")"
+else
+    ABS_APK="$APK_PATH"
+fi
+
 echo "=== SSH Tunnel Android App Test Script ==="
 echo "APK Path: $APK_PATH"
+echo "Absolute APK: $ABS_APK"
 echo "Package: $PACKAGE_NAME"
 echo
 
@@ -47,7 +57,7 @@ echo "  ✅ Ready for testing on Android devices"
 
 echo
 echo "🚀 Next steps:"
-echo "  1. Install on Android device: adb install $APK_PATH"
+echo "  1. Install on Android device (absolute path): adb install -r $ABS_APK"
 echo "  2. Test SSH connection and UDP tunneling"
 echo "  3. Monitor logs: adb logcat | grep SSHTunnel"
 echo
