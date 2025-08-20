@@ -476,7 +476,7 @@ void *tcp_port_forward_thread(void *arg)
         close(listen_sock);
         return NULL;
     }
-    LOGI("TCP port forwarding listening on 127.0.0.1:%d", listen_port);
+    LOGI("TCP port forwarding listening on %s:%d", listen_host, listen_port);
     pf_set_state(PF_STATE_LISTEN_READY);
     port_forward_running = 1;
     while (port_forward_running) {
@@ -500,7 +500,7 @@ void *tcp_port_forward_thread(void *arg)
                 const int MAX_OPEN_ATTEMPTS = 10;
                 const int RETRY_SLEEP_MS = 200;
                 for (int attempt = 1; attempt <= MAX_OPEN_ATTEMPTS; ++attempt) {
-                    rc = ssh_channel_open_forward(channel, remote_host, remote_port, "127.0.0.1", listen_port);
+                    rc = ssh_channel_open_forward(channel, remote_host, remote_port, listen_host, listen_port);
                     if (rc == SSH_OK) {
                         if (attempt > 1) {
                             LOGI("SSH forward channel opened after %d attempts", attempt);
