@@ -24,7 +24,7 @@ void ssht_cli_disconnect(void);
 
 // Start local TCP port forward (127.0.0.1:listen_port) to remote_host:remote_port via SSH direct-tcpip.
 // Returns 0 on success, non-zero on error.
-int ssht_cli_start_port_forward(const char *remote_host, int remote_port, int listen_port);
+int ssht_cli_start_port_forward(const char *remote_host, int remote_port, const char *listen_host, int listen_port);
 
 // Start udp2tcp with the same 8-argument contract as the Android JNI call.
 // Returns 0 on success, non-zero on error.

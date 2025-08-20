@@ -264,7 +264,8 @@ struct pf_config
 {
     char remote_host[128]; // SSH remote host for direct-tcpip (typically 127.0.0.1 on server)
     int remote_port; // server-side TCP destination port
-    int listen_port; // local 127.0.0.1:<port> we expose
+    char listen_host[64]; // local address we bind to (e.g. 127.0.0.1 or 0.0.0.0)
+    int listen_port; // local <listen_host>:<port> we expose
 };
 
 // Global variable to track port forwarding thread
@@ -426,6 +427,7 @@ void *tcp_port_forward_thread(void *arg)
     int listen_port = cfg ? cfg->listen_port : 8080;
     int remote_port = cfg ? cfg->remote_port : 8080;
     char remote_host_buf[128];
+    char listen_host_buf[64];
     if (cfg && cfg->remote_host[0] != '\0') {
         strncpy(remote_host_buf, cfg->remote_host, sizeof(remote_host_buf) - 1);
         remote_host_buf[sizeof(remote_host_buf) - 1] = '\0';
@@ -433,12 +435,20 @@ void *tcp_port_forward_thread(void *arg)
         strncpy(remote_host_buf, "127.0.0.1", sizeof(remote_host_buf) - 1);
         remote_host_buf[sizeof(remote_host_buf) - 1] = '\0';
     }
+    if (cfg && cfg->listen_host[0] != '\0') {
+        strncpy(listen_host_buf, cfg->listen_host, sizeof(listen_host_buf) - 1);
+        listen_host_buf[sizeof(listen_host_buf) - 1] = '\0';
+    } else {
+        strncpy(listen_host_buf, "127.0.0.1", sizeof(listen_host_buf) - 1);
+        listen_host_buf[sizeof(listen_host_buf) - 1] = '\0';
+    }
     const char *remote_host = remote_host_buf;
+    const char *listen_host = listen_host_buf;
     if (cfg) {
         free(cfg);
         cfg = NULL;
     }
-    LOGI("Port forward configuration: local=%d -> remote %s:%d", listen_port, remote_host, remote_port);
+    LOGI("Port forward configuration: local=%s:%d -> remote %s:%d", listen_host, listen_port, remote_host, remote_port);
     int listen_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (listen_sock < 0) {
         LOGE("Failed to create listening socket for port forwarding");
@@ -450,7 +460,11 @@ void *tcp_port_forward_thread(void *arg)
     struct sockaddr_in listen_addr;
     memset(&listen_addr, 0, sizeof(listen_addr));
     listen_addr.sin_family = AF_INET;
-    listen_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    // Bind to configured listen_host (default 127.0.0.1)
+    if (inet_aton(listen_host, &listen_addr.sin_addr) == 0) {
+        LOGW("Invalid listen_host '%s', falling back to 127.0.0.1", listen_host);
+        listen_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    }
     listen_addr.sin_port = htons(listen_port);
     if (bind(listen_sock, (struct sockaddr *)&listen_addr, sizeof(listen_addr)) < 0) {
         LOGE("Failed to bind to port %d for forwarding: %s", listen_port, strerror(errno));
@@ -644,7 +658,7 @@ void *tcp_port_forward_thread(void *arg)
 }
 
 // Setup TCP port forwarding
-int setup_tcp_port_forwarding(const char *remote_host, int remote_port, int listen_port)
+int setup_tcp_port_forwarding(const char *remote_host, int remote_port, const char *listen_host, int listen_port)
 {
     if (port_forward_thread != 0) {
         LOGI("TCP port forwarding already running");
@@ -662,6 +676,13 @@ int setup_tcp_port_forwarding(const char *remote_host, int remote_port, int list
     } else {
         strncpy(cfg->remote_host, "127.0.0.1", sizeof(cfg->remote_host) - 1);
         cfg->remote_host[sizeof(cfg->remote_host) - 1] = '\0';
+    }
+    if (listen_host && *listen_host) {
+        strncpy(cfg->listen_host, listen_host, sizeof(cfg->listen_host) - 1);
+        cfg->listen_host[sizeof(cfg->listen_host) - 1] = '\0';
+    } else {
+        strncpy(cfg->listen_host, "127.0.0.1", sizeof(cfg->listen_host) - 1);
+        cfg->listen_host[sizeof(cfg->listen_host) - 1] = '\0';
     }
     cfg->remote_port = remote_port > 0 ? remote_port : 8080;
     cfg->listen_port = listen_port > 0 ? listen_port : cfg->remote_port;
@@ -997,7 +1018,10 @@ JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SshTunnelService_startUdp2Tcp(
         const char *eff_remote_bridge_host = (remote_bridge_host && *remote_bridge_host) ? remote_bridge_host
                                                                                          : "127.0.0.1";
         int eff_remote_bridge_port = (remote_bridge_port > 0) ? remote_bridge_port : local_bridge_port;
-        if (setup_tcp_port_forwarding(eff_remote_bridge_host, eff_remote_bridge_port, local_bridge_port) != 0) {
+        const char *eff_listen_host = (local_bridge_host && *local_bridge_host) ? local_bridge_host : "127.0.0.1";
+        if (setup_tcp_port_forwarding(
+                eff_remote_bridge_host, eff_remote_bridge_port, eff_listen_host, local_bridge_port)
+            != 0) {
             LOGW("Failed to setup TCP port forwarding prior to udp2tcp start");
         }
     }
@@ -1289,13 +1313,13 @@ void ssht_cli_disconnect(void)
     pthread_mutex_unlock(&session_mutex);
 }
 
-int ssht_cli_start_port_forward(const char *remote_host, int remote_port, int listen_port)
+int ssht_cli_start_port_forward(const char *remote_host, int remote_port, const char *listen_host, int listen_port)
 {
     if (!remote_host || remote_port <= 0 || listen_port <= 0) {
         LOGE("CLI: start_port_forward invalid args");
         return -1;
     }
-    return setup_tcp_port_forwarding(remote_host, remote_port, listen_port);
+    return setup_tcp_port_forwarding(remote_host, remote_port, listen_host, listen_port);
 }
 
 int ssht_cli_start_udp2tcp(
@@ -1312,7 +1336,10 @@ int ssht_cli_start_udp2tcp(
     if (port_forward_thread == 0) {
         const char *rb = (remote_bridge_host && *remote_bridge_host) ? remote_bridge_host : "127.0.0.1";
         int rb_port = (remote_bridge_port > 0) ? remote_bridge_port : local_bridge_port;
-        (void)setup_tcp_port_forwarding(rb, rb_port, local_bridge_port);
+        {
+            const char *eff_listen_host = (local_bridge_host && *local_bridge_host) ? local_bridge_host : "127.0.0.1";
+            (void)setup_tcp_port_forwarding(rb, rb_port, eff_listen_host, local_bridge_port);
+        }
     }
     const char *eff_tcp_host = (local_bridge_host && *local_bridge_host) ? local_bridge_host : "127.0.0.1";
     const char *eff_listen = (local_udp_host && *local_udp_host) ? local_udp_host : "127.0.0.1";

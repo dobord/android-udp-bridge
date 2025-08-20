@@ -45,9 +45,10 @@ static void usage(const char *prog)
 
 // Simple local forward, re-implemented here for CLI: we will connect a TCP socket via SSH direct-tcpip when a local
 // client arrives. For testing purposes, we only check the SSH connection and open/close a forward channel once.
-static int test_open_forward_hold(const char *rhost, int rport, int listen_port, int hold_sec)
+static int test_open_forward_hold(const char *rhost, int rport, const char *listen_host, int listen_port, int hold_sec)
 {
-    int rc = ssht_cli_start_port_forward(rhost, rport, listen_port);
+    const char *eff_listen_host = (listen_host && *listen_host) ? listen_host : "127.0.0.1";
+    int rc = ssht_cli_start_port_forward(rhost, rport, eff_listen_host, listen_port);
     if (rc != 0)
         return rc;
     if (hold_sec <= 0) {
@@ -163,7 +164,7 @@ int main(int argc, char **argv)
 
     int rc = 0;
     if (do_forward) {
-        rc = test_open_forward_hold(f_rhost ? f_rhost : "127.0.0.1", f_rport, f_lport, f_hold);
+        rc = test_open_forward_hold(f_rhost ? f_rhost : "127.0.0.1", f_rport, "127.0.0.1", f_lport, f_hold);
         printf("forward open result: %d\n", rc);
     }
 
