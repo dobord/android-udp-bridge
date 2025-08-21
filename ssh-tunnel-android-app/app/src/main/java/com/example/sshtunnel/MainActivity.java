@@ -175,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
                 boolean running = false;
                 boolean ok = false;
                 try {
-                    running = sshTunnelService.isUdp2TcpRunning();
+                    running = sshTunnelService.isUdp2TcpRunning(sshTunnelService.getNativeHandle());
                     if (running) ok = sshTunnelService.sendTestUdpBurst(10, 128);
                 } catch (Throwable t) {
                     ok = false;
@@ -486,9 +486,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateBridgeStats() {
         // Show live udp2tcp stats under the main button
-        if (serviceBound && sshTunnelService != null && sshTunnelService.isUdp2TcpRunning()) {
+    if (serviceBound && sshTunnelService != null && sshTunnelService.isUdp2TcpRunning(sshTunnelService.getNativeHandle())) {
             try {
-                String stats = sshTunnelService.getUdp2TcpStats();
+                String stats = sshTunnelService.getUdp2TcpStats(sshTunnelService.getNativeHandle());
                 if (stats != null && !stats.isEmpty()) {
                     networkStatsTextView.setText(stats);
                 } else {

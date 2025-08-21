@@ -1,0 +1,42 @@
+name: Android NDK Build
+
+on:
+  push:
+    branches: [ main, feature/udp2tcp ]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      GRADLE_OPTS: -Dorg.gradle.jvmargs='-Xmx3g'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+
+      - name: Install Android commandline tools and NDK
+        run: |
+          set -e
+          SDK_ROOT="$GITHUB_WORKSPACE/.android-sdk"
+          mkdir -p "$SDK_ROOT/cmdline-tools"
+          cd "$SDK_ROOT"
+          curl -fsSLO https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+          unzip -q commandlinetools-linux-9477386_latest.zip -d cmdline-tools
+          mv cmdline-tools/cmdline-tools cmdline-tools/latest
+          yes | "$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$SDK_ROOT" "platform-tools" "platforms;android-31" "build-tools;31.0.0" "ndk;25.2.9519653"
+          echo "sdk.dir=$SDK_ROOT" > local.properties
+
+      - name: Build Debug APK
+        run: ./gradlew :ssh-tunnel-android-app:assembleDebug --no-daemon --console=plain
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: ssh-tunnel-android-app/app/build/outputs/apk/debug/app-debug.apk

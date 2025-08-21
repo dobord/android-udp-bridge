@@ -25,31 +25,41 @@ public class SshTunnelService extends Service {
     }
 
     // Native methods
-    public native boolean connectToServer(String sshHost, int sshPort, String username, String password);
+    // Native API: connect returns native handle (0 on failure)
+    public native long connectToServer(String sshHost, int sshPort, String username, String password);
 
-    public native boolean connectWithKey(String sshHost, int sshPort, String username, String privateKeyPath,
-            String passphrase);
+    public native long connectWithKey(String sshHost, int sshPort, String username, String privateKeyPath,
+        String passphrase);
 
-    public native void disconnect();
+    // Disconnect using native handle
+    public native void disconnect(long handle);
 
     // udp2tcp native (8-parameter contract, names match ServerConfig)
-    public native int startUdp2Tcp(String remoteBridgeHost, int remoteBridgePort,
+    public native int startUdp2Tcp(long handle, String remoteBridgeHost, int remoteBridgePort,
             String localBridgeHost, int localBridgePort,
             String localUdpHost, int localUdpPort,
             String remoteUdpHost, int remoteUdpPort);
 
     // Advanced variant removed on native side; keep Java shim for compatibility
-    public native void stopUdp2Tcp();
+    public native void stopUdp2Tcp(long handle);
 
-    public native String getUdp2TcpStats();
+    public native String getUdp2TcpStats(long handle);
 
-    public native boolean isUdp2TcpRunning();
+    public native boolean isUdp2TcpRunning(long handle);
 
     public native int nativeTlsSelfTest();
 
     // nativeSetForwardingHint removed; bridge config is applied in startUdp2Tcp
     // Debug dump of native internal state
-    public native String nativeDebugDump();
+    public native String nativeDebugDump(long handle);
+
+    // Stored native handle for this service instance (0 == none)
+    private volatile long nativeHandle = 0L;
+
+    // Accessor for activities to fetch the native handle
+    public long getNativeHandle() {
+        return nativeHandle;
+    }
 
     public class LocalBinder extends Binder {
         SshTunnelService getService() {
@@ -70,8 +80,10 @@ public class SshTunnelService extends Service {
 
     public boolean connect(String serverAddress, int serverPort, String username, String password) {
         Log.d(TAG, "Attempting to connect to " + serverAddress + ":" + serverPort);
-        isConnected = connectToServer(serverAddress, serverPort, username, password);
+        long h = connectToServer(serverAddress, serverPort, username, password);
+        isConnected = (h != 0);
         if (isConnected) {
+            nativeHandle = h;
             Log.d(TAG, "Successfully connected to server");
             tryAutoStartForwarding();
         } else {
@@ -83,8 +95,10 @@ public class SshTunnelService extends Service {
     public boolean connectWithPrivateKey(String serverAddress, int serverPort, String username, String privateKeyPath,
             String passphrase) {
         Log.d(TAG, "Attempting to connect to " + serverAddress + ":" + serverPort + " using private key");
-        isConnected = connectWithKey(serverAddress, serverPort, username, privateKeyPath, passphrase);
+        long h = connectWithKey(serverAddress, serverPort, username, privateKeyPath, passphrase);
+        isConnected = (h != 0);
         if (isConnected) {
+            nativeHandle = h;
             Log.d(TAG, "Successfully connected to server with private key");
             tryAutoStartForwarding();
         } else {
@@ -179,15 +193,16 @@ public class SshTunnelService extends Service {
                 "localUdpPort=" + localUdpPort + " " +
                 "remoteUdpHost=" + remoteUdpHost + " " +
                 "remoteUdpPort=" + remoteUdpPort);
-        int rc = startUdp2Tcp(
-                remoteBridgeHost != null ? remoteBridgeHost : "127.0.0.1",
-                remoteBridgePort,
-                localBridgeHost != null ? localBridgeHost : "127.0.0.1",
-                localBridgePort,
-                localUdpHost != null ? localUdpHost : "127.0.0.1",
-                localUdpPort,
-                remoteUdpHost != null ? remoteUdpHost : "127.0.0.1",
-                remoteUdpPort);
+    int rc = startUdp2Tcp(
+        nativeHandle,
+        remoteBridgeHost != null ? remoteBridgeHost : "127.0.0.1",
+        remoteBridgePort,
+        localBridgeHost != null ? localBridgeHost : "127.0.0.1",
+        localBridgePort,
+        localUdpHost != null ? localUdpHost : "127.0.0.1",
+        localUdpPort,
+        remoteUdpHost != null ? remoteUdpHost : "127.0.0.1",
+        remoteUdpPort);
         if (rc == 0) {
             activeUdpLocalPort = localUdpPort;
             startUdp2TcpStatsPolling();
@@ -205,9 +220,9 @@ public class SshTunnelService extends Service {
         stopUdp2TcpStatsPolling();
         udp2tcpStatsFuture = udp2tcpStatsExec.scheduleAtFixedRate(() -> {
             try {
-                if (!isUdp2TcpRunning())
+                if (!isUdp2TcpRunning(nativeHandle))
                     return;
-                String stats = getUdp2TcpStats();
+                String stats = getUdp2TcpStats(nativeHandle);
                 Log.d(TAG, "udp2tcp stats: \n" + stats);
             } catch (Throwable t) {
                 Log.w(TAG, "Stats polling error", t);
@@ -260,7 +275,7 @@ public class SshTunnelService extends Service {
             Log.w(TAG, "sendTestUdp: no active UDP forwarding (port null)");
             return false;
         }
-        if (!isUdp2TcpRunning()) {
+        if (!isUdp2TcpRunning(nativeHandle)) {
             Log.w(TAG, "sendTestUdp: udp2tcp not running");
             return false;
         }
@@ -286,22 +301,22 @@ public class SshTunnelService extends Service {
     public void disconnectFromServer() {
         Log.d(TAG, "Disconnecting from server");
         try {
-            String dbg = nativeDebugDump();
+            String dbg = nativeDebugDump(nativeHandle);
             if (dbg != null)
                 Log.d(TAG, "Pre-disconnect native debug:\n" + dbg);
         } catch (Throwable t) {
             Log.w(TAG, "nativeDebugDump failed (pre)", t);
         }
-        if (isUdp2TcpRunning()) {
+        if (isUdp2TcpRunning(nativeHandle)) {
             Log.d(TAG, "Stopping udp2tcp before SSH disconnect");
-            stopUdp2Tcp();
+            stopUdp2Tcp(nativeHandle);
         }
         stopUdp2TcpStatsPolling();
-        disconnect();
+        disconnect(nativeHandle);
         isConnected = false;
         activeUdpLocalPort = null;
         try {
-            String dbg2 = nativeDebugDump();
+            String dbg2 = nativeDebugDump(nativeHandle);
             if (dbg2 != null)
                 Log.d(TAG, "Post-disconnect native debug:\n" + dbg2);
         } catch (Throwable t) {

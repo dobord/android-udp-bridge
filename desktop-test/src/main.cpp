@@ -12,6 +12,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <atomic>
 #include <chrono>
 #include <cstdio>
 #include <cstring>
@@ -45,10 +46,12 @@ static void usage(const char *prog)
 
 // Simple local forward, re-implemented here for CLI: we will connect a TCP socket via SSH direct-tcpip when a local
 // client arrives. For testing purposes, we only check the SSH connection and open/close a forward channel once.
-static int test_open_forward_hold(const char *rhost, int rport, const char *listen_host, int listen_port, int hold_sec)
+// Accept ssht_handle to use the new API
+static int test_open_forward_hold(
+    ssht_handle *h, const char *rhost, int rport, const char *listen_host, int listen_port, int hold_sec)
 {
     const char *eff_listen_host = (listen_host && *listen_host) ? listen_host : "127.0.0.1";
-    int rc = ssht_cli_start_port_forward(rhost, rport, eff_listen_host, listen_port);
+    int rc = ssht_cli_start_port_forward(h, rhost, rport, eff_listen_host, listen_port);
     if (rc != 0)
         return rc;
     if (hold_sec <= 0) {
@@ -155,16 +158,16 @@ int main(int argc, char **argv)
     }
 
     // Connect SSH via shared core
-    int crc = ssht_cli_connect_password(ssh_host, ssh_port, ssh_user, ssh_pass);
-    if (crc != 0) {
-        fprintf(stderr, "ssh connect/auth failed, rc=%d\n", crc);
+    ssht_handle *h = ssht_cli_connect_password(ssh_host, ssh_port, ssh_user, ssh_pass);
+    if (!h) {
+        fprintf(stderr, "ssh connect/auth failed\n");
         return 4;
     }
     printf("SSH connected: %s@%s:%d\n", ssh_user, ssh_host, ssh_port);
 
     int rc = 0;
     if (do_forward) {
-        rc = test_open_forward_hold(f_rhost ? f_rhost : "127.0.0.1", f_rport, "127.0.0.1", f_lport, f_hold);
+        rc = test_open_forward_hold(h, f_rhost ? f_rhost : "127.0.0.1", f_rport, "127.0.0.1", f_lport, f_hold);
         printf("forward open result: %d\n", rc);
     }
 
@@ -174,7 +177,8 @@ int main(int argc, char **argv)
         }
         // Expect that a real SSH forward is configured externally (or through --forward). Here we directly start the
         // client to connect to local TCP.
-        rc = udp2tcp_start(
+        rc = ssht_cli_start_udp2tcp(
+            h,
             u_rhost ? u_rhost : "127.0.0.1",
             u_rport > 0 ? u_rport : u_lport,
             u_lhost ? u_lhost : "127.0.0.1",
@@ -282,6 +286,6 @@ int main(int argc, char **argv)
         }
     }
 
-    ssht_cli_disconnect();
+    ssht_cli_disconnect(h);
     return rc;
 }

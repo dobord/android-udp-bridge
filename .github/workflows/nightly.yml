@@ -1,5 +1,7 @@
 name: Nightly Build
 
+
+
 on:
   schedule:
     # Run every day at 02:00 UTC
@@ -62,6 +64,16 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: Load CI variables
+      run: |
+        if [ -f .github/ci/ci-vars.sh ]; then
+          source .github/ci/ci-vars.sh
+          echo "ANDROID_NDK_VERSION=$ANDROID_NDK_VERSION" >> $GITHUB_ENV
+          echo "ANDROID_BUILD_TOOLS_VERSION=$ANDROID_BUILD_TOOLS_VERSION" >> $GITHUB_ENV
+        else
+          echo "CI vars file missing" && exit 1
+        fi
+
     - name: Fetch udp2tcp submodule (required)
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -94,8 +106,8 @@ jobs:
         
     - name: Setup Android NDK and Build Tools
       run: |
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;26.3.11579264" || true
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0" || true
+  yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;${ANDROID_NDK_VERSION}" || true
+  yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;${ANDROID_BUILD_TOOLS_VERSION}" || true
         
     - name: Install additional build tools
       run: |
@@ -106,7 +118,7 @@ jobs:
     - name: Setup Android environment
       run: |
         echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
-        echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/26.3.11579264" >> $GITHUB_ENV
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/${ANDROID_NDK_VERSION}" >> $GITHUB_ENV
         echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
         echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
         

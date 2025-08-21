@@ -1,4 +1,5 @@
 // Cross-platform native core for SSH tunneling and udp2tcp adapter.
+#define _GNU_SOURCE
 // Android JNI entry points are compiled when SSHTUN_DESKTOP is not defined.
 // Desktop CLI wrappers are compiled when SSHTUN_DESKTOP is defined.
 
@@ -75,9 +76,36 @@
 #    include "ssh_tunnel_api.h"
 #endif
 
-static ssh_session session = NULL;
-static int tunnel_active = 0;
 static pthread_mutex_t session_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+// Port forward thread state machine for debugging disconnect hangs
+enum port_forward_state_e
+{
+    PF_STATE_NONE = 0,
+    PF_STATE_STARTING,
+    PF_STATE_LISTEN_READY,
+    PF_STATE_WAITING_ACCEPT,
+    PF_STATE_CLIENT_ACCEPTED,
+    PF_STATE_FORWARD_LOOP,
+    PF_STATE_SHUTTING_DOWN,
+    PF_STATE_EXIT
+};
+
+// Opaque handle definition for desktop API.
+struct ssht_handle
+{
+    ssh_session session; // underlying libssh session
+    // per-handle state
+    int tunnel_active;
+    pthread_t port_forward_thread;
+    volatile int port_forward_running;
+    int listen_sock;
+    volatile enum port_forward_state_e pf_state;
+    volatile uint64_t pf_last_state_change_mono_ns;
+    // reserved: additional per-handle state (udp2tcp flags) can be added here
+};
+
+// NOTE: global handle removed. All callers must provide an explicit ssht_handle *.
 
 // UDP Bridge listener integration
 // Legacy only
@@ -268,25 +296,7 @@ struct pf_config
     int listen_port; // local <listen_host>:<port> we expose
 };
 
-// Global variable to track port forwarding thread
-static pthread_t port_forward_thread = 0;
-static volatile int port_forward_running = 0; // volatile to ensure visibility across threads
-static int g_listen_sock = -1; // listening socket to allow external close during shutdown
-
-// Port forward thread state machine for debugging disconnect hangs
-enum port_forward_state_e
-{
-    PF_STATE_NONE = 0,
-    PF_STATE_STARTING,
-    PF_STATE_LISTEN_READY,
-    PF_STATE_WAITING_ACCEPT,
-    PF_STATE_CLIENT_ACCEPTED,
-    PF_STATE_FORWARD_LOOP,
-    PF_STATE_SHUTTING_DOWN,
-    PF_STATE_EXIT
-};
-static volatile enum port_forward_state_e g_pf_state = PF_STATE_NONE;
-static volatile uint64_t g_pf_last_state_change_mono_ns = 0;
+// per-handle PF state stored in ssht_handle
 
 static uint64_t monotonic_ns()
 {
@@ -319,10 +329,19 @@ static const char *pf_state_str(enum port_forward_state_e st)
     }
 }
 
-static void pf_set_state(enum port_forward_state_e st)
+// Thread argument: carries pf_config and the handle the thread serves
+struct pf_thread_arg
 {
-    g_pf_state = st;
-    g_pf_last_state_change_mono_ns = monotonic_ns();
+    struct pf_config *cfg;
+    struct ssht_handle *h;
+};
+
+static void pf_set_state(struct ssht_handle *h, enum port_forward_state_e st)
+{
+    if (h) {
+        h->pf_state = st;
+        h->pf_last_state_change_mono_ns = monotonic_ns();
+    }
     LOGI("PortForwardState -> %s", pf_state_str(st));
 }
 
@@ -421,9 +440,11 @@ static void fb_flush_to_client(
 // TCP Port forwarding thread function
 void *tcp_port_forward_thread(void *arg)
 {
-    struct pf_config *cfg = (struct pf_config *)arg;
+    struct pf_thread_arg *targ = (struct pf_thread_arg *)arg;
+    struct pf_config *cfg = targ ? targ->cfg : NULL;
+    struct ssht_handle *h = targ ? targ->h : NULL;
     LOGI("TCP port forwarding thread started");
-    pf_set_state(PF_STATE_STARTING);
+    pf_set_state(h, PF_STATE_STARTING);
     int listen_port = cfg ? cfg->listen_port : 8080;
     int remote_port = cfg ? cfg->remote_port : 8080;
     char remote_host_buf[128];
@@ -444,9 +465,9 @@ void *tcp_port_forward_thread(void *arg)
     }
     const char *remote_host = remote_host_buf;
     const char *listen_host = listen_host_buf;
-    if (cfg) {
-        free(cfg);
-        cfg = NULL;
+    if (targ) {
+        free(targ);
+        targ = NULL;
     }
     LOGI("Port forward configuration: local=%s:%d -> remote %s:%d", listen_host, listen_port, remote_host, remote_port);
     int listen_sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -454,7 +475,8 @@ void *tcp_port_forward_thread(void *arg)
         LOGE("Failed to create listening socket for port forwarding");
         return NULL;
     }
-    g_listen_sock = listen_sock;
+    if (h)
+        h->listen_sock = listen_sock;
     int opt = 1;
     setsockopt(listen_sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
     struct sockaddr_in listen_addr;
@@ -477,24 +499,34 @@ void *tcp_port_forward_thread(void *arg)
         return NULL;
     }
     LOGI("TCP port forwarding listening on %s:%d", listen_host, listen_port);
-    pf_set_state(PF_STATE_LISTEN_READY);
-    port_forward_running = 1;
-    while (port_forward_running) {
-        pf_set_state(PF_STATE_WAITING_ACCEPT);
+    pf_set_state(h, PF_STATE_LISTEN_READY);
+    /* Require an active handle for per-handle port-forwarding state. */
+    if (!h) {
+        LOGE("TCP port forwarding: no active handle");
+        if (listen_sock >= 0)
+            close(listen_sock);
+        return NULL;
+    }
+    volatile int *running = &h->port_forward_running;
+    h->pf_state = PF_STATE_LISTEN_READY;
+    h->pf_last_state_change_mono_ns = monotonic_ns();
+    h->port_forward_running = 1;
+    while (*running) {
+        pf_set_state(h, PF_STATE_WAITING_ACCEPT);
         struct sockaddr_in client_addr;
         socklen_t client_len = sizeof(client_addr);
         int client_sock = accept(listen_sock, (struct sockaddr *)&client_addr, &client_len);
         if (client_sock < 0) {
-            if (port_forward_running) {
+            if (*running) {
                 LOGE("Failed to accept connection: %s", strerror(errno));
             }
             continue;
         }
         LOGI("Accepted TCP connection for forwarding to remote %s:%d", remote_host, remote_port);
-        pf_set_state(PF_STATE_CLIENT_ACCEPTED);
+        pf_set_state(h, PF_STATE_CLIENT_ACCEPTED);
         pthread_mutex_lock(&session_mutex);
-        if (session != NULL) {
-            ssh_channel channel = ssh_channel_new(session);
+        if (h && h->session != NULL) {
+            ssh_channel channel = ssh_channel_new(h->session);
             if (channel != NULL) {
                 int rc = SSH_ERROR;
                 const int MAX_OPEN_ATTEMPTS = 10;
@@ -507,7 +539,7 @@ void *tcp_port_forward_thread(void *arg)
                         }
                         break;
                     }
-                    const char *err = ssh_get_error(session);
+                    const char *err = (h && h->session) ? ssh_get_error(h->session) : NULL;
                     if (err) {
                         LOGW("open_forward attempt %d/%d failed: %s", attempt, MAX_OPEN_ATTEMPTS, err);
                         if (strstr(err, "Connection refused") != NULL || strstr(err, "connection refused") != NULL) {
@@ -530,7 +562,7 @@ void *tcp_port_forward_thread(void *arg)
                     ssh_channel_set_blocking(channel, 0);
                     char buffer[4096];
                     fd_set read_fds;
-                    int session_fd = ssh_get_fd(session);
+                    int session_fd = (h && h->session) ? ssh_get_fd(h->session) : -1;
                     if (session_fd < 0) {
                         LOGW("ssh_get_fd returned <0; forwarding may not progress correctly");
                     }
@@ -545,9 +577,9 @@ void *tcp_port_forward_thread(void *arg)
                     fb_init(&to_ssh);
                     fb_init(&to_client);
                     const size_t MAX_BUFFER_CAP = 256 * 1024; // 256 KiB cap per direction
-                    while (port_forward_running && connection_active) {
-                        if (g_pf_state != PF_STATE_FORWARD_LOOP)
-                            pf_set_state(PF_STATE_FORWARD_LOOP);
+                    while (*running && connection_active) {
+                        if (!h || h->pf_state != PF_STATE_FORWARD_LOOP)
+                            pf_set_state(h, PF_STATE_FORWARD_LOOP);
                         FD_ZERO(&read_fds);
                         FD_SET(client_sock, &read_fds);
                         if (session_fd >= 0) {
@@ -564,14 +596,14 @@ void *tcp_port_forward_thread(void *arg)
                         time_t now_sec = time(NULL);
                         if (now_sec != (time_t)last_tick_sec) {
                             last_tick_sec = (uint64_t)now_sec;
-                            if (session != NULL && !ssh_is_connected(session)) {
+                            if (h && h->session != NULL && !ssh_is_connected(h->session)) {
                                 LOGW("SSH session no longer connected");
                                 break;
                             }
                             if (to_ssh.size > to_ssh.off)
-                                fb_flush_to_ssh(&to_ssh, channel, &connection_active, &port_forward_running);
+                                fb_flush_to_ssh(&to_ssh, channel, &connection_active, running);
                             if (to_client.size > to_client.off)
-                                fb_flush_to_client(&to_client, client_sock, &connection_active, &port_forward_running);
+                                fb_flush_to_client(&to_client, client_sock, &connection_active, running);
                         }
                         if (FD_ISSET(client_sock, &read_fds)) {
                             for (;;) {
@@ -592,7 +624,7 @@ void *tcp_port_forward_thread(void *arg)
                                     connection_active = 0;
                                     break;
                                 }
-                                fb_flush_to_ssh(&to_ssh, channel, &connection_active, &port_forward_running);
+                                fb_flush_to_ssh(&to_ssh, channel, &connection_active, running);
                                 if (to_ssh.size - to_ssh.off > 64 * 1024) {
                                     break;
                                 }
@@ -601,9 +633,9 @@ void *tcp_port_forward_thread(void *arg)
                         }
                         if (session_fd >= 0 && FD_ISSET(session_fd, &read_fds)) {
                             if (to_ssh.size > to_ssh.off)
-                                fb_flush_to_ssh(&to_ssh, channel, &connection_active, &port_forward_running);
+                                fb_flush_to_ssh(&to_ssh, channel, &connection_active, running);
                         }
-                        while (port_forward_running && connection_active) {
+                        while (*running && connection_active) {
                             int ssh_bytes = ssh_channel_read_nonblocking(channel, buffer, sizeof(buffer), 0);
                             if (ssh_bytes > 0) {
                                 if (fb_append(&to_client, buffer, (size_t)ssh_bytes, MAX_BUFFER_CAP) < 0) {
@@ -611,7 +643,7 @@ void *tcp_port_forward_thread(void *arg)
                                     connection_active = 0;
                                     break;
                                 }
-                                fb_flush_to_client(&to_client, client_sock, &connection_active, &port_forward_running);
+                                fb_flush_to_client(&to_client, client_sock, &connection_active, running);
                                 continue;
                             } else if (ssh_bytes == 0 || ssh_bytes == SSH_AGAIN) {
                                 break;
@@ -626,7 +658,7 @@ void *tcp_port_forward_thread(void *arg)
                             }
                         }
                         if (to_client.size > to_client.off)
-                            fb_flush_to_client(&to_client, client_sock, &connection_active, &port_forward_running);
+                            fb_flush_to_client(&to_client, client_sock, &connection_active, running);
                         if (!ssh_channel_is_open(channel) || ssh_channel_is_closed(channel)) {
                             LOGI("SSH channel closed by remote side");
                             break;
@@ -640,7 +672,7 @@ void *tcp_port_forward_thread(void *arg)
                         "Failed to open SSH forward channel to %s:%d after retries: %s",
                         remote_host,
                         remote_port,
-                        ssh_get_error(session));
+                        (h && h->session) ? ssh_get_error(h->session) : "(no session)");
                 }
                 ssh_channel_free(channel);
             }
@@ -650,21 +682,26 @@ void *tcp_port_forward_thread(void *arg)
     }
     if (listen_sock >= 0)
         close(listen_sock);
-    if (g_listen_sock == listen_sock)
-        g_listen_sock = -1;
-    pf_set_state(PF_STATE_EXIT);
+    if (h && h->listen_sock == listen_sock)
+        h->listen_sock = -1;
+    pf_set_state(h, PF_STATE_EXIT);
     LOGI("TCP port forwarding thread exiting");
     return NULL;
 }
 
 // Setup TCP port forwarding
-int setup_tcp_port_forwarding(const char *remote_host, int remote_port, const char *listen_host, int listen_port)
+int setup_tcp_port_forwarding(
+    struct ssht_handle *h, const char *remote_host, int remote_port, const char *listen_host, int listen_port)
 {
-    if (port_forward_thread != 0) {
+    if (!h) {
+        LOGE("setup_tcp_port_forwarding: no active handle");
+        return -1;
+    }
+    if (h->port_forward_thread != 0) {
         LOGI("TCP port forwarding already running");
         return 0;
     }
-    port_forward_running = 0;
+    h->port_forward_running = 0;
     struct pf_config *cfg = (struct pf_config *)calloc(1, sizeof(struct pf_config));
     if (!cfg) {
         LOGE("Failed to allocate pf_config");
@@ -686,9 +723,18 @@ int setup_tcp_port_forwarding(const char *remote_host, int remote_port, const ch
     }
     cfg->remote_port = remote_port > 0 ? remote_port : 8080;
     cfg->listen_port = listen_port > 0 ? listen_port : cfg->remote_port;
-    if (pthread_create(&port_forward_thread, NULL, tcp_port_forward_thread, cfg) != 0) {
+    struct pf_thread_arg *targ = (struct pf_thread_arg *)calloc(1, sizeof(*targ));
+    if (!targ) {
+        LOGE("Failed to allocate thread arg for port forwarding");
+        free(cfg);
+        return -1;
+    }
+    targ->cfg = cfg;
+    targ->h = h;
+    if (pthread_create(&h->port_forward_thread, NULL, tcp_port_forward_thread, targ) != 0) {
         LOGE("Failed to create TCP port forwarding thread");
         free(cfg);
+        free(targ);
         return -1;
     }
     LOGI("TCP port forwarding thread spawn requested");
@@ -696,24 +742,24 @@ int setup_tcp_port_forwarding(const char *remote_host, int remote_port, const ch
 }
 
 // Stop TCP port forwarding
-void stop_tcp_port_forwarding()
+void stop_tcp_port_forwarding(struct ssht_handle *h)
 {
-    if (port_forward_thread != 0) {
-        LOGI("stop_tcp_port_forwarding: initiating shutdown (state=%s)", pf_state_str(g_pf_state));
-        port_forward_running = 0;
-        pf_set_state(PF_STATE_SHUTTING_DOWN);
-        if (g_listen_sock >= 0) {
-            LOGI("stop_tcp_port_forwarding: closing listen socket %d", g_listen_sock);
-            shutdown(g_listen_sock, SHUT_RDWR);
-            close(g_listen_sock);
-            g_listen_sock = -1;
+    if (h && h->port_forward_thread != 0) {
+        LOGI("stop_tcp_port_forwarding: initiating shutdown (state=%s)", pf_state_str(h->pf_state));
+        h->port_forward_running = 0;
+        pf_set_state(h, PF_STATE_SHUTTING_DOWN);
+        if (h->listen_sock >= 0) {
+            LOGI("stop_tcp_port_forwarding: closing listen socket %d", h->listen_sock);
+            shutdown(h->listen_sock, SHUT_RDWR);
+            close(h->listen_sock);
+            h->listen_sock = -1;
         }
         const uint64_t start_ns = monotonic_ns();
         int joined = 0;
 #if defined(__ANDROID__) || defined(__linux__)
 #    ifdef __GLIBC__
         for (int attempt = 0; attempt < 50; ++attempt) { // ~5s max
-            int tj = pthread_tryjoin_np(port_forward_thread, NULL);
+            int tj = pthread_tryjoin_np(h->port_forward_thread, NULL);
             if (tj == 0) {
                 joined = 1;
                 break;
@@ -725,31 +771,32 @@ void stop_tcp_port_forwarding()
                 LOGI(
                     "stop_tcp_port_forwarding: waiting join... elapsed=%llums state=%s",
                     (unsigned long long)elapsed_ms,
-                    pf_state_str(g_pf_state));
+                    pf_state_str(h ? h->pf_state : PF_STATE_NONE));
             }
-            if (g_pf_state == PF_STATE_EXIT) {
+            if (h->pf_state == PF_STATE_EXIT) {
                 break;
             }
         }
 #    endif
 #endif
         if (!joined) {
-            LOGI("stop_tcp_port_forwarding: performing final blocking join (state=%s)", pf_state_str(g_pf_state));
-            pthread_join(port_forward_thread, NULL);
+            LOGI("stop_tcp_port_forwarding: performing final blocking join (state=%s)", pf_state_str(h->pf_state));
+            pthread_join(h->port_forward_thread, NULL);
         }
-        port_forward_thread = 0;
+        h->port_forward_thread = 0;
         uint64_t total_ms = (monotonic_ns() - start_ns) / 1000000ull;
         LOGI(
             "stop_tcp_port_forwarding: completed in %llums final_state=%s",
             (unsigned long long)total_ms,
-            pf_state_str(g_pf_state));
+            pf_state_str(h->pf_state));
         LOGI("TCP port forwarding stopped");
     }
 }
 
 #ifndef SSHTUN_DESKTOP
 // Simplified mock-friendly connect function (JNI)
-JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_connectToServer(
+// Returns native pointer (ssht_handle *) as jlong, or 0 on failure
+JNIEXPORT jlong JNICALL Java_com_example_sshtunnel_SshTunnelService_connectToServer(
     JNIEnv *env, jobject obj, jstring host, jint port, jstring username, jstring password)
 {
     (void)obj;
@@ -758,14 +805,9 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_connectTo
     const char *password_str = (*env)->GetStringUTFChars(env, password, 0);
     LOGI("Starting SSH connection to %s:%d as %s", host_str, port, username_str);
     pthread_mutex_lock(&session_mutex);
-    if (session != NULL) {
-        LOGW("Session already exists, disconnecting first");
-        ssh_disconnect(session);
-        ssh_free(session);
-        session = NULL;
-    }
-    session = ssh_new();
-    if (session == NULL) {
+    /* per-handle only; no global session maintained */
+    ssh_session new_sess = ssh_new();
+    if (new_sess == NULL) {
         LOGE("Failed to create SSH session");
         pthread_mutex_unlock(&session_mutex);
         (*env)->ReleaseStringUTFChars(env, host, host_str);
@@ -773,15 +815,15 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_connectTo
         (*env)->ReleaseStringUTFChars(env, password, password_str);
         return JNI_FALSE;
     }
-    ssh_options_set(session, SSH_OPTIONS_HOST, host_str);
-    ssh_options_set(session, SSH_OPTIONS_PORT, &port);
-    ssh_options_set(session, SSH_OPTIONS_USER, username_str);
+    ssh_options_set(new_sess, SSH_OPTIONS_HOST, host_str);
+    ssh_options_set(new_sess, SSH_OPTIONS_PORT, &port);
+    ssh_options_set(new_sess, SSH_OPTIONS_USER, username_str);
     const char *ciphers = "aes128-ctr,aes192-ctr,aes256-ctr";
-    ssh_options_set(session, SSH_OPTIONS_CIPHERS_C_S, ciphers);
-    ssh_options_set(session, SSH_OPTIONS_CIPHERS_S_C, ciphers);
+    ssh_options_set(new_sess, SSH_OPTIONS_CIPHERS_C_S, ciphers);
+    ssh_options_set(new_sess, SSH_OPTIONS_CIPHERS_S_C, ciphers);
     const char *kex = "diffie-hellman-group14-sha256,ecdh-sha2-nistp256";
-    ssh_options_set(session, SSH_OPTIONS_KEY_EXCHANGE, kex);
-    ssh_set_blocking(session, 1);
+    ssh_options_set(new_sess, SSH_OPTIONS_KEY_EXCHANGE, kex);
+    ssh_set_blocking(new_sess, 1);
 #    ifndef USE_LIBSSH_MOCK
     LOGI("Forcing entropy initialization before ssh_connect");
     unsigned char entropy_buf[64];
@@ -802,11 +844,10 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_connectTo
     LOGI("Mock mode: Skipping entropy initialization");
 #    endif
     LOGI("Attempting SSH connection to %s:%d with enhanced crypto options", host_str, port);
-    int connection = ssh_connect(session);
+    int connection = ssh_connect(new_sess);
     if (connection != SSH_OK) {
-        LOGE("SSH connection failed: %s", ssh_get_error(session));
-        ssh_free(session);
-        session = NULL;
+        LOGE("SSH connection failed: %s", ssh_get_error(new_sess));
+        ssh_free(new_sess);
         pthread_mutex_unlock(&session_mutex);
         (*env)->ReleaseStringUTFChars(env, host, host_str);
         (*env)->ReleaseStringUTFChars(env, username, username_str);
@@ -814,12 +855,11 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_connectTo
         return JNI_FALSE;
     }
     LOGI("SSH connection established successfully");
-    int auth = ssh_userauth_password(session, username_str, password_str);
+    int auth = ssh_userauth_password(new_sess, username_str, password_str);
     if (auth != SSH_AUTH_SUCCESS) {
-        LOGE("SSH authentication failed: %s", ssh_get_error(session));
-        ssh_disconnect(session);
-        ssh_free(session);
-        session = NULL;
+        LOGE("SSH authentication failed: %s", ssh_get_error(new_sess));
+        ssh_disconnect(new_sess);
+        ssh_free(new_sess);
         pthread_mutex_unlock(&session_mutex);
         (*env)->ReleaseStringUTFChars(env, host, host_str);
         (*env)->ReleaseStringUTFChars(env, username, username_str);
@@ -827,16 +867,30 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_connectTo
         return JNI_FALSE;
     }
     LOGI("SSH authentication successful");
+    // store session into a new handle
+    struct ssht_handle *h = (struct ssht_handle *)calloc(1, sizeof(*h));
+    if (!h) {
+        LOGE("Failed to allocate ssht_handle for JNI connection");
+        ssh_disconnect(new_sess);
+        ssh_free(new_sess);
+        pthread_mutex_unlock(&session_mutex);
+        (*env)->ReleaseStringUTFChars(env, host, host_str);
+        (*env)->ReleaseStringUTFChars(env, username, username_str);
+        (*env)->ReleaseStringUTFChars(env, password, password_str);
+        return JNI_FALSE;
+    }
+    h->session = new_sess;
     pthread_mutex_unlock(&session_mutex);
     (*env)->ReleaseStringUTFChars(env, host, host_str);
     (*env)->ReleaseStringUTFChars(env, username, username_str);
     (*env)->ReleaseStringUTFChars(env, password, password_str);
-    return JNI_TRUE;
+    return (jlong)(uintptr_t)h;
 }
 
 #    ifndef USE_LIBSSH_MOCK
 // Connecting with SSH key authentication
-JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_connectWithKey(
+// Returns native pointer (ssht_handle *) as jlong, or 0 on failure
+JNIEXPORT jlong JNICALL Java_com_example_sshtunnel_SshTunnelService_connectWithKey(
     JNIEnv *env, jobject obj, jstring host, jint port, jstring username, jstring private_key_path, jstring passphrase)
 {
     (void)obj;
@@ -846,14 +900,9 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_connectWi
     const char *passphrase_str = passphrase ? (*env)->GetStringUTFChars(env, passphrase, 0) : NULL;
     LOGI("Starting SSH connection with key to %s:%d as %s", host_str, port, username_str);
     pthread_mutex_lock(&session_mutex);
-    if (session != NULL) {
-        LOGW("Session already exists, disconnecting first");
-        ssh_disconnect(session);
-        ssh_free(session);
-        session = NULL;
-    }
-    session = ssh_new();
-    if (session == NULL) {
+    /* per-handle only; no global session maintained */
+    ssh_session new_sess = ssh_new();
+    if (new_sess == NULL) {
         LOGE("Failed to create SSH session");
         pthread_mutex_unlock(&session_mutex);
         (*env)->ReleaseStringUTFChars(env, host, host_str);
@@ -863,16 +912,15 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_connectWi
             (*env)->ReleaseStringUTFChars(env, passphrase, passphrase_str);
         return -1;
     }
-    ssh_options_set(session, SSH_OPTIONS_HOST, host_str);
-    ssh_options_set(session, SSH_OPTIONS_PORT, &port);
-    ssh_options_set(session, SSH_OPTIONS_USER, username_str);
-    ssh_set_blocking(session, 1);
+    ssh_options_set(new_sess, SSH_OPTIONS_HOST, host_str);
+    ssh_options_set(new_sess, SSH_OPTIONS_PORT, &port);
+    ssh_options_set(new_sess, SSH_OPTIONS_USER, username_str);
+    ssh_set_blocking(new_sess, 1);
     LOGI("Attempting SSH connection to %s:%d", host_str, port);
-    int connection = ssh_connect(session);
+    int connection = ssh_connect(new_sess);
     if (connection != SSH_OK) {
-        LOGE("SSH connection failed: %s", ssh_get_error(session));
-        ssh_free(session);
-        session = NULL;
+        LOGE("SSH connection failed: %s", ssh_get_error(new_sess));
+        ssh_free(new_sess);
         pthread_mutex_unlock(&session_mutex);
         (*env)->ReleaseStringUTFChars(env, host, host_str);
         (*env)->ReleaseStringUTFChars(env, username, username_str);
@@ -885,10 +933,9 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_connectWi
     ssh_key privkey;
     int key_result = ssh_pki_import_privkey_file(key_path_str, passphrase_str, NULL, NULL, &privkey);
     if (key_result != SSH_OK) {
-        LOGE("Failed to load private key from %s: %s", key_path_str, ssh_get_error(session));
-        ssh_disconnect(session);
-        ssh_free(session);
-        session = NULL;
+        LOGE("Failed to load private key from %s: %s", key_path_str, ssh_get_error(new_sess));
+        ssh_disconnect(new_sess);
+        ssh_free(new_sess);
         pthread_mutex_unlock(&session_mutex);
         (*env)->ReleaseStringUTFChars(env, host, host_str);
         (*env)->ReleaseStringUTFChars(env, username, username_str);
@@ -897,13 +944,12 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_connectWi
             (*env)->ReleaseStringUTFChars(env, passphrase, passphrase_str);
         return -1;
     }
-    int auth = ssh_userauth_publickey(session, username_str, privkey);
+    int auth = ssh_userauth_publickey(new_sess, username_str, privkey);
     ssh_key_free(privkey);
     if (auth != SSH_AUTH_SUCCESS) {
-        LOGE("SSH key authentication failed: %s", ssh_get_error(session));
-        ssh_disconnect(session);
-        ssh_free(session);
-        session = NULL;
+        LOGE("SSH key authentication failed: %s", ssh_get_error(new_sess));
+        ssh_disconnect(new_sess);
+        ssh_free(new_sess);
         pthread_mutex_unlock(&session_mutex);
         (*env)->ReleaseStringUTFChars(env, host, host_str);
         (*env)->ReleaseStringUTFChars(env, username, username_str);
@@ -913,17 +959,32 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_connectWi
         return -1;
     }
     LOGI("SSH key authentication successful");
+    // store to handle
+    struct ssht_handle *h = (struct ssht_handle *)calloc(1, sizeof(*h));
+    if (!h) {
+        LOGE("Failed to allocate ssht_handle for JNI key connection");
+        ssh_disconnect(new_sess);
+        ssh_free(new_sess);
+        pthread_mutex_unlock(&session_mutex);
+        (*env)->ReleaseStringUTFChars(env, host, host_str);
+        (*env)->ReleaseStringUTFChars(env, username, username_str);
+        (*env)->ReleaseStringUTFChars(env, private_key_path, key_path_str);
+        if (passphrase_str)
+            (*env)->ReleaseStringUTFChars(env, passphrase, passphrase_str);
+        return -1;
+    }
+    h->session = new_sess;
     pthread_mutex_unlock(&session_mutex);
     (*env)->ReleaseStringUTFChars(env, host, host_str);
     (*env)->ReleaseStringUTFChars(env, username, username_str);
     (*env)->ReleaseStringUTFChars(env, private_key_path, key_path_str);
     if (passphrase_str)
         (*env)->ReleaseStringUTFChars(env, passphrase, passphrase_str);
-    return 0;
+    return (jlong)(uintptr_t)h;
 }
 #    else
-// Mock version of connectWithKey
-JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_connectWithKey(
+// Mock version of connectWithKey (returns native handle as jlong to match real signature)
+JNIEXPORT jlong JNICALL Java_com_example_sshtunnel_SshTunnelService_connectWithKey(
     JNIEnv *env, jobject obj, jstring host, jint port, jstring username, jstring private_key_path, jstring passphrase)
 {
     (void)obj;
@@ -934,24 +995,31 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_connectWi
     LOGI("Mock SSH key connection to %s:%d as %s", host_str, port, username_str);
     (*env)->ReleaseStringUTFChars(env, host, host_str);
     (*env)->ReleaseStringUTFChars(env, username, username_str);
-    return 0; // Mock success
+    return (jlong)0; // Mock: return null handle
 }
 #    endif
 
-JNIEXPORT void JNICALL Java_com_example_sshtunnel_SshTunnelService_disconnect(JNIEnv *env, jobject obj)
+JNIEXPORT void JNICALL Java_com_example_sshtunnel_SshTunnelService_disconnect(JNIEnv *env, jobject obj, jlong handle)
 {
     (void)env;
     (void)obj;
+    struct ssht_handle *h = (struct ssht_handle *)(uintptr_t)handle;
+    if (!h) {
+        LOGW("Disconnect called with null handle");
+        return;
+    }
     LOGI("Disconnecting SSH session");
     uint64_t t0 = monotonic_ns();
-    stop_tcp_port_forwarding();
+    stop_tcp_port_forwarding(h);
     pthread_mutex_lock(&session_mutex);
-    tunnel_active = 0;
-    if (session != NULL) {
-        ssh_disconnect(session);
-        ssh_free(session);
-        session = NULL;
-        LOGI("SSH session disconnected and freed");
+    if (h && h->session != NULL) {
+        /* mark handle as inactive before tearing down session */
+        h->tunnel_active = 0;
+        ssh_disconnect(h->session);
+        ssh_free(h->session);
+        h->session = NULL;
+        LOGI("SSH session disconnected and freed (handle)");
+        free(h);
     } else {
         LOGW("No active SSH session to disconnect");
     }
@@ -960,37 +1028,54 @@ JNIEXPORT void JNICALL Java_com_example_sshtunnel_SshTunnelService_disconnect(JN
     LOGI("Disconnect sequence finished in %llums", (unsigned long long)elapsed_ms);
 }
 
-JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_isConnected(JNIEnv *env, jobject obj)
+JNIEXPORT jboolean JNICALL
+    Java_com_example_sshtunnel_SshTunnelService_isConnected(JNIEnv *env, jobject obj, jlong handle)
 {
     (void)env;
     (void)obj;
+    struct ssht_handle *h = (struct ssht_handle *)(uintptr_t)handle;
+    if (!h)
+        return JNI_FALSE;
     pthread_mutex_lock(&session_mutex);
-    jboolean connected = (session != NULL) ? JNI_TRUE : JNI_FALSE;
+    jboolean connected = (h->session != NULL && ssh_is_connected(h->session)) ? JNI_TRUE : JNI_FALSE;
     pthread_mutex_unlock(&session_mutex);
     return connected;
 }
 
-JNIEXPORT jstring JNICALL Java_com_example_sshtunnel_SshTunnelService_nativeDebugDump(JNIEnv *env, jobject obj)
+JNIEXPORT jstring JNICALL
+    Java_com_example_sshtunnel_SshTunnelService_nativeDebugDump(JNIEnv *env, jobject obj, jlong handle)
 {
     (void)obj;
+    struct ssht_handle *h = (struct ssht_handle *)(uintptr_t)handle;
+    if (!h) {
+        return (*env)->NewStringUTF(env, "native_debug:\n handle=NULL\n");
+    }
     pthread_mutex_lock(&session_mutex);
-    int session_present = (session != NULL);
+    int session_present = (h->session != NULL) ? 1 : 0;
+    const char *session_err = NULL;
+    if (session_present) {
+        session_err = ssh_get_error(h->session);
+    }
     pthread_mutex_unlock(&session_mutex);
     uint64_t now_ns = monotonic_ns();
-    uint64_t state_age_ms =
-        (g_pf_last_state_change_mono_ns > 0) ? (now_ns - g_pf_last_state_change_mono_ns) / 1000000ull : 0;
+    uint64_t state_age_ms = 0;
+    if (h->pf_last_state_change_mono_ns > 0) {
+        state_age_ms = (now_ns - h->pf_last_state_change_mono_ns) / 1000000ull;
+    }
     char buf[512];
     snprintf(
         buf,
         sizeof(buf),
-        "native_debug:\n session_present=%s\n port_forward_thread=%s\n port_forward_running=%d\n pf_state=%s "
+        "native_debug:\n session_present=%s\n session_error=%s\n port_forward_thread=%s\n port_forward_running=%d\n "
+        "pf_state=%s "
         "age_ms=%llu\n listen_sock=%d\n",
         session_present ? "true" : "false",
-        port_forward_thread != 0 ? "true" : "false",
-        port_forward_running,
-        pf_state_str(g_pf_state),
+        session_err ? session_err : "(none)",
+        (h->port_forward_thread != 0) ? "true" : "false",
+        h->port_forward_running,
+        pf_state_str(h->pf_state),
         (unsigned long long)state_age_ms,
-        g_listen_sock);
+        h->listen_sock);
     return (*env)->NewStringUTF(env, buf);
 }
 
@@ -999,6 +1084,7 @@ JNIEXPORT jstring JNICALL Java_com_example_sshtunnel_SshTunnelService_nativeDebu
 JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SshTunnelService_startUdp2Tcp(
     JNIEnv *env,
     jobject obj,
+    jlong handle,
     jstring j_remote_bridge_host,
     jint remote_bridge_port,
     jstring j_local_bridge_host,
@@ -1009,18 +1095,23 @@ JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SshTunnelService_startUdp2Tcp(
     jint remote_udp_port)
 {
     (void)obj;
+    struct ssht_handle *h = (struct ssht_handle *)(uintptr_t)handle;
+    if (!h) {
+        LOGW("startUdp2Tcp called with null handle");
+        return -1;
+    }
     const char *remote_bridge_host = j_remote_bridge_host ? (*env)->GetStringUTFChars(env, j_remote_bridge_host, 0)
                                                           : NULL;
     const char *local_bridge_host = j_local_bridge_host ? (*env)->GetStringUTFChars(env, j_local_bridge_host, 0) : NULL;
     const char *local_udp_host = j_local_udp_host ? (*env)->GetStringUTFChars(env, j_local_udp_host, 0) : NULL;
     const char *remote_udp_host = j_remote_udp_host ? (*env)->GetStringUTFChars(env, j_remote_udp_host, 0) : NULL;
-    if (port_forward_thread == 0) {
+    if (h->port_forward_thread == 0) {
         const char *eff_remote_bridge_host = (remote_bridge_host && *remote_bridge_host) ? remote_bridge_host
                                                                                          : "127.0.0.1";
         int eff_remote_bridge_port = (remote_bridge_port > 0) ? remote_bridge_port : local_bridge_port;
         const char *eff_listen_host = (local_bridge_host && *local_bridge_host) ? local_bridge_host : "127.0.0.1";
         if (setup_tcp_port_forwarding(
-                eff_remote_bridge_host, eff_remote_bridge_port, eff_listen_host, local_bridge_port)
+                h, eff_remote_bridge_host, eff_remote_bridge_port, eff_listen_host, local_bridge_port)
             != 0) {
             LOGW("Failed to setup TCP port forwarding prior to udp2tcp start");
         }
@@ -1059,10 +1150,15 @@ JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SshTunnelService_startUdp2Tcp(
 }
 
 // Stop udp2tcp (graceful)
-JNIEXPORT void JNICALL Java_com_example_sshtunnel_SshTunnelService_stopUdp2Tcp(JNIEnv *env, jobject obj)
+JNIEXPORT void JNICALL Java_com_example_sshtunnel_SshTunnelService_stopUdp2Tcp(JNIEnv *env, jobject obj, jlong handle)
 {
     (void)env;
     (void)obj;
+    struct ssht_handle *h = (struct ssht_handle *)(uintptr_t)handle;
+    if (!h) {
+        LOGW("stopUdp2Tcp called with null handle");
+        return;
+    }
     if (udp2tcp_is_running()) {
         LOGI("Stopping udp2tcp adapter");
         udp2tcp_stop();
@@ -1071,9 +1167,14 @@ JNIEXPORT void JNICALL Java_com_example_sshtunnel_SshTunnelService_stopUdp2Tcp(J
 }
 
 // Get udp2tcp stats
-JNIEXPORT jstring JNICALL Java_com_example_sshtunnel_SshTunnelService_getUdp2TcpStats(JNIEnv *env, jobject obj)
+JNIEXPORT jstring JNICALL
+    Java_com_example_sshtunnel_SshTunnelService_getUdp2TcpStats(JNIEnv *env, jobject obj, jlong handle)
 {
     (void)obj;
+    struct ssht_handle *h = (struct ssht_handle *)(uintptr_t)handle;
+    if (!h) {
+        return (*env)->NewStringUTF(env, "udp2tcp: handle=NULL");
+    }
     uint64_t tx_frames = 0, rx_frames = 0, tx_bytes = 0, rx_bytes = 0;
     udp2tcp_get_library_stats(&tx_frames, &rx_frames, &tx_bytes, &rx_bytes);
     char buf[256];
@@ -1090,10 +1191,14 @@ JNIEXPORT jstring JNICALL Java_com_example_sshtunnel_SshTunnelService_getUdp2Tcp
 }
 
 // Check if running
-JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_isUdp2TcpRunning(JNIEnv *env, jobject obj)
+JNIEXPORT jboolean JNICALL
+    Java_com_example_sshtunnel_SshTunnelService_isUdp2TcpRunning(JNIEnv *env, jobject obj, jlong handle)
 {
     (void)env;
     (void)obj;
+    struct ssht_handle *h = (struct ssht_handle *)(uintptr_t)handle;
+    if (!h)
+        return JNI_FALSE;
     return udp2tcp_is_running() ? JNI_TRUE : JNI_FALSE;
 }
 #    else
@@ -1101,6 +1206,7 @@ JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_isUdp2Tcp
 JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SshTunnelService_startUdp2Tcp(
     JNIEnv *env,
     jobject obj,
+    jlong handle,
     jstring j_remote_bridge_host,
     jint remote_bridge_port,
     jstring j_local_bridge_host,
@@ -1112,6 +1218,7 @@ JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SshTunnelService_startUdp2Tcp(
 {
     (void)env;
     (void)obj;
+    (void)handle;
     (void)j_remote_bridge_host;
     (void)remote_bridge_port;
     (void)j_local_bridge_host;
@@ -1124,23 +1231,28 @@ JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SshTunnelService_startUdp2Tcp(
     return -1;
 }
 
-JNIEXPORT void JNICALL Java_com_example_sshtunnel_SshTunnelService_stopUdp2Tcp(JNIEnv *env, jobject obj)
+JNIEXPORT void JNICALL Java_com_example_sshtunnel_SshTunnelService_stopUdp2Tcp(JNIEnv *env, jobject obj, jlong handle)
 {
     (void)env;
     (void)obj;
+    (void)handle;
     LOGW("udp2tcp not enabled in this build (stopUdp2Tcp)");
 }
 
-JNIEXPORT jstring JNICALL Java_com_example_sshtunnel_SshTunnelService_getUdp2TcpStats(JNIEnv *env, jobject obj)
+JNIEXPORT jstring JNICALL
+    Java_com_example_sshtunnel_SshTunnelService_getUdp2TcpStats(JNIEnv *env, jobject obj, jlong handle)
 {
     (void)obj;
+    (void)handle;
     return (*env)->NewStringUTF(env, "udp2tcp disabled (build without USE_UDP2TCP)");
 }
 
-JNIEXPORT jboolean JNICALL Java_com_example_sshtunnel_SshTunnelService_isUdp2TcpRunning(JNIEnv *env, jobject obj)
+JNIEXPORT jboolean JNICALL
+    Java_com_example_sshtunnel_SshTunnelService_isUdp2TcpRunning(JNIEnv *env, jobject obj, jlong handle)
 {
     (void)env;
     (void)obj;
+    (void)handle;
     return JNI_FALSE;
 }
 #    endif // USE_UDP2TCP
@@ -1177,11 +1289,11 @@ JNIEXPORT jint JNICALL Java_com_example_sshtunnel_SshTunnelService_nativeTlsSelf
 #ifdef SSHTUN_DESKTOP
 // Desktop CLI wrappers exposing the same core functionality without JNI
 
-int ssht_cli_connect_password(const char *host, int port, const char *username, const char *password)
+ssht_handle *ssht_cli_connect_password(const char *host, int port, const char *username, const char *password)
 {
     if (!host || !username || !password || port <= 0) {
         LOGE("ssht_cli_connect_password: invalid arguments");
-        return -1;
+        return NULL;
     }
     signal(SIGPIPE, SIG_IGN);
 #    ifndef USE_LIBSSH_MOCK
@@ -1191,50 +1303,50 @@ int ssht_cli_connect_password(const char *host, int port, const char *username, 
 #    endif
     LOGI("CLI: connecting to %s:%d as %s (password)", host, port, username);
     pthread_mutex_lock(&session_mutex);
-    if (session != NULL) {
-        LOGW("CLI: existing session found, disconnecting");
-        ssh_disconnect(session);
-        ssh_free(session);
-        session = NULL;
-    }
-    session = ssh_new();
-    if (!session) {
+    /* per-handle only; do not maintain global handle in CLI */
+    ssh_session new_sess = ssh_new();
+    if (!new_sess) {
         pthread_mutex_unlock(&session_mutex);
         LOGE("CLI: ssh_new failed");
-        return -1;
+        return NULL;
     }
-    ssh_options_set(session, SSH_OPTIONS_HOST, host);
-    ssh_options_set(session, SSH_OPTIONS_PORT, &port);
-    ssh_options_set(session, SSH_OPTIONS_USER, username);
-    ssh_set_blocking(session, 1);
-    int rc = ssh_connect(session);
+    ssh_options_set(new_sess, SSH_OPTIONS_HOST, host);
+    ssh_options_set(new_sess, SSH_OPTIONS_PORT, &port);
+    ssh_options_set(new_sess, SSH_OPTIONS_USER, username);
+    ssh_set_blocking(new_sess, 1);
+    int rc = ssh_connect(new_sess);
     if (rc != SSH_OK) {
-        LOGE("CLI: ssh_connect failed: %s", ssh_get_error(session));
-        ssh_free(session);
-        session = NULL;
+        LOGE("CLI: ssh_connect failed: %s", ssh_get_error(new_sess));
+        ssh_free(new_sess);
         pthread_mutex_unlock(&session_mutex);
-        return -2;
+        return NULL;
     }
-    rc = ssh_userauth_password(session, username, password);
+    rc = ssh_userauth_password(new_sess, username, password);
     if (rc != SSH_AUTH_SUCCESS) {
-        LOGE("CLI: password auth failed: %s", ssh_get_error(session));
-        ssh_disconnect(session);
-        ssh_free(session);
-        session = NULL;
+        LOGE("CLI: password auth failed: %s", ssh_get_error(new_sess));
+        ssh_disconnect(new_sess);
+        ssh_free(new_sess);
         pthread_mutex_unlock(&session_mutex);
-        return -3;
+        return NULL;
     }
     pthread_mutex_unlock(&session_mutex);
     LOGI("CLI: SSH connection established");
-    return 0;
+    ssht_handle *h = (ssht_handle *)calloc(1, sizeof(*h));
+    if (!h) {
+        LOGE("ssht_cli_connect_password: allocation failed");
+        /* keep session in global but return NULL to indicate handle allocation failure */
+        return NULL;
+    }
+    h->session = new_sess;
+    return h;
 }
 
-int ssht_cli_connect_key(
+ssht_handle *ssht_cli_connect_key(
     const char *host, int port, const char *username, const char *private_key_path, const char *passphrase)
 {
     if (!host || !username || !private_key_path || port <= 0) {
         LOGE("ssht_cli_connect_key: invalid arguments");
-        return -1;
+        return NULL;
     }
     signal(SIGPIPE, SIG_IGN);
 #    ifndef USE_LIBSSH_MOCK
@@ -1244,50 +1356,42 @@ int ssht_cli_connect_key(
 #    endif
     LOGI("CLI: connecting to %s:%d as %s (key)", host, port, username);
     pthread_mutex_lock(&session_mutex);
-    if (session != NULL) {
-        LOGW("CLI: existing session found, disconnecting");
-        ssh_disconnect(session);
-        ssh_free(session);
-        session = NULL;
-    }
-    session = ssh_new();
-    if (!session) {
+    /* per-handle only; do not maintain global handle in CLI */
+    ssh_session new_sess = ssh_new();
+    if (!new_sess) {
         pthread_mutex_unlock(&session_mutex);
         LOGE("CLI: ssh_new failed");
-        return -1;
+        return NULL;
     }
-    ssh_options_set(session, SSH_OPTIONS_HOST, host);
-    ssh_options_set(session, SSH_OPTIONS_PORT, &port);
-    ssh_options_set(session, SSH_OPTIONS_USER, username);
-    ssh_set_blocking(session, 1);
-    int rc = ssh_connect(session);
+    ssh_options_set(new_sess, SSH_OPTIONS_HOST, host);
+    ssh_options_set(new_sess, SSH_OPTIONS_PORT, &port);
+    ssh_options_set(new_sess, SSH_OPTIONS_USER, username);
+    ssh_set_blocking(new_sess, 1);
+    int rc = ssh_connect(new_sess);
     if (rc != SSH_OK) {
-        LOGE("CLI: ssh_connect failed: %s", ssh_get_error(session));
-        ssh_free(session);
-        session = NULL;
+        LOGE("CLI: ssh_connect failed: %s", ssh_get_error(new_sess));
+        ssh_free(new_sess);
         pthread_mutex_unlock(&session_mutex);
-        return -2;
+        return NULL;
     }
 #    ifndef USE_LIBSSH_MOCK
     ssh_key privkey;
     int key_result = ssh_pki_import_privkey_file(private_key_path, passphrase, NULL, NULL, &privkey);
     if (key_result != SSH_OK) {
-        LOGE("CLI: failed to load private key from %s: %s", private_key_path, ssh_get_error(session));
-        ssh_disconnect(session);
-        ssh_free(session);
-        session = NULL;
+        LOGE("CLI: failed to load private key from %s: %s", private_key_path, ssh_get_error(new_sess));
+        ssh_disconnect(new_sess);
+        ssh_free(new_sess);
         pthread_mutex_unlock(&session_mutex);
-        return -3;
+        return NULL;
     }
-    rc = ssh_userauth_publickey(session, username, privkey);
+    rc = ssh_userauth_publickey(new_sess, username, privkey);
     ssh_key_free(privkey);
     if (rc != SSH_AUTH_SUCCESS) {
-        LOGE("CLI: key auth failed: %s", ssh_get_error(session));
-        ssh_disconnect(session);
-        ssh_free(session);
-        session = NULL;
+        LOGE("CLI: key auth failed: %s", ssh_get_error(new_sess));
+        ssh_disconnect(new_sess);
+        ssh_free(new_sess);
         pthread_mutex_unlock(&session_mutex);
-        return -4;
+        return NULL;
     }
 #    else
     (void)private_key_path;
@@ -1296,33 +1400,54 @@ int ssht_cli_connect_key(
 #    endif
     pthread_mutex_unlock(&session_mutex);
     LOGI("CLI: SSH key authentication successful");
-    return 0;
+    ssht_handle *h = (ssht_handle *)calloc(1, sizeof(*h));
+    if (!h) {
+        LOGE("ssht_cli_connect_key: allocation failed");
+        return NULL;
+    }
+    h->session = new_sess;
+    return h;
 }
 
-void ssht_cli_disconnect(void)
+void ssht_cli_disconnect(ssht_handle *h)
 {
     LOGI("CLI: disconnect requested");
-    stop_tcp_port_forwarding();
+    stop_tcp_port_forwarding(h);
     pthread_mutex_lock(&session_mutex);
-    if (session) {
-        ssh_disconnect(session);
-        ssh_free(session);
-        session = NULL;
-        LOGI("CLI: session disconnected");
+    if (h) {
+        if (h->session) {
+            ssh_disconnect(h->session);
+            ssh_free(h->session);
+            LOGI("CLI: session disconnected");
+        }
+        free(h);
+    } else {
+        LOGW("CLI: no session or handle to disconnect");
     }
     pthread_mutex_unlock(&session_mutex);
 }
 
-int ssht_cli_start_port_forward(const char *remote_host, int remote_port, const char *listen_host, int listen_port)
+int ssht_cli_start_port_forward(
+    ssht_handle *h, const char *remote_host, int remote_port, const char *listen_host, int listen_port)
 {
     if (!remote_host || remote_port <= 0 || listen_port <= 0) {
         LOGE("CLI: start_port_forward invalid args");
         return -1;
     }
-    return setup_tcp_port_forwarding(remote_host, remote_port, listen_host, listen_port);
+    // Ensure a session exists for this handle or globally.
+    if (h && !h->session) {
+        LOGE("CLI: handle has no session for port forwarding");
+        return -1;
+    }
+    if (!h) {
+        LOGE("CLI: no active session for port forwarding");
+        return -1;
+    }
+    return setup_tcp_port_forwarding(h, remote_host, remote_port, listen_host, listen_port);
 }
 
 int ssht_cli_start_udp2tcp(
+    ssht_handle *h,
     const char *remote_bridge_host,
     int remote_bridge_port,
     const char *local_bridge_host,
@@ -1333,12 +1458,14 @@ int ssht_cli_start_udp2tcp(
     int remote_udp_port)
 {
 #    ifdef USE_UDP2TCP
-    if (port_forward_thread == 0) {
+    (void)h;
+    /* use per-handle thread id when available; treat missing handle as "no thread" */
+    if (!h || h->port_forward_thread == 0) {
         const char *rb = (remote_bridge_host && *remote_bridge_host) ? remote_bridge_host : "127.0.0.1";
         int rb_port = (remote_bridge_port > 0) ? remote_bridge_port : local_bridge_port;
         {
             const char *eff_listen_host = (local_bridge_host && *local_bridge_host) ? local_bridge_host : "127.0.0.1";
-            (void)setup_tcp_port_forwarding(rb, rb_port, eff_listen_host, local_bridge_port);
+            (void)setup_tcp_port_forwarding(h, rb, rb_port, eff_listen_host, local_bridge_port);
         }
     }
     const char *eff_tcp_host = (local_bridge_host && *local_bridge_host) ? local_bridge_host : "127.0.0.1";
@@ -1367,9 +1494,10 @@ int ssht_cli_start_udp2tcp(
 #    endif
 }
 
-void ssht_cli_stop_udp2tcp(void)
+void ssht_cli_stop_udp2tcp(ssht_handle *h)
 {
 #    ifdef USE_UDP2TCP
+    (void)h;
     if (udp2tcp_is_running()) {
         udp2tcp_stop();
         udp2tcp_cleanup();
@@ -1377,31 +1505,38 @@ void ssht_cli_stop_udp2tcp(void)
 #    endif
 }
 
-int ssht_cli_is_connected(void)
+int ssht_cli_is_connected(ssht_handle *h)
 {
+    if (h)
+        return (h->session != NULL) ? 1 : 0;
     pthread_mutex_lock(&session_mutex);
-    int ok = (session != NULL) ? 1 : 0;
+    int ok = (h && h->session != NULL) ? 1 : 0;
     pthread_mutex_unlock(&session_mutex);
     return ok;
 }
 
-int ssht_cli_is_udp2tcp_running(void)
+int ssht_cli_is_udp2tcp_running(ssht_handle *h)
 {
 #    ifdef USE_UDP2TCP
+    (void)h;
     return udp2tcp_is_running() ? 1 : 0;
 #    else
+    (void)h;
     return 0;
 #    endif
 }
 
-int ssht_cli_get_udp2tcp_stats(uint64_t *tx_frames, uint64_t *rx_frames, uint64_t *tx_bytes, uint64_t *rx_bytes)
+int ssht_cli_get_udp2tcp_stats(
+    ssht_handle *h, uint64_t *tx_frames, uint64_t *rx_frames, uint64_t *tx_bytes, uint64_t *rx_bytes)
 {
 #    ifdef USE_UDP2TCP
+    (void)h;
     if (!tx_frames || !rx_frames || !tx_bytes || !rx_bytes)
         return -1;
     udp2tcp_get_library_stats(tx_frames, rx_frames, tx_bytes, rx_bytes);
     return 0;
 #    else
+    (void)h;
     (void)tx_frames;
     (void)rx_frames;
     (void)tx_bytes;

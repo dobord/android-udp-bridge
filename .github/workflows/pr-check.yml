@@ -1,5 +1,7 @@
 name: Pull Request Check
 
+
+
 on:
   pull_request_target:
     branches: [ main, develop ]
@@ -22,6 +24,14 @@ jobs:
       uses: actions/checkout@v4
       with:
         ref: ${{ github.event.pull_request.head.sha }}
+    - name: Load CI variables
+      run: |
+        if [ -f .github/ci/ci-vars.sh ]; then
+          source .github/ci/ci-vars.sh
+          echo "ANDROID_NDK_VERSION=$ANDROID_NDK_VERSION" >> $GITHUB_ENV
+        else
+          echo "CI vars file missing" && exit 1
+        fi
         
     - name: Set up JDK 17
       uses: actions/setup-java@v4
@@ -33,7 +43,7 @@ jobs:
       uses: android-actions/setup-android@v3
     - name: Setup Android NDK and Build Tools
       run: |
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;26.3.11579264" || true
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;${ANDROID_NDK_VERSION}" || true
         
     - name: Make gradlew executable
       run: chmod +x ssh-tunnel-android-app/gradlew
@@ -104,6 +114,14 @@ jobs:
       uses: actions/checkout@v4
       with:
         ref: ${{ github.event.pull_request.head.sha }}
+      - name: Load CI variables
+        run: |
+          if [ -f .github/ci/ci-vars.sh ]; then
+            source .github/ci/ci-vars.sh
+            echo "ANDROID_NDK_VERSION=$ANDROID_NDK_VERSION" >> $GITHUB_ENV
+          else
+            echo "CI vars file missing" && exit 1
+          fi
         
     - name: Set up JDK 17
       uses: actions/setup-java@v4
@@ -136,15 +154,14 @@ jobs:
       working-directory: ssh-tunnel-android-app
       shell: bash
       run: |
-        set -e
-        echo "[quick-build] Start"
-        rm -rf app/src/main/prebuilt/ app/.cxx/ app/build/intermediates/cxx/
-        ./gradlew clean --no-daemon || true
-        test -d ../third_party/udp2tcp/include || { echo "udp2tcp submodule missing"; exit 1; }
-        cp app/build.gradle app/build.gradle.backup
-        sed -i 's/abiFilters ".*"/abiFilters "arm64-v8a"/' app/build.gradle || true
-        ./gradlew assembleDebug --no-daemon --stacktrace --info 2>&1 | tee build.log
-        mv app/build.gradle.backup app/build.gradle
+  set -e
+  echo "[quick-build] Start"
+  rm -rf app/src/main/prebuilt/ app/.cxx/ app/build/intermediates/cxx/
+  ./gradlew clean --no-daemon || true
+  test -d ../third_party/udp2tcp/include || { echo "udp2tcp submodule missing"; exit 1; }
+  # Instead of sed'ing build.gradle (brittle), pass ABI through Gradle property
+  ABI_ARG="-PcmakeArgs=-DANDROID_ABI=arm64-v8a"
+  ./gradlew assembleDebug --no-daemon --stacktrace --info $ABI_ARG 2>&1 | tee build.log
         if [ -f app/build/outputs/apk/debug/app-debug.apk ]; then
           echo "[quick-build] Success"; unzip -l app/build/outputs/apk/debug/app-debug.apk | grep '\.so' || true
         else
