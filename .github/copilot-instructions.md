@@ -56,6 +56,7 @@ This repository uses C++20 coroutines with libcoro and yaml-cpp. Please follow t
 - Avoid blocking syscalls without prior `poll()`; prefer non‑blocking and cooperative scheduling.
 - When adding TLS client logic, guard with `#ifdef LIBCORO_FEATURE_TLS` and use the awaitable TLS API.
 - Project language policy: all source code comments, log messages, commit messages, and documentation MUST be written in English only (no mixed languages) to keep the codebase consistent and accessible. This also applies to build scripts (`build.gradle`, `settings.gradle`, CMake files) and shell/python scripts under `scripts/`.
+ - Git commit messages: must be written in English only. Keep the subject line short (<=50 chars) and in present tense; use the commit body to explain the rationale and any important implementation details when necessary.
 
 
 Following these rules keeps coroutine lifetimes explicit, avoids scheduler mismatches, and prevents subtle endianness and I/O pitfalls.

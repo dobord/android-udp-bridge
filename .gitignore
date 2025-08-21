@@ -70,3 +70,6 @@ app/.gradle/
 *.swo
 *.bak
 *.orig
+
+# Translations
+translations.txt
