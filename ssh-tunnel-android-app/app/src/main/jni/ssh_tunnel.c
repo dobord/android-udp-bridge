@@ -437,6 +437,213 @@ static void fb_flush_to_client(
     }
 }
 
+// Argument structure for per-connection forwarding thread
+struct pf_conn_arg {
+    struct ssht_handle *h;
+    int client_sock;
+    char remote_host[128];
+    char listen_host[64];
+    int remote_port;
+    int listen_port;
+    volatile int *running;
+};
+
+// Per-connection forwarding thread. Each accepted client gets its own thread so that slow
+// or blocked connections do not stall new accepts. Note: libssh session objects are not
+// guaranteed to be fully thread-safe; we therefore serialize libssh channel operations
+// using the existing global session_mutex around each call that touches the channel/session.
+static void *pf_connection_thread(void *arg)
+{
+    struct pf_conn_arg *carg = (struct pf_conn_arg *)arg;
+    if (!carg)
+        return NULL;
+    struct ssht_handle *h = carg->h;
+    int client_sock = carg->client_sock;
+    const char *remote_host = carg->remote_host;
+    const char *listen_host = carg->listen_host;
+    int remote_port = carg->remote_port;
+    int listen_port = carg->listen_port;
+    volatile int *running = carg->running;
+
+    LOGI("PF connection thread started local=%s:%d -> remote=%s:%d", listen_host, listen_port, remote_host, remote_port);
+
+    // Create channel
+    pthread_mutex_lock(&session_mutex);
+    ssh_channel channel = (h && h->session) ? ssh_channel_new(h->session) : NULL;
+    pthread_mutex_unlock(&session_mutex);
+    if (!channel) {
+        LOGE("Connection thread: failed to allocate channel");
+        close(client_sock);
+        free(carg);
+        return NULL;
+    }
+
+    int rc = SSH_ERROR;
+    const int MAX_OPEN_ATTEMPTS = 10;
+    const int RETRY_SLEEP_MS = 200;
+    for (int attempt = 1; attempt <= MAX_OPEN_ATTEMPTS && *running; ++attempt) {
+        pthread_mutex_lock(&session_mutex);
+        rc = ssh_channel_open_forward(channel, remote_host, remote_port, listen_host, listen_port);
+        pthread_mutex_unlock(&session_mutex);
+        if (rc == SSH_OK) {
+            if (attempt > 1) {
+                LOGI("Connection thread: channel opened after %d attempts", attempt);
+            }
+            break;
+        }
+        const char *err = NULL;
+        pthread_mutex_lock(&session_mutex);
+        if (h && h->session)
+            err = ssh_get_error(h->session);
+        pthread_mutex_unlock(&session_mutex);
+        if (err) {
+            LOGW("Connection thread open_forward attempt %d/%d failed: %s", attempt, MAX_OPEN_ATTEMPTS, err);
+            if ((strstr(err, "Connection refused") != NULL || strstr(err, "connection refused") != NULL) && attempt < MAX_OPEN_ATTEMPTS) {
+                struct timespec ts;
+                ts.tv_sec = RETRY_SLEEP_MS / 1000;
+                ts.tv_nsec = (RETRY_SLEEP_MS % 1000) * 1000000L;
+                nanosleep(&ts, NULL);
+                continue;
+            }
+        } else {
+            LOGW("Connection thread open_forward attempt %d/%d failed (no error string)", attempt, MAX_OPEN_ATTEMPTS);
+        }
+    }
+    if (rc != SSH_OK) {
+        pthread_mutex_lock(&session_mutex);
+        const char *err = (h && h->session) ? ssh_get_error(h->session) : "(no session)";
+        pthread_mutex_unlock(&session_mutex);
+        LOGE("Connection thread: failed to open channel to %s:%d: %s", remote_host, remote_port, err);
+        pthread_mutex_lock(&session_mutex);
+        ssh_channel_free(channel);
+        pthread_mutex_unlock(&session_mutex);
+        close(client_sock);
+        free(carg);
+        return NULL;
+    }
+
+    pthread_mutex_lock(&session_mutex);
+    ssh_channel_set_blocking(channel, 0);
+    pthread_mutex_unlock(&session_mutex);
+
+    int flags = fcntl(client_sock, F_GETFL, 0);
+    if (flags >= 0)
+        fcntl(client_sock, F_SETFL, flags | O_NONBLOCK);
+
+    char buffer[4096];
+    fd_set read_fds;
+    pthread_mutex_lock(&session_mutex);
+    int session_fd = (h && h->session) ? ssh_get_fd(h->session) : -1;
+    pthread_mutex_unlock(&session_mutex);
+    if (session_fd < 0) {
+        LOGW("Connection thread: ssh_get_fd <0; progress may stall");
+    }
+    int max_fd = (client_sock > session_fd) ? client_sock : session_fd;
+    uint64_t last_tick_sec = 0;
+    int connection_active = 1;
+    struct forward_buffer to_ssh, to_client;
+    fb_init(&to_ssh);
+    fb_init(&to_client);
+    const size_t MAX_BUFFER_CAP = 256 * 1024;
+
+    while (*running && connection_active) {
+        FD_ZERO(&read_fds);
+        FD_SET(client_sock, &read_fds);
+        if (session_fd >= 0)
+            FD_SET(session_fd, &read_fds);
+        struct timeval tv = {1, 0};
+        int ready = select(max_fd + 1, &read_fds, NULL, NULL, &tv);
+        if (ready < 0) {
+            if (errno == EINTR)
+                continue;
+            LOGE("Connection thread: select error: %s", strerror(errno));
+            break;
+        }
+        time_t now_sec = time(NULL);
+        if (now_sec != (time_t)last_tick_sec) {
+            last_tick_sec = (uint64_t)now_sec;
+            pthread_mutex_lock(&session_mutex);
+            int connected = (h && h->session && ssh_is_connected(h->session));
+            pthread_mutex_unlock(&session_mutex);
+            if (!connected)
+                break;
+            if (to_ssh.size > to_ssh.off) {
+                pthread_mutex_lock(&session_mutex);
+                fb_flush_to_ssh(&to_ssh, channel, &connection_active, running);
+                pthread_mutex_unlock(&session_mutex);
+            }
+            if (to_client.size > to_client.off)
+                fb_flush_to_client(&to_client, client_sock, &connection_active, running);
+        }
+        if (FD_ISSET(client_sock, &read_fds)) {
+            for (;;) {
+                int bytes = recv(client_sock, buffer, sizeof(buffer), 0);
+                if (bytes == 0) { connection_active = 0; break; }
+                else if (bytes < 0) {
+                    if (errno == EWOULDBLOCK || errno == EAGAIN) break;
+                    LOGE("Connection thread: recv error: %s", strerror(errno));
+                    connection_active = 0; break;
+                }
+                if (fb_append(&to_ssh, buffer, (size_t)bytes, MAX_BUFFER_CAP) < 0) {
+                    LOGE("Connection thread: to_ssh overflow");
+                    connection_active = 0; break;
+                }
+                pthread_mutex_lock(&session_mutex);
+                fb_flush_to_ssh(&to_ssh, channel, &connection_active, running);
+                pthread_mutex_unlock(&session_mutex);
+                if (to_ssh.size - to_ssh.off > 64 * 1024) break;
+            }
+        }
+        if (session_fd >= 0 && FD_ISSET(session_fd, &read_fds)) {
+            if (to_ssh.size > to_ssh.off) {
+                pthread_mutex_lock(&session_mutex);
+                fb_flush_to_ssh(&to_ssh, channel, &connection_active, running);
+                pthread_mutex_unlock(&session_mutex);
+            }
+        }
+        while (*running && connection_active) {
+            pthread_mutex_lock(&session_mutex);
+            int ssh_bytes = ssh_channel_read_nonblocking(channel, buffer, sizeof(buffer), 0);
+            pthread_mutex_unlock(&session_mutex);
+            if (ssh_bytes > 0) {
+                if (fb_append(&to_client, buffer, (size_t)ssh_bytes, MAX_BUFFER_CAP) < 0) {
+                    LOGE("Connection thread: to_client overflow");
+                    connection_active = 0; break;
+                }
+                fb_flush_to_client(&to_client, client_sock, &connection_active, running);
+                continue;
+            } else if (ssh_bytes == 0 || ssh_bytes == SSH_AGAIN) {
+                break; // no more right now
+            } else if (ssh_bytes == SSH_EOF) {
+                LOGI("Connection thread: SSH EOF");
+                connection_active = 0; break;
+            } else if (ssh_bytes == SSH_ERROR) {
+                LOGE("Connection thread: SSH read error");
+                connection_active = 0; break;
+            }
+        }
+        if (to_client.size > to_client.off)
+            fb_flush_to_client(&to_client, client_sock, &connection_active, running);
+        pthread_mutex_lock(&session_mutex);
+        int closed = (!ssh_channel_is_open(channel) || ssh_channel_is_closed(channel));
+        pthread_mutex_unlock(&session_mutex);
+        if (closed) {
+            LOGI("Connection thread: channel closed by remote");
+            break;
+        }
+    }
+    fb_dispose(&to_ssh);
+    fb_dispose(&to_client);
+    pthread_mutex_lock(&session_mutex);
+    ssh_channel_close(channel);
+    ssh_channel_free(channel);
+    pthread_mutex_unlock(&session_mutex);
+    close(client_sock);
+    LOGI("PF connection thread exiting local=%s:%d -> remote=%s:%d", listen_host, listen_port, remote_host, remote_port);
+    free(carg);
+    return NULL;
+}
+
 // TCP Port forwarding thread function
 void *tcp_port_forward_thread(void *arg)
 {
@@ -522,163 +729,35 @@ void *tcp_port_forward_thread(void *arg)
             }
             continue;
         }
-        LOGI("Accepted TCP connection for forwarding to remote %s:%d", remote_host, remote_port);
+        LOGI("Accepted TCP connection for forwarding to remote %s:%d (spawning thread)", remote_host, remote_port);
         pf_set_state(h, PF_STATE_CLIENT_ACCEPTED);
-        pthread_mutex_lock(&session_mutex);
-        if (h && h->session != NULL) {
-            ssh_channel channel = ssh_channel_new(h->session);
-            if (channel != NULL) {
-                int rc = SSH_ERROR;
-                const int MAX_OPEN_ATTEMPTS = 10;
-                const int RETRY_SLEEP_MS = 200;
-                for (int attempt = 1; attempt <= MAX_OPEN_ATTEMPTS; ++attempt) {
-                    rc = ssh_channel_open_forward(channel, remote_host, remote_port, listen_host, listen_port);
-                    if (rc == SSH_OK) {
-                        if (attempt > 1) {
-                            LOGI("SSH forward channel opened after %d attempts", attempt);
-                        }
-                        break;
-                    }
-                    const char *err = (h && h->session) ? ssh_get_error(h->session) : NULL;
-                    if (err) {
-                        LOGW("open_forward attempt %d/%d failed: %s", attempt, MAX_OPEN_ATTEMPTS, err);
-                        if (strstr(err, "Connection refused") != NULL || strstr(err, "connection refused") != NULL) {
-                            if (attempt < MAX_OPEN_ATTEMPTS) {
-                                struct timespec ts;
-                                ts.tv_sec = RETRY_SLEEP_MS / 1000;
-                                ts.tv_nsec = (RETRY_SLEEP_MS % 1000) * 1000000L;
-                                nanosleep(&ts, NULL);
-                                continue;
-                            }
-                        }
-                    } else {
-                        LOGW("open_forward attempt %d/%d failed (no error string)", attempt, MAX_OPEN_ATTEMPTS);
-                    }
-                    if (attempt == MAX_OPEN_ATTEMPTS)
-                        break;
-                }
-                if (rc == SSH_OK) {
-                    LOGI("SSH channel opened for TCP forwarding %d -> %s:%d", listen_port, remote_host, remote_port);
-                    ssh_channel_set_blocking(channel, 0);
-                    char buffer[4096];
-                    fd_set read_fds;
-                    int session_fd = (h && h->session) ? ssh_get_fd(h->session) : -1;
-                    if (session_fd < 0) {
-                        LOGW("ssh_get_fd returned <0; forwarding may not progress correctly");
-                    }
-                    int max_fd = (client_sock > session_fd) ? client_sock : session_fd;
-                    uint64_t last_tick_sec = 0;
-                    int connection_active = 1;
-                    int flags = fcntl(client_sock, F_GETFL, 0);
-                    if (flags >= 0)
-                        fcntl(client_sock, F_SETFL, flags | O_NONBLOCK);
-                    struct forward_buffer to_ssh;
-                    struct forward_buffer to_client;
-                    fb_init(&to_ssh);
-                    fb_init(&to_client);
-                    const size_t MAX_BUFFER_CAP = 256 * 1024; // 256 KiB cap per direction
-                    while (*running && connection_active) {
-                        if (!h || h->pf_state != PF_STATE_FORWARD_LOOP)
-                            pf_set_state(h, PF_STATE_FORWARD_LOOP);
-                        FD_ZERO(&read_fds);
-                        FD_SET(client_sock, &read_fds);
-                        if (session_fd >= 0) {
-                            FD_SET(session_fd, &read_fds);
-                        }
-                        struct timeval tv = {1, 0};
-                        int ready = select(max_fd + 1, &read_fds, NULL, NULL, &tv);
-                        if (ready < 0) {
-                            if (errno == EINTR)
-                                continue;
-                            LOGE("select() error in forwarding loop: %s", strerror(errno));
-                            break;
-                        }
-                        time_t now_sec = time(NULL);
-                        if (now_sec != (time_t)last_tick_sec) {
-                            last_tick_sec = (uint64_t)now_sec;
-                            if (h && h->session != NULL && !ssh_is_connected(h->session)) {
-                                LOGW("SSH session no longer connected");
-                                break;
-                            }
-                            if (to_ssh.size > to_ssh.off)
-                                fb_flush_to_ssh(&to_ssh, channel, &connection_active, running);
-                            if (to_client.size > to_client.off)
-                                fb_flush_to_client(&to_client, client_sock, &connection_active, running);
-                        }
-                        if (FD_ISSET(client_sock, &read_fds)) {
-                            for (;;) {
-                                int bytes = recv(client_sock, buffer, sizeof(buffer), 0);
-                                if (bytes == 0) {
-                                    connection_active = 0;
-                                    break;
-                                } else if (bytes < 0) {
-                                    if (errno == EWOULDBLOCK || errno == EAGAIN) {
-                                        break;
-                                    }
-                                    LOGE("recv() error: %s", strerror(errno));
-                                    connection_active = 0;
-                                    break;
-                                }
-                                if (fb_append(&to_ssh, buffer, (size_t)bytes, MAX_BUFFER_CAP) < 0) {
-                                    LOGE("to_ssh buffer overflow, closing");
-                                    connection_active = 0;
-                                    break;
-                                }
-                                fb_flush_to_ssh(&to_ssh, channel, &connection_active, running);
-                                if (to_ssh.size - to_ssh.off > 64 * 1024) {
-                                    break;
-                                }
-                                continue;
-                            }
-                        }
-                        if (session_fd >= 0 && FD_ISSET(session_fd, &read_fds)) {
-                            if (to_ssh.size > to_ssh.off)
-                                fb_flush_to_ssh(&to_ssh, channel, &connection_active, running);
-                        }
-                        while (*running && connection_active) {
-                            int ssh_bytes = ssh_channel_read_nonblocking(channel, buffer, sizeof(buffer), 0);
-                            if (ssh_bytes > 0) {
-                                if (fb_append(&to_client, buffer, (size_t)ssh_bytes, MAX_BUFFER_CAP) < 0) {
-                                    LOGE("to_client buffer overflow, closing");
-                                    connection_active = 0;
-                                    break;
-                                }
-                                fb_flush_to_client(&to_client, client_sock, &connection_active, running);
-                                continue;
-                            } else if (ssh_bytes == 0 || ssh_bytes == SSH_AGAIN) {
-                                break;
-                            } else if (ssh_bytes == SSH_EOF || ssh_channel_is_eof(channel)) {
-                                LOGI("SSH channel EOF reached");
-                                connection_active = 0;
-                                break;
-                            } else if (ssh_bytes == SSH_ERROR) {
-                                LOGE("ssh_channel_read_nonblocking error (SSH_ERROR)");
-                                connection_active = 0;
-                                break;
-                            }
-                        }
-                        if (to_client.size > to_client.off)
-                            fb_flush_to_client(&to_client, client_sock, &connection_active, running);
-                        if (!ssh_channel_is_open(channel) || ssh_channel_is_closed(channel)) {
-                            LOGI("SSH channel closed by remote side");
-                            break;
-                        }
-                    }
-                    fb_dispose(&to_ssh);
-                    fb_dispose(&to_client);
-                    ssh_channel_close(channel);
-                } else {
-                    LOGE(
-                        "Failed to open SSH forward channel to %s:%d after retries: %s",
-                        remote_host,
-                        remote_port,
-                        (h && h->session) ? ssh_get_error(h->session) : "(no session)");
-                }
-                ssh_channel_free(channel);
-            }
+        struct pf_conn_arg *carg = (struct pf_conn_arg *)calloc(1, sizeof(struct pf_conn_arg));
+        if (!carg) {
+            LOGE("Port forward OOM allocating pf_conn_arg");
+            close(client_sock);
+            continue;
         }
-        pthread_mutex_unlock(&session_mutex);
-        close(client_sock);
+        carg->h = h;
+        carg->client_sock = client_sock;
+        strncpy(carg->remote_host, remote_host, sizeof(carg->remote_host) - 1);
+        carg->remote_host[sizeof(carg->remote_host) - 1] = '\0';
+        strncpy(carg->listen_host, listen_host, sizeof(carg->listen_host) - 1);
+        carg->listen_host[sizeof(carg->listen_host) - 1] = '\0';
+        carg->remote_port = remote_port;
+        carg->listen_port = listen_port;
+        carg->running = running;
+        pthread_t cth;
+        pthread_attr_t attr;
+        pthread_attr_init(&attr);
+        pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+        if (pthread_create(&cth, &attr, pf_connection_thread, carg) != 0) {
+            LOGE("Failed to create connection thread: %s", strerror(errno));
+            pthread_attr_destroy(&attr);
+            close(client_sock);
+            free(carg);
+            continue;
+        }
+        pthread_attr_destroy(&attr);
     }
     if (listen_sock >= 0)
         close(listen_sock);
